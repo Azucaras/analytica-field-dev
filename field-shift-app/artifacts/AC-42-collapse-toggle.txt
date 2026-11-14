@@ -1,7 +1,8 @@
 AC-42 the rotation outlook toggle at 1440x900, 780x900 and 360x640
 
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
-(vite, http://127.0.0.1:5173/), CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
+of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
+(wave4-source-hashes.txt). CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
 Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
 because the card forbids PNGs in the repository.
 

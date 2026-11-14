@@ -1,6 +1,7 @@
 AC-22 top right strip children and the dock half of the criterion, at 1440x900
 
-Measured 2026-11-14 on the dev server of branch block4/wave4-dock at 1440x900.
+Measured 2026-11-14 on the dev server of the main checkout, whose block 4 sources are byte-identical to
+branch block4/wave4-dock-home (wave4-source-hashes.txt), at 1440x900.
 
 strip children (DOM order): [
  {
