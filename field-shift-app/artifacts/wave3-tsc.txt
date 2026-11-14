@@ -1,0 +1,6 @@
+# Block 4 wave 3: tsc -b --noEmit
+# run 2026-11-14T22:43:40Z on the branch block4/wave3-timeline
+
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+exit=0

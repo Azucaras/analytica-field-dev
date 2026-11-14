@@ -1,0 +1,42 @@
+# AC-26 (R-32), the season boundary and the crop class slot
+
+Method: `npx vitest run` at the boundary, plus the real app in Chromium at 1440x900 against
+dev 127.0.0.1:5199 and backend 127.0.0.1:8001.
+
+## The label changes at the boundary
+
+```
+chosen 2025-06-30, `[data-season-label]` = 2024/25
+chosen 2025-07-01, `[data-season-label]` = 2025/26
+```
+
+Measured in the browser by opening `?date=2025-06-30` and `?date=2025-07-01`; the two labels
+differ, and the band follows: 2025-06-30 shows `No planting window data for 2024/25` while
+2025-07-01 draws the four 2025/26 windows.
+
+```
+src/lib/timeline.test.ts > changes the label between 2025-06-30 and 2025-07-01 (AC-26)   PASS
+src/lib/timeline.test.ts > returns the four pinned examples of the spec                   PASS
+```
+
+## The crop class slot
+
+Block 4 has no crop class source, because the MapBiomas access is blocked (OD-04). The slot
+therefore shows one string at every date, and any other date renders no class value.
+
+```
+chosen 2026-11-14  `.timeline-crop-class` = "No crop class source"
+chosen 2026-11-12  `.timeline-crop-class` = "No crop class source"
+chosen 2025-06-30  `.timeline-crop-class` = "No crop class source"
+chosen 2025-07-01  `.timeline-crop-class` = "No crop class source"
+chosen 2024-11-01  `.timeline-crop-class` = "No crop class source"
+```
+
+The value comes from the string catalog key `timeline.no_crop_class`; no class value is
+rendered anywhere in the dock, and the slot changes only with the season label, which is the
+record it belongs to.
+
+```
+src/components/TimelineDock.test.tsx > shows the derived season label and the empty crop
+  class at every date                                               PASS
+```

@@ -1,0 +1,47 @@
+# AC-22 (R-27, R-41), timeline half, 1440x900
+
+Method: `npx vitest run` (App.test.tsx) plus the real app in Chromium at 1440x900, dev
+server 127.0.0.1:5199 and backend 127.0.0.1:8001.
+
+This wave owes the timeline half of AC-22. The card says AC-22 is shared with wave 4; wave 4
+owns the dock half and re-measures the strip. The removal below also emptied the Season slot
+of the top right strip, so the strip children are reported as an adjoining fact.
+
+What changed: `src/components/SeasonSelect.tsx` and its test are deleted, the `season` and
+`seasons` state and `handleSeasonChange` are gone from `src/App.tsx`, and the scenario
+request no longer sends `?season=` (R-30). The component is replaced by `TimelineDock`
+(R-27).
+
+DOM read at 1440x900, `http://127.0.0.1:5199/?date=2026-11-14`:
+
+```
+elements with aria-label "Season"                      = 0
+<select> elements in the document                      = 0
+region aria-label "Timeline"                           = present
+region role / name                                     = region / "Timeline"
+control names inside the region                        = "Go to date", "Previous day",
+                                                         "Timeline date", "Next day"
+top right strip children (.topbar-meta), in order      = span "FIELD INTELLIGENCE"
+                                                         span "Grower profile" (avatar)
+                                                         button "Command"
+                                                         button "Supporting data"
+```
+
+The four controls are the R-37 controls. The 360x640 first-in-region `Timeline controls`
+toggle and the other geometry of AC-30 belong to wave 4; they are not claimed here.
+
+vitest results used as the test artifact:
+
+```
+src/App.test.tsx > block 4 wave 3 > has no element named Season and no season select
+  anywhere (AC-22, timeline half)                                  PASS
+src/App.test.tsx > field map and rotation scenario selection >
+  keeps the unconditional pairs mounted and retries only the field list after an HTTP error
+                                                                   PASS
+Test Files  19 passed (19)
+     Tests  182 passed (182)
+```
+
+Note: the old SeasonSelect test file is deleted with the component, so the three tests that
+asserted the season select are gone; they are retired by block 4 AM-09, and AC-22 and AC-24
+replace them.
