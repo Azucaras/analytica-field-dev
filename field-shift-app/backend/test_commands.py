@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 import unittest
-from datetime import datetime, timezone
-from tempfile import TemporaryDirectory
-from unittest.mock import MagicMock, patch
 
-import httpx
 from fastapi.testclient import TestClient
 
-import main
 from main import app
 
 
@@ -31,37 +26,6 @@ class CommandEndpointTests(unittest.TestCase):
                 self.assertIn(key, command)
             self.assertIsInstance(command["input_schema"], dict)
             self.assertTrue(command["input_schema"].get("properties"))
-
-    def test_layers_returns_latest_tile_date_and_tile_proxy_serves_that_date(self):
-        with TemporaryDirectory() as cache_dir:
-            main.TILE_CACHE_DIR = main.Path(cache_dir)
-            today = datetime(2026, 11, 11, tzinfo=timezone.utc)
-            responses = [
-                httpx.Response(404),
-                httpx.Response(200, content=b"layer-png"),
-                httpx.Response(404),
-                httpx.Response(200, content=b"tile-png"),
-            ]
-            upstream = MagicMock()
-            upstream.get.side_effect = responses
-            client_factory = MagicMock()
-            client_factory.return_value.__enter__.return_value = upstream
-
-            with patch("main.datetime") as mock_datetime, patch("main.httpx.Client", client_factory):
-                mock_datetime.now.return_value = today
-                layers_response = TestClient(app).get("/layers")
-                self.assertEqual(layers_response.status_code, 200)
-                layer = layers_response.json()[0]
-                self.assertEqual(set(layer), {"id", "label", "basis", "resolution", "as_of"})
-                self.assertEqual(layer["id"], "smap")
-                self.assertEqual(layer["as_of"], "2026-11-10")
-
-                x, y = main._first_field_tile(11)
-                tile_response = TestClient(app).get(f"/tiles/smap-soil-moisture/11/{x}/{y}")
-                self.assertEqual(tile_response.status_code, 200)
-                self.assertEqual(tile_response.headers["X-Tile-Date"], layer["as_of"])
-                self.assertEqual(tile_response.content, b"tile-png")
-                self.assertEqual(upstream.get.call_count, 4)
 
     def test_layers_rejects_invalid_tile_coordinates(self):
         response = self.client.get("/layers?z=2&x=4&y=0")

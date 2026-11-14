@@ -4,12 +4,13 @@ import json
 import math
 import os
 import threading
-from datetime import date, datetime, timedelta, timezone
+from dataclasses import dataclass, field
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, Response
+from fastapi import Body, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "field-scenarios.json"
@@ -18,12 +19,101 @@ with FIXTURE_PATH.open(encoding="utf-8") as fixture_file:
 
 BACKEND_DIR = Path(__file__).parent
 TILE_CACHE_DIR = Path(os.getenv("TILE_CACHE_DIR", str(BACKEND_DIR / ".tile-cache")))
-GIBS_MAX_ZOOM = 6
 TILE_CACHE_TTL = timedelta(hours=24)
 GIBS_BASE_URL = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best"
-TILE_LAYER_IDS = {
-    "smap-soil-moisture": "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture",
+AXIS_START = date(2015, 4, 1)
+
+
+def _layer(
+    layer_id: str,
+    gibs_id: str,
+    matrix: str,
+    max_zoom: int,
+    label: str,
+    basis: str,
+    resolution: str,
+    cadence: str,
+    lookback_days: int | None,
+    time_format: str,
+    time_start: str,
+    declared_end: str,
+    kind: str,
+    optical: bool,
+    reserve: str | None = None,
+    window_days: float | int | None = None,
+) -> dict[str, Any]:
+    """One registry entry, with the fields fixed by the Data contracts section."""
+    return {
+        "id": layer_id,
+        "gibs_id": gibs_id,
+        "matrix": matrix,
+        "max_zoom": max_zoom,
+        "label": label,
+        "basis": basis,
+        "resolution": resolution,
+        "cadence": cadence,
+        "lookback_days": lookback_days,
+        "time_format": time_format,
+        "time_start": time_start,
+        "declared_end": declared_end,
+        "kind": kind,
+        "optical": optical,
+        "blank_threshold_bytes": 5000 if optical else None,
+        "reserve": reserve,
+        "window_days": window_days,
+    }
+
+
+# The registry is the single source of a layer id, a GIBS identifier and a tile
+# matrix (R-01). The order is the stack order of the /layers response.
+LAYER_REGISTRY: dict[str, dict[str, Any]] = {
+    entry["id"]: entry
+    for entry in (
+        _layer("smap-l3", "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
+               "SMAP soil moisture", "retrieved", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-11", "tile", False,
+               reserve="backend/reserve/smap-soil-moisture.png", window_days=1),
+        _layer("smap-l4-surface", "SMAP_L4_Analyzed_Surface_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
+               "SMAP L4 surface soil moisture", "modelled", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-10", "tile", False,
+               window_days=1),
+        _layer("smap-l4-root", "SMAP_L4_Analyzed_Root_Zone_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
+               "SMAP L4 root-zone soil moisture", "modelled", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-10", "tile", False,
+               window_days=1),
+        _layer("imerg-daily", "IMERG_Precipitation_Rate", "GoogleMapsCompatible_Level6", 6,
+               "IMERG precipitation, daily", "retrieved", "about 11 km", "P1D", 7, "date", "2000-06-01", "2026-11-13", "tile", False,
+               window_days=1),
+        _layer("imerg-30min", "IMERG_Precipitation_Rate_30min", "GoogleMapsCompatible_Level6", 6,
+               "IMERG precipitation, 30 minutes", "retrieved", "about 11 km", "PT30M", 1, "datetime",
+               "2026-01-19T20:30:00Z", "2026-11-14T12:30:00Z", "tile", False, window_days=0.02),
+        _layer("ndvi-8day", "MODIS_Terra_NDVI_8Day", "GoogleMapsCompatible_Level9", 9,
+               "MODIS NDVI, 8 day", "retrieved", "250 m", "P1D", 16, "date", "2025-02-12", "2026-11-13", "tile", False,
+               window_days=8),
+        _layer("evi-8day", "MODIS_Terra_EVI_8Day", "GoogleMapsCompatible_Level9", 9,
+               "MODIS EVI, 8 day", "retrieved", "250 m", "P1D", 16, "date", "2025-02-12", "2026-11-13", "tile", False,
+               window_days=8),
+        _layer("ndvi-monthly", "MODIS_Terra_L3_NDVI_Monthly", "GoogleMapsCompatible_Level7", 7,
+               "MODIS NDVI, monthly", "retrieved", "250 m", "P1M", 62, "date", "2000-03-01", "2026-10-01", "tile", False,
+               window_days=31),
+        _layer("lst-terra", "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day", "GoogleMapsCompatible_Level7", 7,
+               "MODIS land surface temperature, Terra", "retrieved", "1 km", "P1D", 7, "date", "2000-02-25", "2026-11-13", "tile", False,
+               window_days=1),
+        _layer("lst-aqua", "MODIS_Aqua_Land_Surface_Temp_Day", "GoogleMapsCompatible_Level7", 7,
+               "MODIS land surface temperature, Aqua", "retrieved", "1 km", "P1D", 7, "date", "2002-07-03", "2026-11-14", "tile", False,
+               window_days=1),
+        _layer("hls-l30", "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", "GoogleMapsCompatible_Level12", 12,
+               "HLS Landsat reflectance, 30 m", "retrieved", "30 m", "P1D", 30, "date", "2013-03-22", "2026-11-06", "tile", True,
+               window_days=1),
+        _layer("hls-s30", "HLS_S30_Nadir_BRDF_Adjusted_Reflectance", "GoogleMapsCompatible_Level12", 12,
+               "HLS Sentinel-2 reflectance, 30 m", "retrieved", "30 m", "P1D", 30, "date", "2015-11-28", "2026-11-06", "tile", True,
+               window_days=1),
+        _layer("grace-mascon", "GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI", "GoogleMapsCompatible_Level6", 6,
+               "GRACE water storage, stale", "retrieved", "about 300 km, mascon", "mixed P28D, P17D, P1M", None, "date",
+               "2002-04-04", "2022-07-01", "stale", False),
+    )
 }
+
+# The block 1 id stays an alias of smap-l3 (R-01, AM-03).
+LAYER_ALIASES: dict[str, str] = {"smap-soil-moisture": "smap-l3"}
+
 _upstream_requests = 0
 _tile_lock = threading.RLock()
 
@@ -34,7 +124,7 @@ app.add_middleware(
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Tile-Source", "X-Tile-Fallback", "X-Tile-Date"],
+    expose_headers=["X-Tile-Source", "X-Tile-Fallback", "X-Tile-Date", "X-Tile-Status"],
 )
 
 COMMANDS: tuple[dict[str, Any], ...] = (
@@ -122,8 +212,195 @@ def execute_command(name: str, arguments: Any = Body(...)) -> dict[str, Any]:
     return {"name": name, "effect": COMMANDS_BY_NAME[name]["effect"], "arguments": validated_arguments, "state": dict(command_state)}
 
 
-def _tile_cache_path(layer: str, z: int, x: int, y: int) -> Path:
-    return TILE_CACHE_DIR / layer / str(z) / str(x) / f"{y}.png"
+def resolve_layer(layer_id: str) -> dict[str, Any] | None:
+    """Resolve a requested id, including the block 1 alias, to its registry entry."""
+    return LAYER_REGISTRY.get(LAYER_ALIASES.get(layer_id, layer_id))
+
+
+def _axis_end() -> date:
+    return max(date.fromisoformat(entry["declared_end"][:10]) for entry in LAYER_REGISTRY.values())
+
+
+AXIS_END = _axis_end()
+AXIS = {"start": AXIS_START.isoformat(), "end": AXIS_END.isoformat(), "default": AXIS_END.isoformat()}
+
+
+def _parse_chosen(value: str | None) -> date:
+    if not value:
+        return AXIS_END
+    try:
+        chosen = date.fromisoformat(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid date, expected YYYY-MM-DD") from exc
+    return min(max(chosen, AXIS_START), AXIS_END)
+
+
+def _token_for(entry: dict[str, Any], value: date | datetime) -> str:
+    """Format one candidate token. A datetime layer refuses a date-only token (R-09)."""
+    if entry["time_format"] == "datetime":
+        if not isinstance(value, datetime):
+            raise ValueError("datetime layers need a full UTC token, not a date-only token")
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if isinstance(value, datetime):
+        value = value.date()
+    return value.isoformat()
+
+
+def _parse_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+
+
+def _floor_thirty_minutes(value: datetime) -> datetime:
+    return value.replace(minute=(value.minute // 30) * 30, second=0, microsecond=0)
+
+
+def _candidate_tokens(entry: dict[str, Any], chosen: date) -> list[str]:
+    """The walk of R-05, newest candidate first, bounded by time_start and lookback_days."""
+    lookback = entry["lookback_days"]
+    if entry["time_format"] == "datetime":
+        end_of_day = datetime.combine(chosen, time(23, 59, 59), tzinfo=timezone.utc)
+        declared_end = _parse_utc(entry["declared_end"])
+        start = _floor_thirty_minutes(min(end_of_day, declared_end))
+        lower = max(_parse_utc(entry["time_start"]), end_of_day - timedelta(days=lookback or 0))
+        candidates: list[str] = []
+        cursor = start
+        while cursor >= lower:
+            candidates.append(_token_for(entry, cursor))
+            cursor -= timedelta(minutes=30)
+        return candidates
+
+    declared_end = date.fromisoformat(entry["declared_end"][:10])
+    start = min(chosen, declared_end)
+    lower = max(date.fromisoformat(entry["time_start"][:10]), chosen - timedelta(days=lookback or 0))
+    candidates = []
+    if entry["cadence"].startswith("P1M"):
+        cursor = start.replace(day=1)
+        while cursor >= lower:
+            candidates.append(_token_for(entry, cursor))
+            cursor = (cursor.replace(day=1) - timedelta(days=1)).replace(day=1)
+        return candidates
+    cursor = start
+    while cursor >= lower:
+        candidates.append(_token_for(entry, cursor))
+        cursor -= timedelta(days=1)
+    return candidates
+
+
+@dataclass
+class TileResolution:
+    """The outcome of the effective-date walk for one layer, chosen date and tile."""
+
+    status: str
+    effective_date: str | None = None
+    age_days: int | None = None
+    last_observation: str | None = None
+    response: httpx.Response | None = None
+    attempts: list[str] = field(default_factory=list)
+
+
+def _http_fetch(url: str) -> httpx.Response:
+    global _upstream_requests
+    with _tile_lock:
+        _upstream_requests += 1
+    with httpx.Client(timeout=10.0, follow_redirects=True) as client:
+        return client.get(url)
+
+
+# Tests replace this hook with a recorded transport (the spec's mock transports).
+upstream_fetch: Callable[[str], httpx.Response] = _http_fetch
+
+
+def _tile_suffix(entry: dict[str, Any]) -> str:
+    # HLS products are served as JPEG on GIBS; the rest are PNG.
+    return ".jpg" if entry["optical"] else ".png"
+
+
+def _tile_media_type(entry: dict[str, Any]) -> str:
+    return "image/jpeg" if entry["optical"] else "image/png"
+
+
+def _upstream_url(entry: dict[str, Any], token: str, z: int, x: int, y: int) -> str:
+    base_url = os.getenv("TILE_UPSTREAM_URL", GIBS_BASE_URL).rstrip("/")
+    return (
+        f"{base_url}/{entry['gibs_id']}/default/{token}"
+        f"/{entry['matrix']}/{z}/{y}/{x}{_tile_suffix(entry)}"
+    )
+
+
+def _same_day(entry: dict[str, Any], effective: str, chosen: date) -> bool:
+    return effective[:10] == chosen.isoformat()
+
+
+def _age_days(effective: str, chosen: date) -> int:
+    return (chosen - date.fromisoformat(effective[:10])).days
+
+
+def resolve_effective_date(
+    layer: str | dict[str, Any],
+    chosen: date | datetime | str,
+    fetch: Callable[[str], httpx.Response] | None = None,
+    z: int = 0,
+    x: int = 0,
+    y: int = 0,
+) -> TileResolution:
+    """The effective-date rule of R-05 as a pure function over a fetch callable."""
+    entry = resolve_layer(layer) if isinstance(layer, str) else layer
+    if entry is None:
+        raise KeyError(f"Unknown layer {layer}")
+    fetch = fetch or upstream_fetch
+    if entry["kind"] == "stale":
+        return TileResolution(status="stale", last_observation=entry["declared_end"][:10])
+    if isinstance(chosen, str):
+        chosen = date.fromisoformat(chosen[:10])
+    chosen_day = chosen.date() if isinstance(chosen, datetime) else chosen
+    attempts: list[str] = []
+    for token in _candidate_tokens(entry, chosen_day):
+        attempts.append(token)
+        try:
+            response = fetch(_upstream_url(entry, token, z, x, y))
+        except httpx.HTTPError:
+            return TileResolution(status="unavailable", attempts=attempts)
+        status = response.status_code
+        if status == 200:
+            threshold = entry["blank_threshold_bytes"]
+            if threshold is not None and len(response.content) <= threshold:
+                continue
+            effective_status = "on_date" if _same_day(entry, token, chosen_day) else "earlier"
+            return TileResolution(
+                status=effective_status,
+                effective_date=token,
+                age_days=_age_days(token, chosen_day),
+                response=response,
+                attempts=attempts,
+            )
+        if status in (400, 404):
+            continue
+        return TileResolution(status="unavailable", attempts=attempts)
+    return TileResolution(status="none_in_lookback", attempts=attempts)
+
+
+_resolution_cache: dict[tuple[str, str, int, int, int], tuple[datetime, TileResolution]] = {}
+
+
+def _clear_resolution_cache() -> None:
+    _resolution_cache.clear()
+
+
+def _resolve_cached(entry: dict[str, Any], chosen: date, z: int, x: int, y: int) -> TileResolution:
+    key = (entry["id"], chosen.isoformat(), z, x, y)
+    now = datetime.now(timezone.utc)
+    cached = _resolution_cache.get(key)
+    if cached is not None and now - cached[0] < TILE_CACHE_TTL:
+        return cached[1]
+    resolution = resolve_effective_date(entry, chosen, z=z, x=x, y=y)
+    _resolution_cache[key] = (now, resolution)
+    return resolution
+
+
+def _tile_cache_path(entry: dict[str, Any], tile_date: str, z: int, x: int, y: int) -> Path:
+    return TILE_CACHE_DIR / entry["id"] / tile_date[:10] / str(z) / str(x) / f"{y}{_tile_suffix(entry)}"
 
 
 def _read_fresh_cache(path: Path) -> bytes | None:
@@ -135,10 +412,39 @@ def _read_fresh_cache(path: Path) -> bytes | None:
     return None
 
 
-def _reserve_tile(layer: str, upstream_status: int | str) -> Response:
-    reserve_path = BACKEND_DIR / "reserve" / f"{layer}.png"
+def _write_cache(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    temporary_path.write_bytes(content)
+    temporary_path.replace(path)
+
+
+def _cached_tiles_on_or_before(entry: dict[str, Any], chosen: date, z: int, x: int, y: int) -> list[tuple[date, Path]]:
+    """Every cached tile of this layer and address dated on or before the chosen date (R-25)."""
+    base = TILE_CACHE_DIR / entry["id"]
+    if not base.is_dir():
+        return []
+    found: list[tuple[date, Path]] = []
+    for date_dir in base.iterdir():
+        try:
+            tile_date = date.fromisoformat(date_dir.name)
+        except ValueError:
+            continue
+        if tile_date > chosen:
+            continue
+        path = date_dir / str(z) / str(x) / f"{y}{_tile_suffix(entry)}"
+        if path.is_file():
+            found.append((tile_date, path))
+    found.sort(key=lambda item: item[0], reverse=True)
+    return found
+
+
+def _reserve_tile(entry: dict[str, Any], upstream_status: int | str) -> Response | None:
+    if not entry["reserve"]:
+        return None
+    reserve_path = BACKEND_DIR.parent / entry["reserve"]
     if not reserve_path.is_file():
-        raise HTTPException(status_code=502, detail=f"No reserve tile available for {layer}")
+        return None
     return Response(
         content=reserve_path.read_bytes(),
         media_type="image/png",
@@ -149,12 +455,21 @@ def _reserve_tile(layer: str, upstream_status: int | str) -> Response:
     )
 
 
-def _upstream_url(layer: str, tile_date: date, z: int, x: int, y: int) -> str:
-    base_url = os.getenv("TILE_UPSTREAM_URL", GIBS_BASE_URL).rstrip("/")
-    return (
-        f"{base_url}/{TILE_LAYER_IDS[layer]}/default/{tile_date.isoformat()}"
-        f"/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png"
-    )
+def _offline_tile(entry: dict[str, Any], chosen: date, z: int, x: int, y: int, upstream_status: int | str) -> Response:
+    for tile_date, path in _cached_tiles_on_or_before(entry, chosen, z, x, y):
+        try:
+            content = path.read_bytes()
+        except OSError:
+            continue
+        return Response(
+            content=content,
+            media_type=_tile_media_type(entry),
+            headers={"X-Tile-Source": "cache-offline", "X-Tile-Date": tile_date.isoformat()},
+        )
+    reserve = _reserve_tile(entry, upstream_status)
+    if reserve is not None:
+        return reserve
+    return Response(status_code=404, content=b"", headers={"X-Tile-Status": "no_offline_copy"})
 
 
 def _tile_for_coordinate(longitude: float, latitude: float, zoom: int) -> tuple[int, int]:
@@ -170,59 +485,116 @@ def _first_field_tile(zoom: int) -> tuple[int, int]:
     return _tile_for_coordinate(center[0], center[1], zoom)
 
 
-def _fetch_latest_upstream_tile(
-    layer: str, z: int, x: int, y: int, today: date | None = None
-) -> tuple[date | None, httpx.Response | None, int | str]:
-    global _upstream_requests
-    check_date = today or datetime.now(timezone.utc).date()
-    zoom = min(z, GIBS_MAX_ZOOM)
-    scale = 2 ** (z - zoom)
-    upstream_x, upstream_y = x // scale, y // scale
-    last_status: int | str = "no date tried"
-    for back in range(5):
-        tile_date = check_date - timedelta(days=back)
-        try:
-            with httpx.Client(timeout=10.0, follow_redirects=True) as client:
-                with _tile_lock:
-                    _upstream_requests += 1
-                upstream = client.get(_upstream_url(layer, tile_date, zoom, upstream_x, upstream_y))
-        except httpx.HTTPError as exc:
-            return None, None, f"connection error: {exc.__class__.__name__}"
-
-        last_status = upstream.status_code
-        if upstream.status_code in (400, 404):
-            continue
-        if not 200 <= upstream.status_code < 300:
-            return None, None, last_status
-        return tile_date, upstream, last_status
-    return None, None, last_status
+def _layer_row(entry: dict[str, Any], chosen: date, z: int, x: int, y: int) -> dict[str, Any]:
+    effective_date: str | None = None
+    age_days: int | None = None
+    last_observation: str | None = None
+    if entry["kind"] == "stale":
+        status = "stale"
+        last_observation = entry["declared_end"][:10]
+    else:
+        layer_zoom = min(z, entry["max_zoom"])
+        scale = 2 ** (z - layer_zoom)
+        resolution = _resolve_cached(entry, chosen, layer_zoom, x // scale, y // scale)
+        status = resolution.status
+        effective_date = resolution.effective_date
+        age_days = resolution.age_days
+    return {
+        "id": entry["id"],
+        "label": entry["label"],
+        "kind": entry["kind"],
+        "basis": entry["basis"],
+        "resolution": entry["resolution"],
+        "matrix": entry["matrix"],
+        "max_zoom": entry["max_zoom"],
+        # The JSON sample of the spec fixes the client facing cadence of the
+        # stale layer as "mixed"; the registry keeps Table B's full string.
+        "cadence": "mixed" if entry["kind"] == "stale" else entry["cadence"],
+        "lookback_days": entry["lookback_days"],
+        "time_format": entry["time_format"],
+        "optical": entry["optical"],
+        "window_days": entry["window_days"],
+        "status": status,
+        "effective_date": effective_date,
+        "age_days": age_days,
+        "last_observation": last_observation,
+    }
 
 
 @app.get("/layers")
-def list_layers(z: int = 11, x: int | None = None, y: int | None = None) -> list[dict[str, str]]:
+def list_layers(
+    chosen: str | None = Query(default=None, alias="date"),
+    z: int = 11,
+    x: int | None = None,
+    y: int | None = None,
+) -> dict[str, Any]:
+    if z < 0 or z > 30:
+        raise HTTPException(status_code=400, detail="Invalid tile coordinates")
     if x is None or y is None:
         default_x, default_y = _first_field_tile(z)
         x = default_x if x is None else x
         y = default_y if y is None else y
-    if min(z, x, y) < 0 or z > 30 or x >= 2**z or y >= 2**z:
+    if min(x, y) < 0 or x >= 2**z or y >= 2**z:
         raise HTTPException(status_code=400, detail="Invalid tile coordinates")
 
-    today = datetime.now(timezone.utc).date()
-    layers: list[dict[str, str]] = []
-    for layer_id, label, basis, resolution, proxy_layer in (
-        ("smap", "SMAP soil moisture", "retrieved", "9 km", "smap-soil-moisture"),
-    ):
-        tile_date, _upstream, last_status = _fetch_latest_upstream_tile(proxy_layer, z, x, y, today)
-        if tile_date is None:
-            raise HTTPException(status_code=502, detail=f"No tile date available for {layer_id} ({last_status})")
-        layers.append({
-            "id": layer_id,
-            "label": label,
-            "basis": basis,
-            "resolution": resolution,
-            "as_of": tile_date.isoformat(),
+    chosen_day = _parse_chosen(chosen)
+    return {
+        "chosen_date": chosen_day.isoformat(),
+        "axis": dict(AXIS),
+        "layers": [_layer_row(entry, chosen_day, z, x, y) for entry in LAYER_REGISTRY.values()],
+    }
+
+
+@app.get("/layers/{layer_id}/coverage", response_model=None)
+def layer_coverage(
+    layer_id: str,
+    days: int = 30,
+    chosen: str | None = Query(default=None, alias="date"),
+) -> Response | dict[str, Any]:
+    entry = resolve_layer(layer_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Unknown layer")
+    if not entry["optical"]:
+        raise HTTPException(status_code=400, detail="Coverage is only defined for optical layers")
+    if days < 1 or days > 90:
+        raise HTTPException(status_code=400, detail="days must be between 1 and 90")
+
+    chosen_day = _parse_chosen(chosen)
+    zoom = entry["max_zoom"]
+    x, y = _first_field_tile(zoom)
+    dates_scanned: list[str] = []
+    rows: list[dict[str, Any]] = []
+    for back in range(days):
+        tile_date = chosen_day - timedelta(days=back)
+        token = _token_for(entry, tile_date)
+        dates_scanned.append(token)
+        try:
+            response = upstream_fetch(_upstream_url(entry, token, zoom, x, y))
+        except httpx.HTTPError:
+            return _coverage_unavailable(dates_scanned)
+        if response.status_code not in (200, 400, 404):
+            return _coverage_unavailable(dates_scanned)
+        body_bytes = len(response.content)
+        rows.append({
+            "date": token,
+            "http_status": response.status_code,
+            "bytes": body_bytes,
+            "coverage_ok": response.status_code == 200 and body_bytes > entry["blank_threshold_bytes"],
         })
-    return layers
+    return {
+        "status": "ok",
+        "layer": entry["id"],
+        "start": dates_scanned[-1],
+        "end": dates_scanned[0],
+        "days": days,
+        "dates": rows,
+    }
+
+
+def _coverage_unavailable(dates_scanned: list[str]) -> Response:
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(status_code=503, content={"status": "unavailable", "dates_scanned": dates_scanned})
 
 
 @app.get("/tiles/stats/upstream")
@@ -232,42 +604,53 @@ def tile_upstream_stats() -> dict[str, int]:
 
 
 @app.get("/tiles/{layer}/{z}/{x}/{y}")
-def get_tile(layer: str, z: int, x: int, y: int) -> Response:
-    if layer not in TILE_LAYER_IDS:
+def get_tile(
+    layer: str,
+    z: int,
+    x: int,
+    y: int,
+    chosen: str | None = Query(default=None, alias="date"),
+) -> Response:
+    entry = resolve_layer(layer)
+    if entry is None:
         raise HTTPException(status_code=404, detail="Unknown tile layer")
     if min(z, x, y) < 0 or z > 30 or x >= 2**z or y >= 2**z:
         raise HTTPException(status_code=400, detail="Invalid tile coordinates")
+    if z > entry["max_zoom"]:
+        raise HTTPException(status_code=400, detail="Zoom above max_zoom for layer")
 
-    cache_path = _tile_cache_path(layer, z, x, y)
-    with _tile_lock:
-        cached = _read_fresh_cache(cache_path)
-        if cached is not None:
-            return Response(
-                content=cached,
-                media_type="image/png",
-                headers={"X-Tile-Source": "cache"},
-            )
+    chosen_day = _parse_chosen(chosen)
+    if entry["kind"] == "stale":
+        return Response(status_code=404, content=b"", headers={"X-Tile-Status": "stale"})
 
-        tile_date, upstream, last_status = _fetch_latest_upstream_tile(layer, z, x, y)
-        if upstream is None:
-            if isinstance(last_status, str) and last_status.startswith("connection error"):
-                return _reserve_tile(layer, last_status)
-            if isinstance(last_status, int) and last_status >= 500:
-                return _reserve_tile(layer, last_status)
-            return _reserve_tile(layer, "tile unavailable for today and previous four days")
-        if tile_date is None:
-            return _reserve_tile(layer, last_status)
+    resolution = _resolve_cached(entry, chosen_day, z, x, y)
+    if resolution.status == "none_in_lookback":
+        return Response(status_code=404, content=b"", headers={"X-Tile-Status": "none_in_lookback"})
+    if resolution.status == "unavailable":
+        return _offline_tile(entry, chosen_day, z, x, y, "upstream unavailable")
 
-        TILE_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary_path = cache_path.with_suffix(".png.tmp")
-        temporary_path.write_bytes(upstream.content)
-        temporary_path.replace(cache_path)
-        return Response(
-            content=upstream.content,
-            media_type="image/png",
-            headers={"X-Tile-Source": "upstream", "X-Tile-Date": tile_date.isoformat()},
-        )
+    cache_path = _tile_cache_path(entry, resolution.effective_date or "", z, x, y)
+    content = _read_fresh_cache(cache_path)
+    source = "cache"
+    if content is None and resolution.response is not None:
+        content = resolution.response.content
+        _write_cache(cache_path, content)
+        source = "upstream"
+    if content is None:
+        try:
+            refreshed = upstream_fetch(_upstream_url(entry, resolution.effective_date or "", z, x, y))
+        except httpx.HTTPError:
+            return _offline_tile(entry, chosen_day, z, x, y, "connection error")
+        if refreshed.status_code != 200:
+            return _offline_tile(entry, chosen_day, z, x, y, refreshed.status_code)
+        content = refreshed.content
+        _write_cache(cache_path, content)
+        source = "upstream"
+    return Response(
+        content=content,
+        media_type=_tile_media_type(entry),
+        headers={"X-Tile-Source": source, "X-Tile-Date": resolution.effective_date or ""},
+    )
 
 
 @app.get("/health")
