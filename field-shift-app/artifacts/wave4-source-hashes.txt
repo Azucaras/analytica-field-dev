@@ -1,0 +1,23 @@
+sha256 of the seven block 4 source files, as measured and as committed
+date: 2026-11-14T20:15:34-03:00
+
+The checks in wave4-tsc.txt, wave4-vitest.txt and wave4-build.txt ran in the main checkout
+(/run/media/carloshnp/D/Programming/analytica-field-dev/field-shift-app), where node_modules lives.
+The seven files below are byte-identical between that checkout and this branch, so the app under
+test is the app committed here. The other commits on the checkout's branch touch only
+field-shift-app/specs and field-shift-app/artifacts, never field-shift-app/src.
+
+7b7df61f184c2b27bff2496c07477d115af08c40d0719e1fe118278a895efd79  src/App.tsx  main-checkout
+7b7df61f184c2b27bff2496c07477d115af08c40d0719e1fe118278a895efd79  src/App.tsx  branch
+3c46903c2ca330c8a5d67433607aa43e51cb19d97834a5ac7f933a0e807c0c03  src/App.test.tsx  main-checkout
+3c46903c2ca330c8a5d67433607aa43e51cb19d97834a5ac7f933a0e807c0c03  src/App.test.tsx  branch
+29360cc79be1c752679e6e2e0335014818614a5b848abe54e2f4e9da3b27113b  src/components/TimelineDock.tsx  main-checkout
+29360cc79be1c752679e6e2e0335014818614a5b848abe54e2f4e9da3b27113b  src/components/TimelineDock.tsx  branch
+c869ca101fd31f5a7fa3d9fc364ca6dfe07c9989603ca9f73ed9c7c961185530  src/components/ScenarioCards.tsx  main-checkout
+c869ca101fd31f5a7fa3d9fc364ca6dfe07c9989603ca9f73ed9c7c961185530  src/components/ScenarioCards.tsx  branch
+8c97c6307f2694ba08cc7f37ccebaa6d6ca05067b83f1e90227920d30bdacfe6  src/index.css  main-checkout
+8c97c6307f2694ba08cc7f37ccebaa6d6ca05067b83f1e90227920d30bdacfe6  src/index.css  branch
+cc36669df2bc30d1bb1caf1a28df811f5e1dcd04abdd49cff52e70fb61e55794  src/strings/en.ts  main-checkout
+cc36669df2bc30d1bb1caf1a28df811f5e1dcd04abdd49cff52e70fb61e55794  src/strings/en.ts  branch
+69794e930eadae5814b82089928dd757e5eed677edc239461d4e9e39040a6fec  src/lib/viewport.ts  main-checkout
+69794e930eadae5814b82089928dd757e5eed677edc239461d4e9e39040a6fec  src/lib/viewport.ts  branch

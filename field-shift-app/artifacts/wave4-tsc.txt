@@ -1,0 +1,6 @@
+npx tsc -b --noEmit
+date: 2026-11-14T20:15:01-03:00
+branch: block4/wave4-dock head: 81a93108dd2884924bea42be0aaee9810bedc288
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+exit code: 0

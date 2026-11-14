@@ -1,0 +1,20 @@
+AC-44 load defaults, resize behaviour and reload, with storage keys before and after every press
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
+because the card forbids PNGs in the repository.
+
+step | viewport | data-collapsed | toggle name | aria-expanded | cards | localStorage keys | sessionStorage keys | URL search
+1440 load | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+press on 1440 toggle -> collapse | 1440x900 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
+resize to 360 | 360x640 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
+press on 360 toggle -> expand | 360x640 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+resize to 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+780 load | 780x900 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
+press on 780 toggle -> expand | 780x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+resize to 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+reload at 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
+reload at 360 | 360x640 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
+
+The toggle writes no storage key at any step, so a reload returns the default of the width.
