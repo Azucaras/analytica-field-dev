@@ -1,0 +1,12 @@
+$ curl -s -D - -o /dev/null "http://localhost:8001/tiles/smap-l3/6/22/34?date=2026-11-12"  # first request, empty tile cache
+HTTP/1.1 200 OK
+x-tile-source: upstream
+x-tile-date: 2026-11-11
+$ same request again (cache hit)
+HTTP/1.1 200 OK
+x-tile-source: cache
+x-tile-date: 2026-11-11
+$ alias request
+HTTP/1.1 200 OK
+x-tile-source: cache
+x-tile-date: 2026-11-11

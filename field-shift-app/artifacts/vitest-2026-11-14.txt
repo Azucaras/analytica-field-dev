@@ -1,0 +1,12 @@
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'vitest' run
+
+ RUN  v5.1.0 /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_7f68ce1f/field-shift-app
+
+
+ Test Files  12 passed (12)
+      Tests  97 passed (97)
+   Start at  18:41:27
+   Duration  3.30s (environment 51%, tests 25%, import 12%, setup 9%, transform 3%, worker 1%)
+
+VITEST_EXIT=0
