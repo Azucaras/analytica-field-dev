@@ -1,0 +1,326 @@
+{
+ "probed_at": "2026-11-14T17:00:00-03:00",
+ "probe_point": {
+  "lon": -55.27,
+  "lat": -11.91,
+  "note": "center of fixture Field 01"
+ },
+ "trazo3_pmtiles": {
+  "url": "https://data.source.coop/wri-data-lab/trazofields/trazo3-fields/trazo3.pmtiles",
+  "size_bytes": 1662582674,
+  "tile_type": "MVT",
+  "tile_compression": "gzip",
+  "zoom_range": [
+   0,
+   12
+  ],
+  "bounds": [
+   -68.994184,
+   -35.321848,
+   -41.264648,
+   0.878872
+  ],
+  "vector_layer": "trazo",
+  "properties": [
+   "Id",
+   "mbmode24"
+  ],
+  "cors": {
+   "access-control-allow-origin": "*",
+   "accept-ranges": "bytes",
+   "range_request_status": 206
+  },
+  "license": "CC BY 4.0 (source.coop page)",
+  "mato_grosso_fields_per_source_page": 1418870,
+  "tile_by_zoom_at_probe_point_gzip_kb_and_features": {
+   "z4": [
+    7277.2,
+    3641092
+   ],
+   "z6": [
+    1090.2,
+    361881
+   ],
+   "z7": [
+    178.9,
+    48227
+   ],
+   "z8": [
+    72.8,
+    18212
+   ],
+   "z9": [
+    135.8,
+    9368
+   ],
+   "z10": [
+    67.1,
+    3388
+   ],
+   "z11": [
+    23.9,
+    898
+   ],
+   "z12": [
+    8.0,
+    227
+   ]
+  },
+  "z12_3x3_block": {
+   "polygons": 900,
+   "total_ha": 46398,
+   "area_ha": {
+    "p10": 1.5,
+    "median": 22.4,
+    "p90": 151.2,
+    "max": 453
+   },
+   "note": "areas measured on tile fragments, polygons clipped at tile edges count once per tile",
+   "polygon_count_by_mbmode24": {
+    "39": 657,
+    "15": 127,
+    "41": 115,
+    "62": 1
+   },
+   "area_ha_by_mbmode24": {
+    "39": 42827,
+    "41": 1901,
+    "15": 1667,
+    "62": 3
+   }
+  }
+ },
+ "mapbiomas_c10_legend_ids": {
+  "39": "Soja",
+  "20": "Cana",
+  "40": "Arroz",
+  "62": "Algodao (beta)",
+  "41": "Outras lavouras temporarias",
+  "46": "Cafe",
+  "47": "Citrus",
+  "35": "Dende",
+  "48": "Outras perenes",
+  "15": "Pastagem",
+  "9": "Silvicultura",
+  "21": "Mosaico de usos",
+  "3": "Formacao florestal",
+  "4": "Formacao savanica"
+ },
+ "mapbiomas_public_bucket_anonymous_access": {
+  "list_status": 401,
+  "object_get_status": 403
+ },
+ "basemap_tiles_at_probe_point": {
+  "esri_world_imagery": {
+   "z10": [
+    200,
+    22511
+   ],
+   "z14": [
+    200,
+    9547
+   ],
+   "z16": [
+    200,
+    8295
+   ],
+   "z17": [
+    200,
+    6274
+   ],
+   "z18": [
+    200,
+    2521
+   ],
+   "visual_check": "z14 and z17 viewed: field edges, forest edge, road and planting rows visible; z18 not viewed"
+  },
+  "eox_s2cloudless_2024": {
+   "z10": [
+    200,
+    17958
+   ],
+   "z14": [
+    200,
+    7884
+   ],
+   "z16": [
+    200,
+    4095
+   ],
+   "z17": [
+    200,
+    2447
+   ],
+   "visual_check": "z14 viewed: same layout as Esri, softer, fields distinguishable"
+  },
+  "gibs_modis_terra_true_color_z9": {
+   "2026-11-14": [
+    200,
+    12273
+   ],
+   "2026-11-13": [
+    200,
+    5667
+   ],
+   "2026-11-12": [
+    200,
+    14994
+   ],
+   "2026-11-11": [
+    200,
+    5770
+   ],
+   "visual_check": "2026-11-13 viewed: cloud cover plus black no-data swath edge"
+  },
+  "gibs_viirs_snpp_true_color_z9_jpg": {
+   "2026-11-14": 404,
+   "2026-11-13": 404,
+   "2026-11-12": 404,
+   "2026-11-11": 404,
+   "note": "cause not investigated"
+  }
+ },
+ "sentinel2_l2a_earth_search": {
+  "endpoint": "https://earth-search.aws.element84.com/v1/search",
+  "window": "2026-09-15 to 2026-11-14",
+  "scenes": 18,
+  "scenes_cloud_below_20": 6,
+  "by_date": [
+   [
+    "2026-09-17",
+    21.3
+   ],
+   [
+    "2026-09-19",
+    0.1
+   ],
+   [
+    "2026-09-22",
+    5.7
+   ],
+   [
+    "2026-09-27",
+    3.8
+   ],
+   [
+    "2026-09-29",
+    98.1
+   ],
+   [
+    "2026-10-02",
+    100
+   ],
+   [
+    "2026-10-07",
+    10.5
+   ],
+   [
+    "2026-10-09",
+    53.2
+   ],
+   [
+    "2026-10-12",
+    0.0
+   ],
+   [
+    "2026-10-17",
+    12.0
+   ],
+   [
+    "2026-10-19",
+    72.8
+   ],
+   [
+    "2026-10-22",
+    44.1
+   ],
+   [
+    "2026-10-27",
+    90.8
+   ],
+   [
+    "2026-10-29",
+    52.4
+   ],
+   [
+    "2026-11-01",
+    21.5
+   ],
+   [
+    "2026-11-06",
+    76.2
+   ],
+   [
+    "2026-11-08",
+    100
+   ],
+   [
+    "2026-11-11",
+    39.9
+   ]
+  ],
+  "asset_range_get_status_without_login": {
+   "B04": 206,
+   "B08": 206,
+   "TCI": 206,
+   "SCL": 206
+  }
+ },
+ "power_normals_1991_2025": {
+  "window": "Oct 1 to Nov 11 each year",
+  "rain_mm_2026": 171.9,
+  "rain_mm_median": 224.9,
+  "rain_mm_min": 88.9,
+  "rain_mm_max": 389.7,
+  "percentile_of_2026_among_35_earlier_years": 20,
+  "tmax_ge_35_days_2026": 28,
+  "tmax_ge_35_days_median": 17
+ },
+ "soilgrids_at_probe_point": {
+  "endpoint": "https://rest.isric.org/soilgrids/v2.0/properties/query",
+  "mapped_values_mean": {
+   "clay_g_per_kg": [
+    225,
+    223,
+    265
+   ],
+   "sand_g_per_kg": [
+    635,
+    639,
+    601
+   ],
+   "phh2o_x10": [
+    50,
+    51,
+    51
+   ],
+   "soc_dg_per_kg": [
+    222,
+    162,
+    91
+   ]
+  },
+  "depths": [
+   "0-5cm",
+   "5-15cm",
+   "15-30cm"
+  ]
+ },
+ "sidra_pam_1612_mato_grosso_soy_planted_area_ha": {
+  "2021": 10366601,
+  "2022": 10925226,
+  "2023": 11981285,
+  "2024": 12383077,
+  "2025": 12788611
+ },
+ "zarc_dataset": {
+  "license": "Creative Commons Attribution",
+  "metadata_modified": "2026-11-13",
+  "format": "CSV per crop season"
+ },
+ "earthdata_login_state": {
+  "managed_browser": "login form shown, not signed in",
+  "local_browser": "login form shown, not signed in",
+  "vault_items": 0
+ }
+}
