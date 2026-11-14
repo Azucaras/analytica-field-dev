@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useMapStore } from '@/lib/map-store'
+import { layersResponse } from '@/test/api-fixtures'
 import App from '@/App'
 
 /**
@@ -86,7 +87,7 @@ function mockApi() {
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (new URL(url).pathname === '/layers') {
-      return jsonResponse([{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }])
+      return jsonResponse(layersResponse())
     }
     if (url.endsWith('/fields')) return jsonResponse(fieldsResponse)
     const fieldId = new URL(url).pathname.split('/')[2]
@@ -152,7 +153,7 @@ describe('initial field selection does not depend on event ordering', () => {
     vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
       const url = String(input)
       if (new URL(url).pathname === '/layers') {
-        return Promise.resolve(jsonResponse([{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }]))
+        return Promise.resolve(jsonResponse(layersResponse()))
       }
       if (url.endsWith('/fields')) {
         return new Promise<Response>((resolve) => {

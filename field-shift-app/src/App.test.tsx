@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import userEvent from '@testing-library/user-event'
 import { useMapStore } from '@/lib/map-store'
 import { en } from './strings/en'
+import { layersResponse } from '@/test/api-fixtures'
 import App, { ZOrder } from './App'
 
 function scanVisibleUi(root: ParentNode) {
@@ -96,7 +97,7 @@ function mockApi() {
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (new URL(url).pathname === '/layers') {
-      return { ok: true, status: 200, json: async () => [{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }] } as Response
+      return { ok: true, status: 200, json: async () => layersResponse() } as Response
     }
     if (url.endsWith('/fields')) {
       return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2023/24', '2024/25', '2025/26'], default_season: '2025/26' }) } as Response
@@ -250,7 +251,7 @@ describe('field map and rotation scenario selection', () => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
       if (new URL(url).pathname === '/layers') {
-        return { ok: true, status: 200, json: async () => [{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }] } as Response
+        return { ok: true, status: 200, json: async () => layersResponse() } as Response
       }
       if (url.endsWith('/fields')) {
         return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2023/24', '2024/25', '2025/26'], default_season: '2025/26' }) } as Response
@@ -327,7 +328,7 @@ describe('field map and rotation scenario selection', () => {
   it('keeps the unconditional pairs mounted and retries only the field list after an HTTP error', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (new URL(String(input)).pathname === '/layers') {
-        return { ok: true, status: 200, json: async () => [{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }] } as Response
+        return { ok: true, status: 200, json: async () => layersResponse() } as Response
       }
       if (new URL(String(input)).pathname === '/fields') {
         if (fetchMock.mock.calls.filter(([request]) => new URL(String(request)).pathname === '/fields').length === 1) {

@@ -1,0 +1,14 @@
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'vitest' run
+
+ RUN  v5.1.0 /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_94f78c40/field-shift-app
+
+
+ Test Files  15 passed (15)
+      Tests  134 passed (134)
+   Start at  19:21:43
+   Duration  4.10s (environment 44%, tests 35%, import 11%, setup 8%, transform 2%, worker 1%)
+
+    Isolate  15 workers spawned · ~741ms startup each (spawn + environment, per file)
+             at least ~269ms faster with isolate: false — reuses workers across files instead of one per file
+

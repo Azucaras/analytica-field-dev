@@ -1,223 +1,257 @@
-import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LayerRail } from './LayerRail'
-import { MapCanvas } from './MapCanvas'
+import { buildLayerCatalog, markCatalogUnavailable } from '@/lib/layer-catalog'
+import { RECORDED_LAYERS_RESPONSE } from '@/lib/recorded-layers-response'
 import { useMapStore } from '@/lib/map-store'
 
-const mapOptions: Array<{ attributionControl?: { compact?: boolean }; center?: [number, number]; zoom?: number }> = []
-
-const mapInstances: Array<{
-  addControl: ReturnType<typeof vi.fn>
-  addSource: ReturnType<typeof vi.fn>
-  addLayer: ReturnType<typeof vi.fn>
-  flyTo: ReturnType<typeof vi.fn>
-  emit: (event: string) => void
-  listeners: Record<string, Array<() => void>>
-  on: ReturnType<typeof vi.fn>
-  remove: ReturnType<typeof vi.fn>
-  setPaintProperty: ReturnType<typeof vi.fn>
-  setLayoutProperty: ReturnType<typeof vi.fn>
-  getCenter: Mock<() => { lng: number; lat: number }>
-  getZoom: Mock<() => number>
-  getSource: ReturnType<typeof vi.fn>
-  getLayer: ReturnType<typeof vi.fn>
-  getStyle: ReturnType<typeof vi.fn>
-  sources: Set<string>
-  layers: Set<string>
-  attributionControl?: { compact?: boolean; customAttribution?: string }
-}> = []
-
-vi.mock('maplibre-gl', () => ({
-  Map: class {
-    addControl = vi.fn()
-    addSource = vi.fn((id: string) => this.sources.add(id))
-    addLayer = vi.fn((layer: { id: string }) => this.layers.add(layer.id))
-    flyTo = vi.fn()
-    listeners: Record<string, Array<() => void>> = {}
-    on = vi.fn((event: string, listener: () => void) => {
-      ;(this.listeners[event] ??= []).push(listener)
-      if (event === 'load' || event === 'style.load') listener()
-    })
-    emit = (event: string) => this.listeners[event]?.forEach((listener) => listener())
-    remove = vi.fn()
-    setPaintProperty = vi.fn()
-    setLayoutProperty = vi.fn()
-    getCenter = vi.fn(() => ({ lng: -55.27, lat: -11.91 }))
-    getZoom = vi.fn(() => 8)
-    sources = new Set<string>()
-    layers = new Set<string>()
-    getSource = vi.fn((id: string) => this.sources.has(id) ? { id } : undefined)
-    getLayer = vi.fn((id: string) => this.layers.has(id) ? { id } : undefined)
-    getStyle = vi.fn(() => ({ layers: [...this.layers].map((id) => ({ id, type: id === 'place-label' ? 'symbol' : 'raster' })) }))
-
-    constructor(options: { attributionControl?: { compact?: boolean; customAttribution?: string }; style?: { sources?: Record<string, unknown>; layers?: Array<{ id: string }> } | string }) {
-      mapOptions.push(options)
-      Object.keys(typeof options.style === 'object' ? options.style.sources ?? {} : {}).forEach((id) => this.sources.add(id))
-      const styleLayers = typeof options.style === 'object' ? options.style.layers ?? [] : []
-      styleLayers.forEach(({ id }) => this.layers.add(id))
-      this.layers.add('place-label')
-      mapInstances.push(this)
-    }
-  },
-  NavigationControl: class {},
-  setWorkerUrl: vi.fn(),
-}))
-
-const fields = []
-
-const layerMetadata = [{ id: 'smap', label: 'SMAP soil moisture', basis: 'retrieved', resolution: '9 km', as_of: '2026-11-08' }]
+const stylesheet = readFileSync(resolve(process.cwd(), 'src/index.css'), 'utf8')
+const catalog = buildLayerCatalog(RECORDED_LAYERS_RESPONSE)
 
 beforeEach(() => {
-  mapInstances.length = 0
-  mapOptions.length = 0
-  useMapStore.setState({ selectedFieldId: null, composition: 'map' })
-  vi.stubGlobal('fetch', vi.fn(async () => ({
-    ok: true,
-    status: 200,
-    json: async () => layerMetadata,
-  }) as unknown as Response))
+  useMapStore.setState({
+    catalog,
+    on: { 'smap-l3': true },
+    opacity: {},
+    order: catalog.map((entry) => entry.id),
+    pinnedDates: {},
+    compare: {},
+    tileDecisions: {},
+    chosenDate: '2026-11-12',
+    axis: RECORDED_LAYERS_RESPONSE.axis,
+    composition: 'map',
+    layerCatalogFailed: false,
+  })
 })
 
-afterEach(() => {
-  cleanup()
-  vi.unstubAllGlobals()
-})
+afterEach(() => cleanup())
 
-describe('LayerRail composition presets', () => {
-  it('opens at field scale centred on the first field, with a visible boundary', () => {
-    const firstField = {
-      id: 'field-01',
-      name: 'Field 01',
-      location: 'Test',
-      coverage: 86,
-      center: [-55.27, -11.91] as [number, number],
-      boundary: { type: 'Polygon' as const, coordinates: [[[-55.285, -11.9], [-55.26, -11.9], [-55.26, -11.92], [-55.285, -11.92], [-55.285, -11.9]]] },
-    }
-    render(<MapCanvas fields={[firstField]} selectedField={null} />)
+const rowOf = (layerId: string) => document.querySelector(`.layer-entry[data-layer-id="${layerId}"]`) as HTMLElement | null
 
-    expect(mapOptions[0]?.center).toEqual(firstField.center)
-    expect(mapOptions[0]?.zoom).toBeGreaterThanOrEqual(11)
-    expect(mapInstances[0]?.addSource).toHaveBeenCalledWith('boundary-field-01', expect.objectContaining({ data: firstField.boundary }))
-    expect(mapInstances[0]?.addLayer).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'boundary-field-01',
-      type: 'line',
-      paint: expect.objectContaining({ 'line-width': 2 }),
-    }))
-  })
-
-  it('adds raster and boundary layers on style.load, not load, and stays idempotent across style reloads', () => {
-    const field = {
-      id: 'field-01',
-      name: 'Field 01',
-      location: 'Test',
-      coverage: 86,
-      center: [-55.27, -11.91] as [number, number],
-      boundary: { type: 'Polygon' as const, coordinates: [[[-55.285, -11.9], [-55.26, -11.9], [-55.26, -11.92], [-55.285, -11.9]]] },
-    }
-    render(<MapCanvas fields={[field]} selectedField={null} />)
-    const map = mapInstances[0]
-
-    expect(map.listeners['style.load']).toHaveLength(1)
-    expect(map.addSource).toHaveBeenCalledTimes(2)
-    expect(map.addLayer).toHaveBeenCalledTimes(2)
-
-    // A preset change or setStyle() re-fires style.load: nothing may be added twice.
-    map.emit('style.load')
-    map.emit('style.load')
-    expect(map.addSource).toHaveBeenCalledTimes(2)
-    expect(map.addLayer).toHaveBeenCalledTimes(2)
-
-    // After setStyle() drops every source and layer, the next style.load restores them.
-    map.sources.clear()
-    map.layers.clear()
-    map.layers.add('place-label')
-    map.emit('style.load')
-    expect(map.addSource).toHaveBeenCalledTimes(4)
-    expect(map.addLayer).toHaveBeenCalledTimes(4)
-  })
-
-  it('initializes MapLibre with an always-visible non-compact attribution control', () => {
-    render(<MapCanvas fields={fields} selectedField={null} />)
-
-    expect(mapOptions[0]?.attributionControl).toEqual({
-      compact: false,
-      customAttribution: 'NASA GIBS · SMAP L4 · 9 km',
-    })
-  })
-
-  it('offers exactly the three named presets', () => {
+describe('block 1 presets and the block 3 Layers pair', () => {
+  it('offers exactly the three named presets inside the navigation landmark named Layers', async () => {
     render(<LayerRail />)
 
     const rail = screen.getByRole('navigation', { name: 'Layers' })
-    expect(within(rail).getAllByRole('button')).toHaveLength(3)
-    expect(within(rail).getByRole('button', { name: 'Map' })).toBeTruthy()
-    expect(within(rail).getByRole('button', { name: 'Satellite' })).toBeTruthy()
-    expect(within(rail).getByRole('button', { name: 'Satellite with labels' })).toBeTruthy()
+    const presets = within(rail.querySelector('.layer-presets') as HTMLElement).getAllByRole('button')
+    expect(presets.map((button) => button.textContent)).toEqual(['Map', 'Satellite', 'Satellite with labels'])
+    expect(within(rail).getAllByRole('listitem')).toHaveLength(13)
+  })
+})
+
+describe('R-26 the collapsed row (AC-21, front half)', () => {
+  it('shows the name, the basis, the resolution, the effective date, the age and the status', () => {
+    render(<LayerRail />)
+    const row = rowOf('smap-l3') as HTMLElement
+    expect(row).toBeTruthy()
+
+    const text = row.textContent ?? ''
+    expect(text).toContain('SMAP soil moisture')
+    expect(text).toContain('retrieved')
+    expect(text).toContain('9 km')
+    expect(text).toContain('2026-11-11')
+    expect(text).toContain('1 day old')
+    expect(text).toContain('earlier observation')
   })
 
-  it('shows basis, resolution, and as-of date for each layer entry', async () => {
+  it('shows the stale layer with its last observation and no current date', () => {
+    render(<LayerRail />)
+    const row = rowOf('grace-mascon') as HTMLElement
+    const text = row.textContent ?? ''
+    expect(text).toContain('GRACE water storage, stale')
+    expect(text).toContain('Last observation 2022-07-01')
+    expect(text).toContain('stale')
+    expect(text).not.toContain('on date')
+  })
+
+  it('shows the no-observation marker only when the effective date differs from the chosen date', () => {
+    render(<LayerRail />)
+    // smap-l3 resolves to 2026-11-11 at chosen 2026-11-12, so the marker shows.
+    expect(within(rowOf('smap-l3') as HTMLElement).getByText('No observation')).toBeTruthy()
+    // imerg-daily resolves to the chosen date itself, so it does not.
+    expect(within(rowOf('imerg-daily') as HTMLElement).queryByText('No observation')).toBeNull()
+  })
+
+  it('keeps every row with its status text and no date while /layers has not answered (R-24, AC-20)', () => {
+    useMapStore.setState({ catalog: markCatalogUnavailable(catalog), layerCatalogFailed: true })
     render(<LayerRail />)
 
-    const rail = screen.getByRole('navigation', { name: 'Layers' })
-    const entries = await within(rail).findAllByRole('listitem')
-    expect(entries.length).toBeGreaterThan(0)
-    for (const entry of entries) {
-      expect(within(entry).getByText('retrieved')).toBeTruthy()
-      expect(within(entry).getByText('9 km')).toBeTruthy()
-      expect(within(entry).getByText('2026-11-08')).toBeTruthy()
+    expect(document.querySelectorAll('.layer-entry')).toHaveLength(13)
+    expect(screen.getByText('Layer catalog unavailable')).toBeTruthy()
+    for (const row of document.querySelectorAll('.layer-entry')) {
+      expect(row.getAttribute('data-status')).toBe('unavailable')
+      expect(row.textContent).toContain('unavailable')
+      expect(row.querySelector('time')).toBeNull()
+      expect(row.textContent).not.toMatch(/\d+ days? old/)
     }
+    expect(screen.getByRole('navigation', { name: 'Layers' })).toBeTruthy()
   })
+})
 
-  it('reads the date and metadata from the layers endpoint', async () => {
-    const fetchedLayers = [{ ...layerMetadata[0], as_of: '2026-11-06' }]
-    vi.stubGlobal('fetch', vi.fn(async () => ({
-      ok: true,
-      status: 200,
-      json: async () => fetchedLayers,
-    }) as unknown as Response))
-    render(<LayerRail />)
-
-    expect(await screen.findByText('2026-11-06')).toBeTruthy()
-    expect(screen.queryByText('2026-11-08')).toBeNull()
-    expect(vi.mocked(fetch)).toHaveBeenCalledWith('http://localhost:8000/layers', expect.objectContaining({ signal: expect.any(AbortSignal) }))
-  })
-
-  it('changes raster and label opacity without remounting the map or moving its camera', async () => {
+describe('R-26 the expanded row (AC-21, front half)', () => {
+  it('carries the opacity, move, pin, track and compare controls with the R-26 names, in that order', async () => {
     const user = userEvent.setup()
-    render(
-      <MapCanvas fields={fields} selectedField={null}>
-        <LayerRail />
-      </MapCanvas>,
-    )
+    render(<LayerRail />)
 
-    const map = mapInstances[0]
-    expect(map).toBeTruthy()
-    const centerBefore = map.getCenter()
-    const zoomBefore = map.getZoom()
+    const trigger = within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP soil moisture' })
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    await user.click(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
 
-    await user.click(screen.getByRole('button', { name: 'Satellite' }))
-    expect(useMapStore.getState().composition).toBe('satellite')
-    expect(map.setPaintProperty).toHaveBeenCalledWith('smap-soil-moisture', 'raster-opacity', 0.55)
-    expect(map.setLayoutProperty).toHaveBeenCalledWith('place-label', 'visibility', 'none')
+    const row = rowOf('smap-l3') as HTMLElement
+    const options = row.querySelector('.layer-options') as HTMLElement
+    const controls = [...options.querySelectorAll('input, button')]
+      .map((control) => control.getAttribute('aria-label'))
+    expect(controls).toEqual([
+      'Opacity, SMAP soil moisture',
+      'Move SMAP soil moisture up',
+      'Move SMAP soil moisture down',
+      'Pin date, SMAP soil moisture',
+      'Compare, SMAP soil moisture',
+    ])
+    expect(within(options).getByRole('img', { name: 'SMAP soil moisture availability' })).toBeTruthy()
+    expect(within(row).getByRole('button', { name: 'Show SMAP soil moisture' })).toBeTruthy()
+  })
 
-    await user.click(screen.getByRole('button', { name: 'Satellite with labels' }))
-    expect(useMapStore.getState().composition).toBe('satellite-with-labels')
-    expect(map.setPaintProperty).toHaveBeenCalledWith('smap-soil-moisture', 'raster-opacity', 0.55)
-    expect(map.setLayoutProperty).toHaveBeenCalledWith('place-label', 'visibility', 'visible')
-    await user.click(screen.getByRole('button', { name: 'Map' }))
-    expect(useMapStore.getState().composition).toBe('map')
-    expect(map.setPaintProperty).toHaveBeenCalledWith('smap-soil-moisture', 'raster-opacity', 0)
-    expect(map.setLayoutProperty).toHaveBeenCalledWith('place-label', 'visibility', 'visible')
+  it('offers no compare control on a layer that is not a tile layer', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    await user.click(within(rowOf('grace-mascon') as HTMLElement).getByRole('button', { name: 'Layer options, GRACE water storage, stale' }))
+    expect(within(rowOf('grace-mascon') as HTMLElement).queryByRole('button', { name: /^Compare,/ })).toBeNull()
+  })
 
-    expect(mapInstances).toHaveLength(1)
-    expect(map.getSource).toHaveBeenCalledWith('smap')
-    expect(map.getLayer).toHaveBeenCalledWith('smap-soil-moisture')
-    expect(map.addSource).toHaveBeenCalledTimes(1)
-    expect(map.addLayer).toHaveBeenCalledTimes(1)
-    expect(map.remove).not.toHaveBeenCalled()
-    expect(map.flyTo).not.toHaveBeenCalled()
-    expect(map.getCenter()).toEqual(centerBefore)
-    expect(map.getZoom()).toBe(zoomBefore)
+  it('declares at least 44 by 44 px on the row trigger and on every expanded control', () => {
+    // jsdom computes no layout, so the declared box is asserted from the stylesheet that
+    // the browser measurement of AC-21 reads. The browser measurement itself is the gate's.
+    const declared = (selector: string) => {
+      const rule = stylesheet.split('\n').find((line) => line.trim().startsWith(selector))
+      expect(rule, `no rule for ${selector}`).toBeTruthy()
+      expect(rule).toContain('min-width: 44px')
+      expect(rule).toContain('min-height: 44px')
+    }
+    declared('.layer-entry-trigger')
+    declared('.layer-move button, .layer-pin, .layer-compare')
+    expect(stylesheet).toContain('.layer-control input[type="range"] { min-width: 44px; min-height: 44px; }')
+    expect(stylesheet).toContain('.layer-control input[type="date"] { min-height: 44px; }')
+    expect(stylesheet).toContain('.layer-entry-switch { margin-left: auto; min-width: 44px; min-height: 44px;')
+  })
+})
+
+describe('R-26 keyboard and state (AC-37)', () => {
+  it('toggles the row with Enter and with Space, keeps focus and reaches every control by Tab', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    const trigger = within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP soil moisture' })
+
+    trigger.focus()
+    await user.keyboard('{Enter}')
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    expect(document.activeElement).toBe(trigger)
+
+    // Tab order inside the expanded row, from the trigger onwards.
+    const reached: string[] = []
+    for (let step = 0; step < 6; step += 1) {
+      await user.tab()
+      const active = document.activeElement as HTMLElement
+      reached.push(active.getAttribute('aria-label') ?? active.tagName.toLowerCase())
+    }
+    expect(reached).toContain('Opacity, SMAP soil moisture')
+    expect(reached).toContain('Move SMAP soil moisture up')
+    expect(reached).toContain('Move SMAP soil moisture down')
+    expect(reached).toContain('Pin date, SMAP soil moisture')
+    expect(reached).toContain('Compare, SMAP soil moisture')
+
+    trigger.focus()
+    await user.keyboard(' ')
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('steps the opacity by 0.05 per arrow key', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    await user.click(within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP soil moisture' }))
+    const opacity = within(rowOf('smap-l3') as HTMLElement).getByLabelText('Opacity, SMAP soil moisture') as HTMLInputElement
+
+    opacity.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(useMapStore.getState().opacity['smap-l3']).toBeCloseTo(0.6, 5)
+    await user.keyboard('{ArrowLeft}')
+    expect(useMapStore.getState().opacity['smap-l3']).toBeCloseTo(0.55, 5)
+    await user.keyboard('{End}')
+    expect(useMapStore.getState().opacity['smap-l3']).toBe(1)
+    await user.keyboard('{Home}')
+    expect(useMapStore.getState().opacity['smap-l3']).toBe(0)
+    expect(document.activeElement).toBe(opacity)
+  })
+
+  it('moves the row with Enter on Move up and keeps focus on that button', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    const before = [...useMapStore.getState().order]
+    await user.click(within(rowOf('smap-l4-surface') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP L4 surface soil moisture' }))
+    const moveUp = within(rowOf('smap-l4-surface') as HTMLElement).getByRole('button', { name: 'Move SMAP L4 surface soil moisture up' })
+
+    moveUp.focus()
+    await user.keyboard('{Enter}')
+
+    expect(useMapStore.getState().order.slice(0, 2)).toEqual(['smap-l4-surface', 'smap-l3'])
+    expect(useMapStore.getState().order).toHaveLength(before.length)
+    expect(document.activeElement).toBe(moveUp)
+    // R-18: the rows on screen follow the stack list, so the moved row is the first one.
+    expect([...document.querySelectorAll('.layer-entry')].slice(0, 2).map((row) => row.getAttribute('data-layer-id')))
+      .toEqual(['smap-l4-surface', 'smap-l3'])
+  })
+
+  it('toggles the pin with Enter and Space and shows the word pinned only while pressed', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    await user.click(within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP soil moisture' }))
+    const pin = within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Pin date, SMAP soil moisture' })
+
+    expect(pin.getAttribute('aria-pressed')).toBe('false')
+    expect(rowOf('smap-l3')?.textContent).not.toContain('pinned')
+
+    pin.focus()
+    await user.keyboard('{Enter}')
+    expect(pin.getAttribute('aria-pressed')).toBe('true')
+    expect(useMapStore.getState().pinnedDates['smap-l3']).toBe('2026-11-11')
+    expect(rowOf('smap-l3')?.textContent).toContain('pinned')
+
+    await user.keyboard(' ')
+    expect(pin.getAttribute('aria-pressed')).toBe('false')
+    expect(rowOf('smap-l3')?.textContent).not.toContain('pinned')
+    expect(document.activeElement).toBe(pin)
+  })
+
+  it('turns compare on and off from the row with the state on the toggle (R-22)', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    await user.click(within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Layer options, SMAP soil moisture' }))
+    const compare = within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Compare, SMAP soil moisture' })
+
+    await user.click(compare)
+    expect(compare.getAttribute('aria-pressed')).toBe('true')
+    expect(useMapStore.getState().compare['smap-l3']).toEqual({ date: '2026-11-05', divider: 0.5 })
+    expect(within(rowOf('smap-l3') as HTMLElement).getByLabelText('Compare date, SMAP soil moisture')).toBeTruthy()
+
+    await user.click(compare)
+    expect(compare.getAttribute('aria-pressed')).toBe('false')
+    expect(useMapStore.getState().compare['smap-l3']).toBeNull()
+  })
+
+  it('turns a layer off and on from the row switch (R-19)', async () => {
+    const user = userEvent.setup()
+    render(<LayerRail />)
+    const toggle = within(rowOf('smap-l3') as HTMLElement).getByRole('button', { name: 'Show SMAP soil moisture' })
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+
+    await user.click(toggle)
+    expect(useMapStore.getState().on['smap-l3']).toBe(false)
+    await user.click(toggle)
+    expect(useMapStore.getState().on['smap-l3']).toBe(true)
   })
 })

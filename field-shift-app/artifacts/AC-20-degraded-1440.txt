@@ -1,0 +1,50 @@
+# AC-20 (R-24, R-25) degraded mode, 1440x900, computer use with the upstream forced to 503
+
+Method: the real app in Chromium at 1440x900. The app was pointed at a stub that replays the
+exact responses `backend/main.py` produces under R-25, because GIBS cannot be forced to
+answer 5xx without changing `backend/`, which this wave must not touch:
+
+```
+GET /layers                     -> 503
+GET /tiles/smap-l3/...          -> 200, 9 kB, X-Tile-Source: cache-offline, X-Tile-Date: 2026-11-11
+GET /tiles/smap-l4-surface/...  -> 200, 9 kB, X-Tile-Source: reserve  (no date)
+GET /tiles/imerg-daily/...      -> 404, X-Tile-Status: no_offline_copy
+GET /fields, /fields/*          -> proxied to the real backend, so the rest of the screen works
+```
+
+The proxy's own half of R-25 (which cached entry it may serve, and that an entry dated after
+the chosen date is refused) is wave 1's backend unittest; this run measures the app's half.
+
+```
+Rows in the rail                                  = 13   (no row disappears)
+Row data-status, all thirteen                     = unavailable x13
+Rows carrying a <time> element                    = 0
+Rows printing an age                              = 0
+Row status text (first three)                     = unavailable, unavailable, unavailable
+Catalog error line                                = "Layer catalog unavailable"
+Nav landmark name                                 = Layers
+
+Map overlay, one row per degraded layer:
+  SMAP soil moisture                / 2026-11-11              (cached tile, drawn with its date)
+  SMAP L4 surface soil moisture     / offline sample, date unknown   (reserve, drawn undated)
+  IMERG precipitation, daily        / no offline copy          (neither cache nor reserve)
+
+Raster sources in the style                        = [smap-l3, smap-l4-surface]
+smap-l3 source tiles                              = ...?date=2026-11-11
+smap-l4-surface source tiles                      = ... (no date)
+smap-l3 raster opacity                            = 0.55
+Rotated or invented dates on any row              = none
+```
+
+Verdict: every row stays with its status text and no invented date, the map shows the cached
+tile with its date, the reserve is labelled `offline sample, date unknown` and never as
+current, and the layer with neither shows `no offline copy`.
+
+One defect this measurement caught and fixed before the commit: with `/layers` failed the
+app had no effective date, and R-23's guard was comparing the tile's date against an empty
+string, which refused every dated cached tile. The guard now compares against the chosen
+date (R-22/R-28), not against the missing effective date, and the vitest case
+`still accepts a dated cached tile when /layers has failed ...` locks it.
+
+Reproduce: run the stub above, point `VITE_API_BASE_URL` at it, open the app, turn on
+`SMAP L4 surface soil moisture` and `IMERG precipitation, daily`.
