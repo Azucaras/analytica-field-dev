@@ -1,0 +1,18 @@
+# Block 4 wave 3: gates after merging origin/main (spec revision 7) into the branch
+# run 2026-11-14T22:48:34Z
+
+$ npx tsc -b --noEmit
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+exit=0
+
+$ npx vitest run
+ Test Files  19 passed (19)
+      Tests  182 passed (182)
+   Duration  4.13s (environment 50%, tests 34%, setup 8%, import 6%, transform 2%, worker 1%)
+
+$ npm run build
+✓ 213 modules transformed.
+dist/assets/index-BB-XCghC.js                              1,981.15 kB │ gzip: 437.48 kB
+✓ built in 581ms
+exit=0
