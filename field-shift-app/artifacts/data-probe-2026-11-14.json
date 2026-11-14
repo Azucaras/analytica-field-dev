@@ -1,0 +1,252 @@
+{
+ "probed_at": "2026-11-14T15:50:00-03:00",
+ "probe_point": {
+  "name": "fixture fields, Mato Grosso",
+  "lon": -55.27,
+  "lat": -11.91
+ },
+ "gibs_capabilities": {
+  "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml",
+  "layer_count": 1353,
+  "fetched_at": "2026-11-14T15:45:00-03:00"
+ },
+ "gibs_layers": [
+  {
+   "layer": "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture",
+   "native": "9 km posting, ~36 km radiometer footprint",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-11",
+   "served": "2026-11-11",
+   "status": 200,
+   "bytes": 9999
+  },
+  {
+   "layer": "SMAP_L4_Analyzed_Surface_Soil_Moisture",
+   "native": "9 km model plus assimilation, 0-5 cm",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-10",
+   "served": "2026-11-10",
+   "status": 200,
+   "bytes": 8476
+  },
+  {
+   "layer": "SMAP_L4_Analyzed_Root_Zone_Soil_Moisture",
+   "native": "9 km model plus assimilation, 0-100 cm",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-10",
+   "served": "2026-11-10",
+   "status": 200,
+   "bytes": 8095
+  },
+  {
+   "layer": "IMERG_Precipitation_Rate",
+   "native": "0.1 deg, about 11 km, daily",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-13",
+   "served": "2026-11-13",
+   "status": 200,
+   "bytes": 2299
+  },
+  {
+   "layer": "IMERG_Precipitation_Rate_30min",
+   "native": "0.1 deg, about 11 km, half-hourly",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-14T12:30:00Z",
+   "served": "2026-11-14T12:30:00Z",
+   "status": 200,
+   "bytes": 1357
+  },
+  {
+   "layer": "MODIS_Terra_NDVI_8Day",
+   "native": "250 m, 8-day composite",
+   "tms": "GoogleMapsCompatible_Level9",
+   "declared_end": "2026-11-13",
+   "served": "2026-11-13",
+   "status": 200,
+   "bytes": 46881
+  },
+  {
+   "layer": "MODIS_Terra_EVI_8Day",
+   "native": "250 m, 8-day composite",
+   "tms": "GoogleMapsCompatible_Level9",
+   "declared_end": "2026-11-13",
+   "served": "2026-11-13",
+   "status": 200,
+   "bytes": 50401
+  },
+  {
+   "layer": "MODIS_Terra_L3_NDVI_Monthly",
+   "native": "250 m, monthly",
+   "tms": "GoogleMapsCompatible_Level7",
+   "declared_end": "2026-10-01",
+   "served": "2026-10-01",
+   "status": 200,
+   "bytes": 48137
+  },
+  {
+   "layer": "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day",
+   "native": "1 km, daily day",
+   "tms": "GoogleMapsCompatible_Level7",
+   "declared_end": "2026-11-13",
+   "served": "2026-11-13",
+   "status": 200,
+   "bytes": 1189
+  },
+  {
+   "layer": "MODIS_Aqua_Land_Surface_Temp_Day",
+   "native": "1 km, daily day",
+   "tms": "GoogleMapsCompatible_Level7",
+   "declared_end": "2026-11-14",
+   "served": "2026-11-14",
+   "status": 200,
+   "bytes": 1189
+  },
+  {
+   "layer": "HLS_L30_Nadir_BRDF_Adjusted_Reflectance",
+   "native": "30 m",
+   "tms": "GoogleMapsCompatible_Level12",
+   "declared_end": "2026-11-06",
+   "served": "2026-11-06",
+   "status": 200,
+   "bytes": 334
+  },
+  {
+   "layer": "HLS_S30_Nadir_BRDF_Adjusted_Reflectance",
+   "native": "30 m",
+   "tms": "GoogleMapsCompatible_Level12",
+   "declared_end": "2026-11-06",
+   "served": "2026-11-06",
+   "status": 200,
+   "bytes": 104260
+  },
+  {
+   "layer": "GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI",
+   "native": "about 300 km mascon, monthly",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2022-07-01",
+   "served": "2022-07-01",
+   "status": 200,
+   "bytes": 1457
+  },
+  {
+   "layer": "LPRM_AMSR2_Surface_Soil_Moisture_C1_Band_Day_Daily",
+   "native": "0.25 deg",
+   "tms": "GoogleMapsCompatible_Level6",
+   "declared_end": "2026-11-08",
+   "served": "2026-11-08",
+   "status": 200,
+   "bytes": 1651
+  },
+  {
+   "layer": "NDH_Drought_Hazard_Frequency_Distribution_1980-2000",
+   "native": "1 km, static hazard map",
+   "tms": "GoogleMapsCompatible_Level7",
+   "declared_end": "",
+   "error": "unparsable end",
+   "status": null
+  }
+ ],
+ "tile_matrix_rule_probe": [
+  {
+   "layer": "MODIS_Terra_NDVI_8Day",
+   "matrix": "GoogleMapsCompatible_Level6",
+   "z": 6,
+   "status": 400
+  },
+  {
+   "layer": "MODIS_Terra_NDVI_8Day",
+   "matrix": "GoogleMapsCompatible_Level9",
+   "z": 9,
+   "status": 200,
+   "bytes": 52372
+  },
+  {
+   "layer": "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture",
+   "matrix": "GoogleMapsCompatible_Level9",
+   "z": 9,
+   "status": 400
+  },
+  {
+   "layer": "HLS_S30_Nadir_BRDF_Adjusted_Reflectance",
+   "matrix": "GoogleMapsCompatible_Level12",
+   "z": 12,
+   "status": 404,
+   "note": "date 2026-11-13 has no acquisition in this tile"
+  },
+  {
+   "layer": "HLS_S30_Nadir_BRDF_Adjusted_Reflectance",
+   "matrix": "GoogleMapsCompatible_Level6",
+   "z": 6,
+   "status": 400
+  }
+ ],
+ "hls_l30_zoom12_last25_days": "dates with more than 5 KB: 2026-11-01 146477, 2026-10-31 46144, 2026-10-24 122826, 2026-10-23 66444, 2026-10-16 163066",
+ "power": {
+  "endpoint": "https://power.larc.nasa.gov/api/temporal/daily/point",
+  "community": "AG",
+  "params": {
+   "T2M": "C",
+   "T2M_MAX": "C",
+   "T2M_MIN": "C",
+   "T2MDEW": "C",
+   "RH2M": "%",
+   "PRECTOTCORR": "mm/day",
+   "GWETROOT": "1",
+   "GWETPROF": "1",
+   "GWETTOP": "1",
+   "ALLSKY_SFC_SW_DWN": "MJ/m^2/day",
+   "WS2M": "m/s",
+   "QV2M": "g/kg",
+   "EVLAND": "mm/day",
+   "EVPTRNS": "MJ/m^2/day",
+   "FROST_DAYS": "Days",
+   "T2M_RANGE": "C"
+  },
+  "valid_through": "2026-11-11",
+  "fill_value": -999.0
+ },
+ "power_aggregates_20261001_20261111": {
+  "Field 01": {
+   "days": 42,
+   "rain_mm": 171.9,
+   "max_dry_spell_days": 7,
+   "gdd10": 836.0,
+   "frost_days": 0.0,
+   "tmin_c": 21.8,
+   "gwetroot_mean": 0.49
+  },
+  "Field 02": {
+   "days": 42,
+   "rain_mm": 171.9,
+   "max_dry_spell_days": 7,
+   "gdd10": 836.0,
+   "frost_days": 0.0,
+   "tmin_c": 21.8,
+   "gwetroot_mean": 0.49
+  },
+  "Field 03": {
+   "days": 42,
+   "rain_mm": 171.9,
+   "max_dry_spell_days": 7,
+   "gdd10": 836.0,
+   "frost_days": 0.0,
+   "tmin_c": 21.8,
+   "gwetroot_mean": 0.49
+  }
+ },
+ "fixture_field_centers": {
+  "Field 01": [
+   -55.27,
+   -11.91
+  ],
+  "Field 02": [
+   -55.24,
+   -11.94
+  ],
+  "Field 03": [
+   -55.21,
+   -11.97
+  ],
+  "note": "all three fall in the same POWER cell, identical aggregates measured"
+ }
+}
