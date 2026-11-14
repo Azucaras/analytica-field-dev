@@ -1,0 +1,49 @@
+# AC-18 (R-22) compare mode, 1440x900, computer use
+
+Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
+127.0.0.1:8001. Compare is turned on from the rail row of `ndvi-8day`, side B is set through
+`Compare date, MODIS NDVI, 8 day`, and the divider is moved with a pointer-equivalent input
+event on `Compare divider`.
+
+One substitution is reported plainly: the spec pins side A at 2026-11-12 through the
+`?date=YYYY-MM-DD` query, which is R-28 and belongs to wave 3, so this wave's build has no
+query pin. Side A is therefore the chosen date the app loads at, 2026-11-14, which is what
+R-22 actually requires ("Side A SHALL be the chosen date"). The rule under test is unchanged.
+
+```
+A. Compare on for ndvi-8day
+   `Compare, MODIS NDVI, 8 day` aria-pressed          = true
+   side A label                                       = 2026-11-13, 1 day old
+   side B label (default, seven days before)          = 2026-11-07, 7 days old
+   `Compare divider` value                            = 50
+   compare sources in the style                       = [ndvi-8day~compare-a, ndvi-8day~compare-b]
+   side A source tiles                                = ...?date=2026-11-13
+   side B source tiles                                = ...?date=2026-11-07
+   elements carrying a numeric delta                  = 0
+   camera centre before                               = [-55.27, -11.91]
+   zoom before                                        = 11
+
+B. `Compare date, MODIS NDVI, 8 day` set to 2026-10-01
+   side A label                                       = 2026-11-13, 1 day old   (unchanged)
+   side B label                                       = 2026-10-01, 44 days old
+   side B source tiles                                = ...?date=2026-10-01
+
+C. `Compare divider` moved to 70 with a pointer-equivalent event
+   divider value                                      = 70
+   camera centre after                                = [-55.27, -11.91]   (unchanged)
+   zoom after                                         = 11                (unchanged)
+   bounds of compare-a                                = [-55.5172, -12.0611, -55.27, -11.7588]
+   bounds of compare-b                                = [-55.27, -12.0611, -55.0228, -11.7588]
+```
+
+Both sides carry their own date and age, side B follows its input, the divider moves with
+the pointer, the camera centre and zoom do not change, and no numeric delta renders
+(F-34's numeric half is CO-B4-04, block 6).
+
+How the split is drawn: two raster sources of the same layer, each with the `bounds` of its
+half of the current viewport, split at the divider fraction. Moving the divider rewrites the
+two `bounds` through `source.setSourceProperty`, which does not touch the camera.
+
+Reproduce: turn on `MODIS NDVI, 8 day`, expand `Layer options, MODIS NDVI, 8 day`, press
+`Compare, MODIS NDVI, 8 day`, then set `Compare date, MODIS NDVI, 8 day` and drag
+`Compare divider`.
