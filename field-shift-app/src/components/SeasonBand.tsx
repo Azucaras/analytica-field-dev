@@ -1,18 +1,19 @@
 import { useMemo } from 'react'
 import {
-  buildSeasonBand,
   type BandEmpty,
+  type BandWindow,
   type FieldCrop,
   type ZarcSnapshot,
 } from '@/lib/season-band'
-import { daysBetween, parseFieldLocation, type Axis } from '@/lib/timeline'
+import { daysBetween, type Axis } from '@/lib/timeline'
+import { windowSourceFor } from '@/lib/window-source'
 import { t } from '@/strings'
 
 type SeasonBandProps = {
   location: string | null
   crops: readonly string[]
-  /** The derived `Y/YY` label of R-29. */
-  season: string
+  /** The chosen date of R-28; the window source derives the season of the band from it. */
+  date: string
   axis: Axis
   snapshot: ZarcSnapshot | null
 }
@@ -51,25 +52,49 @@ function emptyText(empty: BandEmpty, season: string): string {
 }
 
 /**
- * R-31: the planting windows of the field's municipality and crops, for the derived
- * season only. The windows sit behind the range input and are not interactive (R-37), so
- * the band is a drawing with one text label per window and the empty text of R-31.
+ * What the band has to draw: the source's answer, or the one reason it has none. These are
+ * different facts, and the band never draws the second as if it were the first.
  */
-export function SeasonBand({ location, crops, season, axis, snapshot }: SeasonBandProps) {
-  const band = useMemo(() => {
-    const parsed = parseFieldLocation(location)
-    if (!parsed) return null
-    return buildSeasonBand(snapshot, { ...parsed, crops, season })
-  }, [location, crops, season, snapshot])
+type BandDrawing =
+  | { kind: 'windows'; season: string; windows: BandWindow[]; empty: BandEmpty[] }
+  | { kind: 'no_source' }
 
-  // No field is selected yet: the dock renders (R-35) and the band claims nothing.
-  if (!band) return null
+/**
+ * R-31: the planting windows of the field's region, for the derived season of the chosen
+ * date only, drawn from the window source that region selects. The band owns the drawing,
+ * the labels and the empty text; the source owns the windows and its own season key. The
+ * windows sit behind the range input and are not interactive (R-37), so the band is a
+ * drawing with one text label per window and one empty text per thing the source could not
+ * read. A region with no source draws no window and says so, never a blank band.
+ */
+export function SeasonBand({ location, crops, date, axis, snapshot }: SeasonBandProps) {
+  const drawing = useMemo<BandDrawing | null>(() => {
+    // No field is selected yet: the dock renders (R-35) and the band claims nothing.
+    if (!location || location.trim() === '') return null
+    const source = windowSourceFor(location, snapshot)
+    if (!source) return { kind: 'no_source' }
+    return { kind: 'windows', ...source.windowsFor({ date, crops }) }
+  }, [location, crops, date, snapshot])
 
-  const bandAxis = seasonAxisOf(season, axis)
+  if (drawing === null) return null
+
+  // R-31: no source for the field's region. No window, no key to normalise, and the reason
+  // named instead of a silent blank.
+  if (drawing.kind === 'no_source') {
+    return (
+      <div className="timeline-season-band" data-season-band aria-label={t('timeline.band')}>
+        <span className="timeline-band-empty" data-season-empty="no_source">
+          {t('timeline.no_window_source')}
+        </span>
+      </div>
+    )
+  }
+
+  const bandAxis = seasonAxisOf(drawing.season, axis)
 
   return (
     <div className="timeline-season-band" data-season-band aria-label={t('timeline.band')}>
-      {band.windows.map((window) => (
+      {drawing.windows.map((window) => (
         <span
           className="timeline-window"
           data-end={window.end}
@@ -85,9 +110,9 @@ export function SeasonBand({ location, crops, season, axis, snapshot }: SeasonBa
           </span>
         </span>
       ))}
-      {band.empty.map((empty) => (
+      {drawing.empty.map((empty) => (
         <span className="timeline-band-empty" data-season-empty={empty.kind} key={`${empty.kind}-${empty.kind === 'crop' ? empty.crop : ''}`}>
-          {emptyText(empty, season)}
+          {emptyText(empty, drawing.season)}
         </span>
       ))}
     </div>
