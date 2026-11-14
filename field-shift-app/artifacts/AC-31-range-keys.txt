@@ -1,0 +1,9 @@
+AC-31 (R-38)
+method: tests
+command: npx vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/TimelineDock.test.tsx > R-38 / AC-31: the range keys move the date and no other key does > steps one day, thirty days and the bounds 37ms
+
+verdict: PASS

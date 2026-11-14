@@ -1,40 +1,20 @@
-# AC-37 (R-26) layer row keyboard, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900. Every key below was dispatched through CDP
-`Input.dispatchKeyEvent`, so it is a trusted key event, not a synthetic DOM event. Focus is
-read from `document.activeElement`.
-
-```
-Action                                        Result                                                Focus after
-----------------------------------------------------------------------------------------------------------------------
-focus `Layer options, SMAP soil moisture`     tabIndex 0 (native button)                            Layer options, SMAP soil moisture
-Enter                                         aria-expanded true                                    Layer options, SMAP soil moisture
-Space                                         aria-expanded false                                   Layer options, SMAP soil moisture
-Enter again                                   aria-expanded true                                    Layer options, SMAP soil moisture
-
-Tab from the trigger, seven stops             Show SMAP soil moisture;
-                                              Opacity, SMAP soil moisture;
-                                              Move SMAP soil moisture up;
-                                              Move SMAP soil moisture down;
-                                              Pin date, SMAP soil moisture;
-                                              Compare, SMAP soil moisture;
-                                              Layer options, SMAP L4 surface soil moisture
-
-focus `Opacity, SMAP soil moisture`,          paint 0.55 -> 0.6 -> 0.55                             Opacity, SMAP soil moisture
-ArrowRight then ArrowLeft                     (0.05 per step)
-
-focus `Move SMAP L4 surface soil moisture     stack [smap-l3, smap-l4-surface, smap-l4-root]        Move SMAP L4 surface soil moisture up
-up`, Enter                                    -> [smap-l4-surface, smap-l3, smap-l4-root]
-
-focus `Pin date, SMAP soil moisture`,         aria-pressed true, row shows `pinned`                 Pin date, SMAP soil moisture
-Enter                                         aria-pressed false, `pinned` gone after Space
-```
-
-Verdict: Tab reaches the trigger, the opacity range, both move buttons, the pin toggle and,
-for a tile layer, the compare toggle; Enter and Space each toggle the row; the arrows move
-the paint opacity by 0.05 per step; a move changes the stack index and keeps focus on the
-same button; the pin follows `aria-pressed` and the word `pinned` appears only while it is
-true.
-
-Reproduce: open the app at 1440x900, focus the row trigger with the keyboard and repeat the
-keys above.
+AC-37 (R-26)
+method: computer use at 1440x900 with the key log
+command: CDP Input.dispatchKeyEvent
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+row trigger smap-l3: Enter -> aria-expanded true, Space -> false, Enter -> true, focus stays on the trigger.
+Tab inside the expanded row: Show SMAP soil moisture, Opacity, Move up, Move down, Pin date, Compare.
+opacity range: 0.55, ArrowRight -> 0.6 and getPaintProperty 0.6, two ArrowLeft -> 0.5 and 0.5, focus stays.
+Move up on the second row (smap-l4-surface): stack order [smap-l3, smap-l4-surface] ->
+  [smap-l4-surface, smap-l3], focus stays on "Move SMAP L4 surface soil moisture up".
+pin: aria-pressed false -> Enter -> true and the row reads "1 day old pinned", focus stays;
+  Space -> false and the word pinned leaves the row.
+vitest / unittest lines quoted from this run:
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > toggles the row with Enter and with Space, keeps focus and reaches every control by Tab 165ms
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > steps the opacity by 0.05 per arrow key 102ms
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > moves the row with Enter on Move up and keeps focus on that button 65ms
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > toggles the pin with Enter and Space and shows the word pinned only while pressed 52ms
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > turns compare on and off from the row with the state on the toggle (R-22) 68ms
+  src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > turns a layer off and on from the row switch (R-19) 69ms
+verdict: PASS

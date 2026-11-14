@@ -1,0 +1,9 @@
+AC-15 (R-19)
+method: tests
+command: npx vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/MapCanvas.block4.test.tsx > R-19 a layer that is off issues no tile request (AC-15) > counts tile requests for the layer that is on and no other 67ms
+
+verdict: PASS

@@ -1,0 +1,9 @@
+AC-04 (R-05, R-06)
+method: tests
+command: cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_04_worked_example_on_2026_11_12 (test_layers.TileContractTests.test_ac_04_worked_example_on_2026_11_12) ... ok
+
+verdict: PASS

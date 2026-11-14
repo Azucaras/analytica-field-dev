@@ -1,0 +1,298 @@
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'vitest' run --reporter=verbose
+
+ RUN  v5.1.0 /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_1670e720/repo/field-shift-app
+
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > renders the evidence skeletons while loading and keeps the region contract 89ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > draws a retrieved fixture value as measured and keeps the fixture string as text (R-14, AC-08) 55ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > treats observed, retrieved and entered as the measured bases (R-14) 27ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > scales every fixture value against the same maximum (R-14) 10ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > names the group with the layer, the value and the basis (accessible names) 2ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > marks a modelled row, draws 0 px and prints no digit (R-17, AC-13) 3ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > draws 0 px with the literal label for null, Not entered and a missing row (R-16, R-17) 6ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > keeps the track mounted and empty in every unmeasured state (R-17) 10ms
+ ✓ src/components/SmapBar.test.tsx > SmapBar > names the empty states with the same literal as the visible one (R-17, AC-13) 6ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > renders the empty state with its reason instead of evidence rows 9ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > renders evidence normally when no loading or empty flags are provided 53ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > renders the five specified table columns 29ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > shows an allowed basis label on every evidence row 31ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > renders No observation for a row with no value 35ms
+ ✓ src/components/EvidencePanel.test.tsx > EvidencePanel > links the source URL using the source itself as link text 20ms
+ ✓ src/components/MapCanvas.block4.test.tsx > block 1 R-10 composition presets still recompose without remounting > keeps one map, one source set and the camera when the preset changes 114ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-17 opacity (AC-13) > starts a layer that is on at 0.55 and moves the paint property without touching a source 72ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > shows the front face only at first paint (R-11, R-12, AC-07) 154ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > moves one card to the back face with the five facts and no visuals (R-11, R-13, AC-07) 67ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > renders the scenario skeletons while loading and keeps the list contract 162ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > renders the empty state with its reason instead of scenarios 17ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-17 opacity (AC-13) > starts a layer the user turns on at 0.55 62ms
+ ✓ src/components/AvailabilityTrack.test.tsx > AC-27: the Sentinel-2 track > carries 18 scene marks and highlights the 6 scenes under 20 percent cloud 117ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > leaves the other cards on their own front face (R-11, AC-07) 50ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > derives every accessible name from the card heading and shows no label text (R-18, AC-11) 62ms
+ ✓ src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > is a region named Timeline with the four R-37 controls 142ms
+ ✓ src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > shows the chosen date and the primary layer age in the range value text 12ms
+ ✓ src/components/LayerRail.test.tsx > block 1 presets and the block 3 Layers pair > offers exactly the three named presets inside the navigation landmark named Layers 219ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the name, the basis, the resolution, the effective date, the age and the status 33ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the stale layer with its last observation and no current date 21ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the no-observation marker only when the effective date differs from the chosen date 18ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > renders scenarios normally when no loading or empty flags are provided 95ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > puts the current sequence first even when the fixture order differs 48ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-18 order (AC-14) > moves a row one place down through moveLayer and keeps every source 79ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-18 order (AC-14) > keeps the order across a composition preset change (R-18) 76ms
+ ✓ src/components/AvailabilityTrack.test.tsx > AC-27: the Sentinel-2 track > sits in the expanded row of hls-l30 and hls-s30, not in the dock 203ms
+ ✓ src/components/AvailabilityTrack.test.tsx > AC-27 / R-34: declared-range marks > leaves the smap-l3 gap day 2026-11-02 unmarked and keeps the days either side 11ms
+ ✓ src/components/AvailabilityTrack.test.tsx > AC-27 / R-34: declared-range marks > carries no ndvi-8day mark before its declared start 2025-02-12 11ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > points aria-controls at the card body and swaps its content (R-18, R-20) 52ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > keeps focus on the trigger across both flips (R-19, AC-11) 47ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > flips the card with Enter from the overlay button (R-19) 35ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > keeps every row with its status text and no date while /layers has not answered (R-24, AC-20) 42ms
+ ✓ src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > steps one day with Previous day and Next day 137ms
+ ✓ src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > sets the chosen date from the Go to date input 23ms
+ ✓ src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > clamps a typed date outside the axis and says which bound it used (AC-23) 31ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-19 a layer that is off issues no tile request (AC-15) > counts tile requests for the layer that is on and no other 67ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > keeps the three scenario cards in one row at a wide viewport (R-11, AC-11) 60ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > shows the two visuals on every front and none of the five facts (R-12, AC-07) 61ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > flips the card with Space from the overlay button (R-19) 31ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > renders no visual at all on the back and no fact on the front (R-12, R-13) 34ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > marks a modelled SMAP row at 0 px and keeps the crop date on the same face (R-17, AC-13) 20ms
+ ✓ src/components/RotationFlipCard.test.tsx > RotationFlipCard > renders the not reported state when the scenario has no SMAP row (R-16) 11ms
+ ✓ src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > turns compare on for one tile layer and gives each side its own date label 398ms
+ ✓ src/components/TimelineDock.test.tsx > R-38 / AC-31: the range keys move the date and no other key does > steps one day, thirty days and the bounds 37ms
+ ✓ src/components/TimelineDock.test.tsx > R-32 / AC-26: the season record and its crop class slot > shows the derived season label and the empty crop class at every date 25ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > draws the four windows of 2026/27 with the snapshot envelope dates 16ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > labels each maize window with its own snapshot crop name 12ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > draws the 2025/26 windows at 2025-11-10 17ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > names the derived season when the snapshot does not hold it 23ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-20 a date change re-resolves only what changed (AC-16) > requests only the layer whose effective date changed, and nothing for a pinned layer 68ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-20 a date change re-resolves only what changed (AC-16) > keeps a pinned layer on its own date 68ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the expanded row (AC-21, front half) > carries the opacity, move, pin, track and compare controls with the R-26 names, in that order 129ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > renders the five labelled facts in block 2 order on the back face (R-13, AC-07) 153ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > names the municipality when the snapshot file is absent 23ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > names the municipality when the snapshot does not list Santa Carmem 16ms
+ ✓ src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock > names a crop the snapshot does not hold for the municipality 12ms
+ ✓ src/components/TimelineDock.test.tsx > R-33 / AC-27: the primary track sits in the dock > draws the primary layer track over the axis and leaves the 2026-11-02 gap unmarked 12ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > keeps the crop group basis and date per scenario and invents none (R-15, AC-10) 27ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > shows the measured SMAP strings and no derived rotation value on the front (R-14, R-38, AC-08) 20ms
+ ✓ src/components/ScenarioCards.test.tsx > ScenarioCards > decides the SMAP label from each row basis: retrieved measures, modelled marks (R-14, R-17, AC-13) 27ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the expanded row (AC-21, front half) > offers no compare control on a layer that is not a tile layer 107ms
+ ✓ src/components/LayerRail.test.tsx > R-26 the expanded row (AC-21, front half) > declares at least 44 by 44 px on the row trigger and on every expanded control 4ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-23 the app refuses a tile the proxy should not have served (AC-19) > rejects a tile whose X-Tile-Date is later than the chosen date 60ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-23 the app refuses a tile the proxy should not have served (AC-19) > does not draw a 200 with a zero byte body and reports unavailable 60ms
+ ✓ src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > follows the Compare date input on side B 228ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-25 the degraded mode the map shows (AC-20) > draws the cached tile dated on or before the chosen date and labels the row with its date 44ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-25 the degraded mode the map shows (AC-20) > labels the reserve as an offline sample with no date, never as current 20ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-25 the degraded mode the map shows (AC-20) > shows no offline copy when the layer has neither a cache entry nor a reserve 22ms
+ ✓ src/components/MapCanvas.block4.test.tsx > R-25 the degraded mode the map shows (AC-20) > still accepts a dated cached tile when /layers has failed and no effective date is known 8ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > toggles the row with Enter and with Space, keeps focus and reaches every control by Tab 165ms
+ ✓ src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > moves the divider with the pointer without moving the camera and with no numeric delta 148ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > steps the opacity by 0.05 per arrow key 102ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > moves the row with Enter on Move up and keeps focus on that button 65ms
+ ✓ src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > draws both sides from two dates of the same layer 110ms
+ ✓ src/components/CompareMode.test.tsx > R-22 the divider is a keyboard control (AC-38) > moves one step per arrow press, keeps focus and leaves the camera alone 138ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > toggles the pin with Enter and Space and shows the word pinned only while pressed 52ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > turns compare on and off from the row with the state on the toggle (R-22) 68ms
+ ✓ src/components/LayerRail.test.tsx > R-26 keyboard and state (AC-37) > turns a layer off and on from the row switch (R-19) 69ms
+ ✓ src/components/MapCanvas.test.tsx > initial field selection does not depend on event ordering > selects the first field when the field list lands before the map style and load never fires 554ms
+ ✓ src/components/MapCanvas.test.tsx > initial field selection does not depend on event ordering > selects the first field when the map style is ready before the field list arrives 162ms
+ ✓ src/components/SeasonBand.test.tsx > R-31 and AC-25: the band of the season band source > claims nothing while no field is selected (R-35) 33ms
+ ✓ src/components/SeasonBand.test.tsx > R-31 and AC-25: the band of the season band source > draws the four Brazil windows of 2026/27 with the wave 3 labels and dates 50ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > renders one equal length bar per crop in array order with the row basis and date (R-15) 51ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > gives every track the same grid column so both bars render equal (AC-10) 2ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > keeps the array order instead of sorting the crops 11ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > names the group with the row and the sequence (accessible names) 8ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > prints no numeric bar label and lets the date be the only numeric text 9ms
+ ✓ src/components/CropHistoryBars.test.tsx > CropHistoryBars > renders the bars with no basis and no date when the scenario has no Crop history row (R-15) 17ms
+ ✓ src/components/SeasonBand.test.tsx > R-31 and AC-25: the band of the season band source > draws no window and names the missing source when the region has none (AC-25 f) 30ms
+ ✓ src/components/SeasonBand.test.tsx > R-31 and AC-25: the band of the season band source > keeps the Brazil municipality empty text for an absent snapshot file (AC-25 a) 6ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > selects the Brazil source for a field whose location names a Brazilian state 3ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > has no source for a region this block supplies none for (AC-25 f) 2ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > has no source when the field names no location at all 1ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > returns the windows of the chosen date from the snapshot, as wave 3 read them 3ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > reads 2025-11-10 from the 2025/2026 rows only 1ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > names the season the snapshot does not hold with the derived Y/YY label 1ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > normalises the derived Y/YY label to the snapshot Y/YYYY key through the one mapping 1ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > keeps the municipality empty when the snapshot file is absent (AC-25 a) 0ms
+ ✓ src/lib/window-source.test.ts > R-31 (revision 8): the window source boundary > builds the Brazil source for an already parsed place 2ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > scans rendered interface text for untranslated literals when t returns keys 828ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > renders the Field map region at the root route 97ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > renders top chips without panel surface classes 63ms
+ ✓ src/lib/timeline.test.ts > AC-24 / R-29: seasonForDate derives Y/YY from the most recent 1 July > returns the four pinned examples of the spec 2ms
+ ✓ src/lib/timeline.test.ts > AC-24 / R-29: seasonForDate derives Y/YY from the most recent 1 July > changes the label between 2025-06-30 and 2025-07-01 (AC-26) 1ms
+ ✓ src/lib/timeline.test.ts > AC-24 / R-29: seasonForDate derives Y/YY from the most recent 1 July > normalises the derived label to the snapshot key Y/YYYY (R-31) 1ms
+ ✓ src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > uses the axis default when the query holds no date 1ms
+ ✓ src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > sets the chosen date from an on-axis ?date= 1ms
+ ✓ src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps a date before the axis start and names the bound 0ms
+ ✓ src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps a date after the axis end and names the bound 0ms
+ ✓ src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps through clampToAxis and ignores a malformed value 0ms
+ ✓ src/lib/timeline.test.ts > day arithmetic is UTC and exact > steps one day across a month boundary 0ms
+ ✓ src/lib/timeline.test.ts > day arithmetic is UTC and exact > counts whole days between two dates 0ms
+ ✓ src/lib/timeline.test.ts > the field location text maps to the snapshot municipality and UF > reads Santa Carmem, Mato Grosso as Santa Carmem and MT 0ms
+ ✓ src/lib/timeline.test.ts > the field location text maps to the snapshot municipality and UF > returns null when the text cannot be read 0ms
+ ✓ src/lib/timeline.test.ts > R-33: the primary layer is the first one on in stack order, else smap-l3 > takes the first on layer of the stack 0ms
+ ✓ src/lib/timeline.test.ts > R-33: the primary layer is the first one on in stack order, else smap-l3 > falls back to smap-l3 when no layer is on 0ms
+ ✓ src/lib/commands.test.ts > command registry > runs set_composition and changes the map store 3ms
+ ✓ src/lib/commands.test.ts > command registry > rejects an unregistered name with status 422 and all valid names 1ms
+ ✓ src/lib/commands.test.ts > command registry > lists exactly four fully described commands 2ms
+ ✓ src/lib/commands.test.ts > command registry > accepts only scenarios and evidence for open_panel (AM-08, AC-28) 1ms
+ ✓ src/lib/commands.test.ts > command registry > rejects the withdrawn constraints panel with a schema failure (AM-08) 3ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > renders the fullscreen map behind pointer-transparent overlay anchors 64ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: marks come from the recorded declared ranges > leaves the smap-l3 gap day 2026-11-02 unmarked 5ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: marks come from the recorded declared ranges > carries no ndvi-8day mark before its declared start 2025-02-12 2ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: marks come from the recorded declared ranges > stops the hls-l30 track at its declared end 2026-11-06 1ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: marks come from the recorded declared ranges > clips a span to the window it is drawn in 1ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: the Sentinel-2 track reads the recorded STAC response > carries 18 marks and highlights the 6 scenes under 20 percent cloud 12ms
+ ✓ src/lib/availability.test.ts > AC-27 / R-33: the Sentinel-2 track reads the recorded STAC response > keeps every scene inside the recorded window 0ms
+ ✓ src/lib/season-band.test.ts > AC-25 (a) and (b): the band names the municipality it cannot read > shows the municipality empty text when the snapshot file is absent 2ms
+ ✓ src/lib/season-band.test.ts > AC-25 (a) and (b): the band names the municipality it cannot read > shows the municipality empty text when the snapshot does not list Santa Carmem 0ms
+ ✓ src/lib/season-band.test.ts > AC-25 (c): a crop the snapshot does not hold for the municipality > names Cotton and still draws Soybean and Corn 1ms
+ ✓ src/lib/season-band.test.ts > AC-25 (d) and (e): the file in the tree, at the three pinned dates > checks the recorded sha256 before it reads the envelope values (AC-25 e) 1ms
+ ✓ src/lib/season-band.test.ts > AC-25 (d) and (e): the file in the tree, at the three pinned dates > reads 2026/27 from the 2026/2027 rows only, with the table envelopes 1ms
+ ✓ src/lib/season-band.test.ts > AC-25 (d) and (e): the file in the tree, at the three pinned dates > reads 2025/26 from the 2025/2026 rows only 1ms
+ ✓ src/lib/season-band.test.ts > AC-25 (d) and (e): the file in the tree, at the three pinned dates > names the derived season when the snapshot does not hold it 0ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > uses the keyless OpenFreeMap Liberty vector basemap, not the zoom-capped MapLibre demo tiles 2ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > reads the same bytes as the recorded /layers evidence 2ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > is generated from the /layers response, in the order the response fixes (13 entries) 1ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > takes every display label from the string catalog with the exact spec text 1ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > carries the fields the rail reads, and no hand-written tile list 2ms
+ ✓ src/lib/layer-catalog.test.ts > layer catalog > keeps every row without a date or an age while /layers has not answered (R-24) 1ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > keeps the block 3 anchors and the fixed layer sequence 198ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > draws a dated observation for the chosen date 3ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > rejects a tile whose X-Tile-Date is later than the chosen date 0ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > does not draw a 200 with a zero byte body and reports unavailable 0ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-25 (AC-20) > draws a cached tile dated on or before the chosen date and labels it with its date 0ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-25 (AC-20) > draws the reserve as an undated offline sample, never as a current observation 0ms
+ ✓ src/lib/tile-guard.test.ts > tile guard, the app half of R-25 (AC-20) > reports no offline copy when the layer has neither a cache entry nor a reserve 0ms
+ ✓ src/lib/tile-guard.test.ts > probeLayerTile reads the headers the map cannot see > sends the chosen date and reads X-Tile-Date from the response 2ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > does not repeat the empty reason as both evidence title and subtitle 65ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > shows the server abstention threshold for field 03, keeps all cards, and hides ranking markers 90ms
+ ✓ src/strings/index.test.ts > t > uses English when no locale is stored 1ms
+ ✓ src/strings/index.test.ts > t > uses an optional pt-BR translation when present and falls back to English otherwise 0ms
+ ✓ src/strings/index.test.ts > t > interpolates named variables in English strings 0ms
+ ✓ src/strings/index.test.ts > t > keeps the field coverage readout in a single catalog key 0ms
+ ✓ src/strings/index.test.ts > t > keeps the modelled marker and drops the withdrawn constraint keys (AM-02, AM-12) 1ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > does not show an abstention notice for ranked field 01 86ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > requests scenarios without a season and keeps the fixture values when the date changes (R-30) 61ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > keeps the unconditional pairs mounted and retries only the field list after an HTTP error 88ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > renders a translated backend-unreachable reason when fetch rejects 28ms
+ ✓ src/App.test.tsx > field map and rotation scenario selection > runs a registered agent command and reports an unregistered name 249ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > mounts the agent command form only while Command is open (R-01, AC-02) 50ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > moves focus into the command form, returns it on close and keeps the draft (AC-03) 166ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > wraps the field list in the vendored collapsible (AC-04) 53ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > shows one collapsed chip for the selected field and no percentage (AC-05) 105ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > renders no chip while the field list is loading with nothing selected (AC-05) 14ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > keeps the selected field and issues no new scenario request when the panel collapses or expands (AC-06) 87ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > keeps the four unconditional pairs at first paint and mounts Evidence only while Supporting data is open (AC-14, AC-21) 84ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > prints coverage only in the rotation pill and drops every other readout (R-25, R-26) 90ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > stacks the command form above the evidence panel in one right edge column (R-23) 58ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > keeps every toggle operable and the field error reachable when the backend fails (AC-28, R-09) 51ms
+ ✓ src/App.test.tsx > block 3 wave 1: toggles and the single coverage readout > has no second form and no withdrawn constraint control at first paint or after activations (AC-16, R-15) 66ms
+ ✓ src/App.test.tsx > block 3 wave 3: layout, notice and right edge column rules > keeps one notice node, first in the left stack, with no duplicate mount (R-23, R-39) 49ms
+ ✓ src/App.test.tsx > block 3 wave 3: layout, notice and right edge column rules > holds at most one right edge panel open at 360 (R-40, AC-30) 62ms
+ ✓ src/App.test.tsx > block 3 wave 3: layout, notice and right edge column rules > keeps both right edge panels open above 640 (R-23) 50ms
+ ✓ src/App.test.tsx > block 3 wave 3: layout, notice and right edge column rules > closes the older right edge panel when the viewport enters 360 and keeps focus (R-40, AC-26, AC-30) 63ms
+ ✓ src/App.test.tsx > block 3 wave 3: layout, notice and right edge column rules > keeps the panel opened last when the command form is the newer one (R-40) 61ms
+ ✓ src/App.test.tsx > block 3 wave 2: rotation flip card visuals > draws the measured SMAP value and its number at first paint with no interaction (AC-08, AC-09, AC-13) 36ms
+ ✓ src/App.test.tsx > block 3 wave 2: rotation flip card visuals > flips one card to its facts and back without touching the others (AC-07) 95ms
+stdout | src/App.test.tsx > block 3 gate: keyboard contract of the four controls (AC-32) > lists the four controls, their tag, tabIndex and state after Enter, Space and a letter key
+AC-32 keyboard matrix [
+  {
+    "control": "Fields",
+    "tagName": "BUTTON",
+    "tabIndex": 0,
+    "disabled": false,
+    "negativeTabIndex": false,
+    "afterEnter": "true",
+    "afterSpace": "false",
+    "afterSecondEnter": "true",
+    "afterLetter": "true",
+    "focusAfterEnter": "button:Fields",
+    "focusAfterSpace": "button:Fields",
+    "focusAfterSecondEnter": "button:Fields",
+    "focusAfterLetter": "button:Fields",
+    "regionAfterEnter": true,
+    "regionAfterSpace": false,
+    "regionAfterSecondEnter": true,
+    "regionAfterLetter": true
+  },
+  {
+    "control": "Command",
+    "tagName": "BUTTON",
+    "tabIndex": 0,
+    "disabled": false,
+    "negativeTabIndex": false,
+    "afterEnter": "true",
+    "afterSpace": "false",
+    "afterSecondEnter": "true",
+    "afterLetter": "true",
+    "focusAfterEnter": "input:Command name",
+    "focusAfterSpace": "button:Command",
+    "focusAfterSecondEnter": "input:Command name",
+    "focusAfterLetter": "button:Command",
+    "regionAfterEnter": true,
+    "regionAfterSpace": false,
+    "regionAfterSecondEnter": true,
+    "regionAfterLetter": true
+  },
+  {
+    "control": "Supporting data",
+    "tagName": "BUTTON",
+    "tabIndex": 0,
+    "disabled": false,
+    "negativeTabIndex": false,
+    "afterEnter": "true",
+    "afterSpace": "false",
+    "afterSecondEnter": "true",
+    "afterLetter": "true",
+    "focusAfterEnter": "button:Supporting data",
+    "focusAfterSpace": "button:Supporting data",
+    "focusAfterSecondEnter": "button:Supporting data",
+    "focusAfterLetter": "button:Supporting data",
+    "regionAfterEnter": true,
+    "regionAfterSpace": false,
+    "regionAfterSecondEnter": true,
+    "regionAfterLetter": true
+  },
+  {
+    "control": "Details for Current sequence",
+    "tagName": "BUTTON",
+    "tabIndex": 0,
+    "disabled": false,
+    "negativeTabIndex": false,
+    "afterEnter": "true",
+    "afterSpace": "false",
+    "afterSecondEnter": "true",
+    "afterLetter": "true",
+    "focusAfterEnter": "button:Details for Current sequence",
+    "focusAfterSpace": "button:Charts for Current sequence",
+    "focusAfterSecondEnter": "button:Details for Current sequence",
+    "focusAfterLetter": "button:Details for Current sequence",
+    "regionAfterEnter": true,
+    "regionAfterSpace": false,
+    "regionAfterSecondEnter": true,
+    "regionAfterLetter": true
+  }
+]
+
+ ✓ src/App.test.tsx > block 3 gate: keyboard contract of the four controls (AC-32) > lists the four controls, their tag, tabIndex and state after Enter, Space and a letter key 175ms
+ ✓ src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > has no element named Season and no season select anywhere (AC-22, timeline half) 25ms
+ ✓ src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > opens at the axis end by default (AC-23) 27ms
+ ✓ src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > opens at ?date=2026-11-12 and asks /layers for that date (AC-23) 29ms
+ ✓ src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > clamps a query before the axis and shows the polite limit message (AC-23) 26ms
+ ✓ src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > renders none_in_lookback and the first axis day without inventing a date (AC-28) 47ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-46, AC-39: at 360x640 the dock is the collapsed toggle and Enter expands it as the region first control 45ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-46, AC-39: at 780x900 the dock is expanded at first paint and its toggle is a sibling of the region 47ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-40, R-51, R-52, AC-33: a resize keeps the chosen date and the states the user set 73ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-48, AC-42: the rotation toggle is a native button whose name states the action and whose keys toggle it 44ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-49, AC-43: collapsing unmounts the three cards and the Rotation scenarios list 58ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-37, AC-36: Enter and Space step the date from Previous day and Next day and keep focus 53ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-53, AC-45: a block 4 press leaves the card faces and values alone, and wave 4 imports no other panel state 66ms
+ ✓ src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-41, AC-22: the top right strip is the label, the avatar, Command and Supporting data in that order 19ms
+
+ Test Files  21 passed (21)
+      Tests  203 passed (203)
+   Start at  20:49:36
+   Duration  5.82s (environment 47%, tests 32%, setup 10%, import 7%, transform 3%, worker 1%)
+
+Environment  jsdom was created 21 times · 15.26s total, 47% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

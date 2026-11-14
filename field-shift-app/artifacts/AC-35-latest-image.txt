@@ -1,0 +1,13 @@
+AC-35 (R-44)
+method: tests on the recorded HLS fixture + computer use at 1440x900
+command: grep over src/ and backend/, git grep over every branch, plus the full vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+searched: grep -rni "latest image|latestimage|latest_image" src/ backend/ -> 0 hits in every branch
+(git grep over refs/heads and refs/remotes); grep "AC-35" src/ backend/ -> 0 hits; the verbose vitest log has no
+AC-35 test; the browser at 1440x900 has no control whose accessible name or text is "Latest image"
+(document.body.innerText.includes("Latest image") = false, and the optical rows hls-l30 / hls-s30 carry no such button).
+the backend half that does exist is the coverage route (GET /layers/{id}/coverage), which R-44 itself calls a
+different scan, and its test test_r_44_coverage_records_every_date_of_the_window_and_answers_503_on_a_stop passes.
+measured value that fails it: controls named Latest image 0, AC-35 tests 0, artifact AC-35-latest-1440.png absent.
+verdict: FAIL (not implemented)

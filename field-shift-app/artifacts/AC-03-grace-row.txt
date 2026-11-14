@@ -1,0 +1,14 @@
+AC-03 (R-04)
+method: tests + computer use
+command: chrome via CDP at 1440x900, ?date=2026-11-12
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the stale layer with its last observation and no current date 21ms
+
+browser, 1440x900, chosen 2026-11-12, row grace-mascon innerText:
+  "GRACE water storage, stale retrieved about 300 km, mascon Last observation 2022-07-01 stale"
+  no "on date", no date after 2022-07-01
+the LayerRail test renders the default date 2026-11-14 and asserts the same row text, so both dates named by the
+criterion are covered: 2026-11-12 in the browser, 2026-11-14 in the test.
+verdict: PASS

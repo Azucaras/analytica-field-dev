@@ -1,36 +1,14 @@
-# AC-14 (R-18) order, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
-127.0.0.1:8001. Two adjacent rows are on (`smap-l3` and `smap-l4-surface`), which is the
-state in which a one place move changes what the style draws: moving a row past a row that
-is off cannot change the drawn stack, because that row draws nothing.
-
-```
-Before the move:
-  map.getStyle().layers index of 'smap-l3-raster' = 115
-  raster layer order                               = [smap-l4-surface-raster, smap-l3-raster]
-  count of sources                                 = 7
-  rail row order (first three)                     = [smap-l3, smap-l4-surface, smap-l4-root]
-
-Press: `Move SMAP soil moisture down` (one press, one place)
-
-After the move:
-  map.getStyle().layers index of 'smap-l3-raster' = 114
-  raster layer order                               = [smap-l3-raster, smap-l4-surface-raster]
-  count of sources                                 = 7
-  rail row order (first three)                     = [smap-l4-surface, smap-l3, smap-l4-root]
-  addSource calls during the step                   = 0
-  removeSource calls during the step                = 0
-  moveLayer was called for 'smap-l3-raster'          = true
-```
-
-Composition preset change (R-18, "the order SHALL survive a change of composition preset"):
-the stack list is unchanged after `satellite-with-labels` and back to `map`, and the vitest
-case `block 1 R-10 composition presets ...` in `MapCanvas.block4.test.tsx` asserts the store
-order is byte identical across the change.
-
-Verdict: the index in `map.getStyle().layers` changes (115 to 114), the raster order swaps,
-the source count stays 7, and the rows on screen follow the stack list.
-
-Reproduce: turn on `SMAP L4 surface soil moisture`, expand `Layer options, SMAP soil moisture`,
-press `Move SMAP soil moisture down`, read `window.__fsMap.getStyle().layers`.
+AC-14 (R-18)
+method: computer use at 1440x900
+command: chrome via CDP, style layer index
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+two raster layers on (smap-l3 and SMAP L4 surface soil moisture), 1440x900:
+  before the press: raster order [smap-l4-surface-raster, smap-l3-raster], index of smap-l3-raster 115
+  after one press on Move SMAP soil moisture down:
+    raster order [smap-l3-raster, smap-l4-surface-raster], index of smap-l3-raster 114
+    sources 7 before and 7 after, addSource 1 (the layer turned on) and removeSource 0
+vitest / unittest lines quoted from this run:
+  src/components/MapCanvas.block4.test.tsx > R-18 order (AC-14) > moves a row one place down through moveLayer and keeps every source 79ms
+  src/components/MapCanvas.block4.test.tsx > R-18 order (AC-14) > keeps the order across a composition preset change (R-18) 76ms
+verdict: PASS

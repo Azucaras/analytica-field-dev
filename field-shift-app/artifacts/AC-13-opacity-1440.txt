@@ -1,34 +1,14 @@
-# AC-13 (R-17) opacity, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900, dev server on 127.0.0.1:5199, backend on
-127.0.0.1:8001 (block 4 wave 1). Measured with CDP `Emulation.setDeviceMetricsOverride`,
-DOM reads and `map.getPaintProperty` on `window.__fsMap`.
-
-The card forbids PNGs in the repository, so this file carries the readouts the criterion
-asks the screenshot to show. The measurements below are the ones AC-13 names.
-
-```
-Step 1, the layer is on at first paint (smap-l3, the block 1 layer):
-  map.getPaintProperty('smap-l3-raster','raster-opacity') = 0.55
-  opacity control value                                   = 0.55
-  count of style sources                                   = 6
-
-Step 2, the opacity control is set to 0.3 with a pointer-equivalent input event:
-  input.value dispatched                                  = 0.3
-  map.getPaintProperty('smap-l3-raster','raster-opacity') = 0.3
-  opacity control value                                   = 0.3
-  count of style sources                                   = 6
-  source id list unchanged                                 = true
-  addSource calls during the step                           = 0
-  removeSource calls during the step                        = 0
-
-Style layer tail after the step (raster layers sit above the basemap symbols):
-  label_city, label_city_capital, label_country_3, label_country_2,
-  label_country_1, smap-l3-raster
-```
-
-Verdict: `getPaintProperty` returns the value the control holds (0.3), the start value of a
-layer that is on is 0.55, and neither a source nor a style layer was removed or re-added.
-
-Reproduce: open the app at 1440x900, expand `Layer options, SMAP soil moisture`, set
-`Opacity, SMAP soil moisture` to 0.3, read `window.__fsMap.getPaintProperty('smap-l3-raster','raster-opacity')`.
+AC-13 (R-17)
+method: computer use at 1440x900
+command: chrome via CDP, window.__fsMap reads
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+layer smap-l3 (raster layer smap-l3-raster), 1440x900:
+  at first paint: getPaintProperty(raster-opacity) = 0.55, sources = 6
+  opacity control set to 0.3: control value 0.3, getPaintProperty = 0.3
+  addSource calls during the change: 0, removeSource calls: 0, sources before and after: 6
+  a layer turned on (imerg-daily): getPaintProperty(imerg-daily-raster) = 0.55
+vitest / unittest lines quoted from this run:
+  src/components/MapCanvas.block4.test.tsx > R-17 opacity (AC-13) > starts a layer that is on at 0.55 and moves the paint property without touching a source 72ms
+  src/components/MapCanvas.block4.test.tsx > R-17 opacity (AC-13) > starts a layer the user turns on at 0.55 62ms
+verdict: PASS

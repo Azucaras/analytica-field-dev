@@ -1,0 +1,11 @@
+AC-12 (R-15, R-16)
+method: tests + cli
+command: unittest, vitest, curl /tiles/smap-l3/9/0/0
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_12_zoom_above_max_zoom_is_refused_without_an_upstream_request (test_layers.TileContractTests.test_ac_12_zoom_above_max_zoom_is_refused_without_an_upstream_request) ... ok
+cli: curl -o /dev/null -w %{http_code} /tiles/smap-l3/9/0/0?date=2026-11-12 -> 400 (max_zoom 6, no upstream request)
+source: src/components/MapCanvas.tsx line 96 sets maxzoom: entry.max_zoom; grep "maxzoom" returns lines 52 and 96 only,
+so the literal 6 is not at line 40 and not anywhere in the file. Line 40 is now the emitViewportTile signature.
+verdict: PASS

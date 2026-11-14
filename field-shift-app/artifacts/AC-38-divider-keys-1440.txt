@@ -1,29 +1,12 @@
-# AC-38 (R-22) compare divider keys, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
-127.0.0.1:8001. Compare is on for `ndvi-8day`; `Compare divider` is focused and the keys are
-dispatched through CDP `Input.dispatchKeyEvent` (trusted events). One step is 1 percent of
-the map width, the design target R-22 states.
-
-```
-Focus                                               Compare divider
-aria-valuetext before                               "50% of the map width"
-aria-valuenow before                                50
-camera centre before                                [-55.27, -11.91]
-zoom before                                         11
-
-ArrowRight                                          aria-valuenow 51
-ArrowRight                                          aria-valuenow 52
-ArrowLeft                                           aria-valuenow 51
-
-focus after the keys                                Compare divider
-camera centre after                                 [-55.27, -11.91]   (unchanged)
-zoom after                                          11                  (unchanged)
-```
-
-Verdict: ArrowRight moves the divider one step, ArrowLeft moves it back, `aria-valuenow`
-changes on every press, focus stays on the divider, and the map centre and zoom do not
-change.
-
-Reproduce: turn on `MODIS NDVI, 8 day`, press `Compare, MODIS NDVI, 8 day`, focus
-`Compare divider` and press the arrow keys.
+AC-38 (R-22)
+method: computer use at 1440x900 with the key log
+command: CDP Input.dispatchKeyEvent
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+compare on, Compare divider focused, aria-valuenow per key:
+  start 50 -> ArrowRight 51 -> ArrowRight 52 -> ArrowLeft 51
+  focus after each key: "Compare divider"
+  camera after each key: lng -55.27, lat -11.91, zoom 11 (unchanged from the start)
+vitest / unittest lines quoted from this run:
+  src/components/CompareMode.test.tsx > R-22 the divider is a keyboard control (AC-38) > moves one step per arrow press, keeps focus and leaves the camera alone 138ms
+verdict: PASS

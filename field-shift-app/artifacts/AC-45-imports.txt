@@ -1,0 +1,9 @@
+AC-45 (R-53, R-54)
+method: tests
+command: npx vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-53, AC-45: a block 4 press leaves the card faces and values alone, and wave 4 imports no other panel state 66ms
+
+verdict: PASS

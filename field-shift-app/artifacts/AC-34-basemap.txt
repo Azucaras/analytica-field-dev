@@ -1,0 +1,14 @@
+AC-34 (R-43)
+method: tests (vitest output and the network log of the test run)
+command: grep over src/ and backend/ plus the full vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+searched: grep -rni "google" src/ backend/ (no basemap adapter, no VITE_GOOGLE_MAPS_API_KEY, no Google adapter),
+grep -rni "eox|basemap" src/lib src/components (only two doc comments in MapCanvas.tsx), and the full verbose vitest
+log: no test carries AC-34 and no test records a network log of Google requests.
+what the tree has: one vector basemap, VECTOR_BASEMAP_STYLE = https://tiles.openfreemap.org/styles/liberty
+(src/lib/layer-catalog.ts line 107), selected unconditionally. There is no adapter interface and no EOX Sentinel-2
+cloudless layer, so the clause "the basemap registry SHALL select the EOX adapter" has no implementation to measure.
+measured value that fails it: adapters found 0, EOX references 0, VITE_GOOGLE_MAPS_API_KEY references 0, AC-34 tests 0.
+artifact named by the spec (vitest output plus the network log of the test run): the network log does not exist.
+verdict: FAIL (not implemented)
