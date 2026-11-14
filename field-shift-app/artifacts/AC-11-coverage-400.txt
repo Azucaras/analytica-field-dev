@@ -1,0 +1,4 @@
+$ curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8001/layers/grace-mascon/coverage?days=5"
+400
+$ curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8001/layers/smap-l3/coverage?days=5"
+400
