@@ -1,0 +1,88 @@
+# AC-25 (R-31), the season band, five branches
+
+Method: `npx vitest run` on recorded copies and on the file in the tree, plus the real app
+in Chromium at 1440x900 (dev 127.0.0.1:5199, backend 127.0.0.1:8001).
+
+The band reads `window_risk_20` from `artifacts/zarc-mt-snapshot.json` (sha256
+`b53c8a7be60948fccb72e5cfa108b95debfdd932f5f15b315363d42a332dfde9`, 93 rows) and draws the
+envelope of the Sequeiro rows for the field's municipality, crops and derived season only
+(OD-21, OD-22).
+
+## (a) No snapshot file
+
+```
+buildSeasonBand(null, {municipality: "Santa Carmem", uf: "MT", crops: [...], season: "2026/27"})
+  windows = []
+  empty   = [{kind: "municipality"}]
+component with snapshot={null}: text = "No planting window data for this municipality"
+```
+
+## (b) Snapshot does not list Santa Carmem
+
+A recorded copy holding a Sinop row only:
+```
+  windows = []
+  empty   = [{kind: "municipality"}]
+component text = "No planting window data for this municipality"
+```
+
+## (c) Santa Carmem, but no Algodão Herbáceo rows
+
+A recorded copy with Soja, Milho 1ª Safra and Milho 2ª Safra at 2026/2027:
+```
+  windows = Soybean/Soja, Corn/Milho 1ª Safra, Corn/Milho 2ª Safra
+  empty   = [{kind: "crop", crop: "Cotton"}]
+component text = "No planting window data for Cotton"
+```
+
+## (d) The file in the tree, three pinned dates
+
+```
+chosen 2026-11-12, derived 2026/27, snapshot key read 2026/2027
+  Soybean / Soja             2026-10-01 to 2027-01-10
+  Corn    / Milho 1ª Safra   2026-10-01 to 2026-12-31
+  Corn    / Milho 2ª Safra   2027-01-01 to 2027-03-10
+  Cotton  / Algodão Herbáceo 2026-12-21 to 2027-02-20
+
+chosen 2025-11-10, derived 2025/26, snapshot key read 2025/2026
+  Soybean / Soja             2025-10-01 to 2026-01-10
+  Corn    / Milho 1ª Safra   2025-10-11 to 2025-12-31
+  Corn    / Milho 2ª Safra   2026-01-01 to 2026-02-28
+  Cotton  / Algodão Herbáceo 2025-12-21 to 2026-02-20
+
+chosen 2024-11-01, derived 2024/25, the snapshot does not hold it
+  windows = []
+  empty   = [{kind: "season"}]
+  component text = "No planting window data for 2024/25"   (derived form, not 2024/2025)
+```
+
+The browser readouts above are the `data-season-window` attributes and label text of
+`.timeline-season-band`; each window is labelled with its snapshot crop name, so the maize
+band shows both `Milho 1ª Safra` and `Milho 2ª Safra`. No window of the other season renders
+at either pinned date: the component receives one derived season and filters the rows by the
+normalised key.
+
+## (e) The recorded sha256 gate
+
+`src/lib/season-band.test.ts` reads the file, hashes the raw bytes and compares against
+`b53c8a7be60948fccb72e5cfa108b95debfdd932f5f15b315363d42a332dfde9` before it asserts any
+envelope value. Measured on 2026-11-14:
+```
+sha256(artifacts/zarc-mt-snapshot.json) = b53c8a7be60948fccb72e5cfa108b95debfdd932f5f15b315363d42a332dfde9
+```
+
+## vitest
+
+```
+src/lib/season-band.test.ts                                    7 tests PASS
+  AC-25 (a) and (b): the band names the municipality it cannot read
+  AC-25 (c): a crop the snapshot does not hold for the municipality
+  AC-25 (d) and (e): the file in the tree, at the three pinned dates
+src/components/TimelineDock.test.tsx > R-31 / AC-25: the season band of the dock
+  7 tests PASS (2026/27, labels, 2025/26, season absent, municipality absent,
+  Santa Carmem missing, crop missing)
+```
+
+The band's horizontal domain is the derived season's own year, 1 July to 30 June, so one
+season reads as a crop calendar. That is a drawing choice; the dates and the labels above
+are the data facts the criterion asserts.
