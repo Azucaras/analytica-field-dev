@@ -1,6 +1,8 @@
 import { useId, useState } from 'react'
 import type { LayerCatalogEntry } from '@/lib/layer-catalog'
 import { COMPARE_DEFAULT_DIVIDER, useMapStore, chosenDateOf, opacityOf, type CompositionPreset } from '@/lib/map-store'
+import { ageLabel } from '@/lib/layer-age'
+import { AvailabilityTrack } from './AvailabilityTrack'
 import { t } from '@/strings'
 
 const PRESETS: Array<{ composition: CompositionPreset; key: 'layers.map' | 'layers.satellite' | 'layers.satellite_with_labels' }> = [
@@ -21,12 +23,8 @@ function layerName(entry: LayerCatalogEntry): string {
   return t(entry.labelKey ?? entry.label)
 }
 
-function ageLabel(ageDays: number | null): string | null {
-  if (ageDays === null) return null
-  if (ageDays === 0) return t('layers.age_zero')
-  if (ageDays === 1) return t('layers.age_one')
-  return t('layers.age_days', { days: ageDays })
-}
+/** R-33: the Sentinel-2 track is track-only and sits in these two optical rows. */
+const SENTINEL2_TRACK_LAYERS = new Set(['hls-l30', 'hls-s30'])
 
 /** R-26, one rail row: a collapsed summary and, behind one button, the fine controls. */
 function LayerRow({ entry }: { entry: LayerCatalogEntry }) {
@@ -149,7 +147,10 @@ function LayerRow({ entry }: { entry: LayerCatalogEntry }) {
               <path d="M4 1h4l-1 4 2 2H3l2-2-1-4zM6 7v4" fill="none" stroke="currentColor" strokeWidth="1.4" />
             </svg>
           </button>
-          <div className="layer-track" role="img" aria-label={t('layers.track', { name })} data-dynamic-content />
+          <AvailabilityTrack layerId={entry.id} name={name} />
+          {entry.kind === 'tile' && SENTINEL2_TRACK_LAYERS.has(entry.id) && (
+            <AvailabilityTrack kind="sentinel2" layerId={entry.id} name={name} />
+          )}
           {entry.kind === 'tile' && (
             <button
               aria-label={t('layers.compare', { name })}

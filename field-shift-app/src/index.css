@@ -875,3 +875,134 @@
        right: 8px and bottom: calc(30vh + 14vh + 58px) in this one rule. */
     .layer-rail-anchor { right: 64px; bottom: 8px; }
   }
+
+  /* Block 4, wave 3: the daily timeline, the season band and the availability marks.
+     Wave 3 mounts the dock inside the bottom-left anchor, above the rotation panel
+     (R-35); wave 4 owns the measured geometry of the three widths. */
+  .bottom-left-column {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  /* The anchor has to hold the rotation panel (46vh) plus the 92 px dock and its 8 px
+     gap; the panel's own 46vh cap is unchanged. */
+  .anchor-bottom-left:has(.bottom-left-column) { max-height: calc(46vh + 100px); }
+  .bottom-left-column > .scenario-anchor { width: 100%; }
+
+  .timeline-dock {
+    position: relative;
+    z-index: 45;
+    display: flex;
+    width: 100%;
+    height: 92px;
+    max-height: 92px;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 8px;
+    overflow: visible;
+  }
+  .timeline-row { display: flex; min-height: 44px; height: 44px; align-items: center; gap: 8px; }
+  .timeline-date-input {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    border: 1px solid #dfe8d1;
+    border-radius: 8px;
+    background: #fff;
+    color: #25332a;
+    font: inherit;
+    font-size: 10px;
+  }
+  .timeline-date-input:focus-visible { outline: 1px solid #25372a; outline-offset: 2px; }
+  .timeline-age, .timeline-season { color: #56634f; font-size: 10px; font-weight: 650; white-space: nowrap; }
+  .timeline-crop-class { margin-left: auto; color: #8e978a; font-size: 9px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+  .timeline-step {
+    display: grid;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    place-items: center;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #25372a;
+    cursor: pointer;
+  }
+  .timeline-step:hover { background: rgb(255 255 255 / 55%); }
+  .timeline-step:focus-visible { outline: 1px solid #25372a; outline-offset: 2px; }
+  .timeline-range-wrap {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    height: 44px;
+    flex: 1;
+    align-items: center;
+  }
+  .timeline-range-wrap .timeline-season-band,
+  .timeline-range-wrap .timeline-track { position: absolute; left: 0; right: 0; pointer-events: none; }
+  .timeline-range-wrap .timeline-season-band { top: 2px; height: 14px; }
+  .timeline-range-wrap .timeline-track { bottom: 3px; height: 5px; }
+  .timeline-range { position: relative; z-index: 2; width: 100%; min-height: 44px; margin: 0; background: transparent; }
+  .timeline-date-limit { position: absolute; left: 8px; bottom: 2px; margin: 0; color: #8a5a1f; font-size: 9px; }
+
+  .timeline-season-band {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #eef1e9;
+  }
+  .timeline-window {
+    position: absolute;
+    top: 0;
+    display: block;
+    min-width: 2px;
+    height: 100%;
+    border-radius: 2px;
+    background: #a8bb8a;
+  }
+  .timeline-window-label {
+    display: block;
+    overflow: hidden;
+    padding: 0 2px;
+    color: #25332a;
+    font-size: 8px;
+    font-weight: 650;
+    line-height: 14px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .timeline-band-empty { display: block; overflow: hidden; padding: 0 4px; color: #56634f; font-size: 8px; font-weight: 650; line-height: 14px; white-space: nowrap; text-overflow: ellipsis; }
+
+  .timeline-track { position: relative; width: 100%; height: 5px; overflow: hidden; border-radius: 3px; background: #edf0e9; }
+  .track-span { position: absolute; top: 0; height: 100%; border-radius: 2px; background: #7f9c5c; }
+  .track-scene { position: absolute; top: 0; width: 2px; height: 100%; border-radius: 1px; background: #9aa892; }
+  .track-scene[data-highlight="true"] { background: #4d6b2f; }
+
+  .fixture-season-note {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    margin: -10px 0 0;
+    color: #8a5a1f;
+    font-size: 8px;
+    font-weight: 650;
+    line-height: 10px;
+    pointer-events: none;
+  }
+  /* The note must not add a row to the panel: block 3 fixes the panel's content height
+     and R-36 derives the dock's top edge from it. It sits in the header's own padding. */
+  .rotation-heading-row { position: relative; }
+
+  @media (max-width: 640px) {
+    /* R-46 band for the expanded dock at 360. The dock is fixed so the rotation panel
+       keeps its block 3 box; wave 4 adds the collapsed toggle and measures it. */
+    .app-shell .timeline-dock { position: fixed; top: 224px; left: 8px; right: 64px; width: auto; height: 92px; }
+    .app-shell .anchor-bottom-left:has(.bottom-left-column) { max-height: 30vh; }
+  }
