@@ -1,0 +1,905 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://www.spaceappschallenge.org/2026/challenges/adapting-farms-with-nasa-data",
+      "title": "Field Shift: Adapting Farms with NASA Data",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 2,
+      "url": "https://www.spaceappschallenge.org/2026",
+      "title": "NASA Space Apps Challenge 2026",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 3,
+      "url": "https://www.spaceappschallenge.org/awards",
+      "title": "NASA Space Apps awards page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 4,
+      "url": "https://2013.spaceappschallenge.org/about/judging",
+      "title": "2013 judging page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 5,
+      "url": "https://2014.spaceappschallenge.org/about/judging",
+      "title": "2014 global judging page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 6,
+      "url": "https://2019.spaceappschallenge.org/locations/northeastern-university",
+      "title": "2019 Northeastern event page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 7,
+      "url": "https://rbms.sede.embrapa.br/ojs/article/download/1345/1615/11443",
+      "title": "Lange et al.",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 8,
+      "url": "https://globorural.globo.com/credito-e-investimento/noticia/2026/06/governo-bloqueia-metade-do-orcamento-do-seguro-rural-em-2026.ghtml",
+      "title": "Globo Rural",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 9,
+      "url": "https://nsidc.org/sites/default/files/documents/user-guide/multi_spl4smau-v008-userguide.pdf",
+      "title": "SMAP L4 user guide",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 10,
+      "url": "https://lpdaac.usgs.gov/documents/1698/HLS_User_Guide_V2.pdf",
+      "title": "HLS user guide",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 11,
+      "url": "https://raw.githubusercontent.com/ECOSTRESS-Collection-3/ECOv003-L3T-L4T-JET/main/documentation/ECOv003_L3_L4_JET_ATBD.md",
+      "title": "ECOSTRESS JET algorithm guide",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 12,
+      "url": "https://extension.msstate.edu/sites/default/files/publications/P4091_web.pdf",
+      "title": "Mississippi State Extension",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 13,
+      "url": "http://coamo.coop.br/revista/conteudo.php?ed=103&id=1810",
+      "title": "Coamo's member magazine",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 14,
+      "url": "https://nsidc.org/sites/default/files/documents/user-guide/spl3smp_e-v006-userguide.pdf",
+      "title": "SMAP Enhanced L3 user guide (read, December 2023)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 15,
+      "url": "https://www.earthdata.nasa.gov/data/catalog/lpcloud-eco-l2t-lste-003",
+      "title": "ECOSTRESS LSTE catalog (read, checked 2026-11-10)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 16,
+      "url": "https://api.openalex.org/works/https://doi.org/10.1080/07038992.2026.2645742",
+      "title": "Thakur et al., 2026",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 17,
+      "url": "https://www.earthdata.nasa.gov/data/catalog/lpcloud-eco-l3t-jet-003",
+      "title": "ECOSTRESS catalog records (read, checked 2026-11-10)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 18,
+      "url": "https://arthurhou.pps.eosdis.nasa.gov/Documents/IMERG_V07_ATBD_final.pdf",
+      "title": "IMERG V07 ATBD (read, 2023-07-12)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 19,
+      "url": "https://www.earthdata.nasa.gov/data/catalog/ges-disc-gpm-3imergdl-07",
+      "title": "GES DISC Late product page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 20,
+      "url": "https://science.nasa.gov/science-research/earth-science/terra-the-end-of-an-era",
+      "title": "NASA's March 20, 2026 update",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 21,
+      "url": "https://modis.gsfc.nasa.gov/sci_team/meetings/202603/presentations/Session%201/Jones%20and%20Chiang%20-%20MODISInstOps_2026.pdf",
+      "title": "March 11, 2026 MODIS operations deck",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 22,
+      "url": "https://earthdata.nasa.gov/s3fs-public/2025-12/GRACE-FO_L3_Handbook_JPL.pdf",
+      "title": "GRACE and GRACE Follow On mascon handbook (read, handbook dated 2021-05-10)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 23,
+      "url": "https://lpdaac.usgs.gov/documents/179/SRTM_User_Guide_V3.pdf",
+      "title": "SRTM user guide (read, revised 2015-10)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 24,
+      "url": "https://data.ornldaac.earthdata.nasa.gov/public/gedi/GEDI_L4B_Gridded_Biomass_V2_1/comp/GEDI_L4B_Gridded_Biomass_V2_1.pdf",
+      "title": "GEDI L4B guide (read, revision 2023-10-29)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 25,
+      "url": "https://power.larc.nasa.gov/docs/services/api/temporal/daily",
+      "title": "POWER daily API documentation (read, checked 2026-11-10)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 26,
+      "url": "https://www.nrcs.usda.gov/resources/data-and-reports/gridded-soil-survey-geographic-gssurgo-database",
+      "title": "gSSURGO",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 27,
+      "url": "https://www.nrcs.usda.gov/resources/data-and-reports/gridded-national-soil-survey-geographic-database-gnatsgo",
+      "title": "gNATSGO",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 28,
+      "url": "https://www.nrcs.usda.gov/resources/data-and-reports/description-of-statsgo2-database",
+      "title": "STATSGO2",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 29,
+      "url": "https://websoilsurvey.nrcs.usda.gov/app",
+      "title": "Web Soil Survey",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 30,
+      "url": "https://www.ibge.gov.br/geociencias/informacoes-ambientais/pedologia/10871-pedologia.html",
+      "title": "IBGE Pedologia",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 31,
+      "url": "https://geoinfo.dados.embrapa.br/geoserver/ows?service=WFS&version=2.0.0&request=GetCapabilities",
+      "title": "Embrapa GeoInfo",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 32,
+      "url": "https://www.bdsolos.cnptia.embrapa.br/consulta_publica.html",
+      "title": "BDsolos and its Redape repository",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 33,
+      "url": "https://geoportal.sgb.gov.br/server/rest/services/pronasolos?f=pjson",
+      "title": "PronaSolos",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 34,
+      "url": "https://geoportal.sgb.gov.br/server/rest/services/pronasolos/solos_90m/MapServer",
+      "title": "SGB service",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 35,
+      "url": "https://www.gov.br/en/government-of-brazil/latest-news/2022/pronasolos-platform-allow-access-to-all-who-produce-soil-data-in-brazil",
+      "title": "2022 federal programme summary",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 36,
+      "url": "https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura",
+      "title": "MapBiomas Collection 11",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 37,
+      "url": "https://brasil.mapbiomas.org/iniciativas-e-produtos/solo",
+      "title": "MapBiomas Soil Collection 3",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 38,
+      "url": "https://consultapublica.car.gov.br/publico/imoveis/index",
+      "title": "SICAR",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 39,
+      "url": "https://www.nass.usda.gov/Research_and_Science/Cropland/sarsfaqs2.php",
+      "title": "Cropland Data Layer (CDL)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 40,
+      "url": "https://croplandcros.scinet.usda.gov",
+      "title": "CroplandCROS",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 41,
+      "url": "https://nass.usda.gov/Research_and_Science/Crop-Sequence-Boundaries/metadata_Crop-Sequence-Boundaries-2022.htm",
+      "title": "Crop Sequence Boundaries",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 42,
+      "url": "https://nass.usda.gov/Research_and_Science/Cropland/metadata/metadata_Crop-Frequency-Layers-2025_FGDC-STD-001-1998.htm",
+      "title": "Crop Frequency Layers",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 43,
+      "url": "https://www.gov.br/agricultura/pt-br/assuntos/riscos-seguro/programa-nacional-de-zoneamento-agricola-de-risco-climatico/portarias",
+      "title": "ZARC",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 44,
+      "url": "https://quickstats.nass.usda.gov/api",
+      "title": "NASS Quick Stats",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 45,
+      "url": "https://www.nass.usda.gov/publications/agcensus/2022",
+      "title": "Census of Agriculture",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 46,
+      "url": "https://portaldeinformacoes.conab.gov.br/precos-agropecuarios-serie-historica.html",
+      "title": "CONAB historical prices",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 47,
+      "url": "https://www.nass.usda.gov/Publications/Highlights/2025/2025LandValuesCashRents_FINAL.pdf",
+      "title": "2025 Land Values and Cash Rents, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 48,
+      "url": "https://farmdocdaily.illinois.edu/2026/01/projected-incomes-on-owned-vs-rented-farmland-for-2026.html",
+      "title": "2026 Illinois return comparison, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 49,
+      "url": "https://farmdocdaily.illinois.edu/2026/01/tenure-characteristics-of-illinois-farmland-6.html",
+      "title": "tenure analysis, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 50,
+      "url": "https://practicalfarmers.org/resources/articles/finding-common-ground",
+      "title": "Practical Farmers of Iowa account, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 51,
+      "url": "https://nass.usda.gov/Publications/Highlights/2026/TOTAL24.pdf",
+      "title": "2024 TOTAL survey, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 52,
+      "url": "https://farmdocdaily.illinois.edu/2026/03/projected-prices-and-volatility-factors-for-2026.html",
+      "title": "projected-price report, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 53,
+      "url": "https://rma.usda.gov/sites/default/files/2026-06/Common%20Crop%20Insurance%20Policy%20Basic%20Provisions%2027.1-BR.pdf",
+      "title": "USDA Risk Management Agency’s 2026 Common Crop Insurance Basic Provisions, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 54,
+      "url": "https://www.ecfr.gov/current/title-7/subtitle-B/chapter-XIV/subchapter-B/part-1412/subpart-B/section-1412.27",
+      "title": "eCFR rule for additional base acres, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 55,
+      "url": "https://fsa.usda.gov/news-events/news/09-15-2026/usda-announces-2026-2027-enrollment-key-price-revenue-safety-net",
+      "title": "allocation announcement, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 56,
+      "url": "https://usda.gov/about-usda/news/press-releases/2025/12/31/usda-announces-commodity-payment-rates-farmer-bridge-assistance-program",
+      "title": "2025 FBA payment announcement, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 57,
+      "url": "https://dtnpf.com/agriculture/web/ag/news/article/2026/11/04/corn-soybean-basis-stronger",
+      "title": "daily basis comments, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 58,
+      "url": "https://www.farmprogress.com/management/tale-of-two-farmers-nitrogen-prices-force-strategy-rewrite",
+      "title": "Farm Progress, October 2026",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 59,
+      "url": "https://acsess.onlinelibrary.wiley.com/doi/full/10.2134/agronj2016.03.0134",
+      "title": "Agronomy Journal analysis, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 60,
+      "url": "https://extension.iastate.edu/agdm/crops/html/a3-25.html",
+      "title": "Iowa State’s 2025 field-day analysis, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 61,
+      "url": "https://www.qgdigitalpublishing.com/article/Should+you+skinny+down+your+line%3F/5079686/857804/article.html",
+      "title": "December 2025 Wallace Farmer profile",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 62,
+      "url": "https://kgs.ku.edu/news/article/groundwater-levels-in-the-kansas-high-plains-aquifer-see-first-overall-increase-since-2019",
+      "title": "2025 levels report, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 63,
+      "url": "https://accc.k-state.edu/research/factsheets/FS7_LEMA.pdf",
+      "title": "2016 K-State study",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 64,
+      "url": "https://ageconsearch.umn.edu/record/358997/files/JARE358997.pdf",
+      "title": "2026 Journal of Agricultural and Resource Economics study",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 65,
+      "url": "https://www.ppic.org/publication/policy-brief-the-future-of-agriculture-in-the-san-joaquin-valley",
+      "title": "Public Policy Institute of California’s San Joaquin Valley analysis, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 66,
+      "url": "https://ppic.org/blog/california-is-finally-addressing-groundwater-overdraft-how-is-it-going",
+      "title": "2026 overdraft update, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 67,
+      "url": "https://agriculture.ks.gov/home/showpublisheddocument/17804/639268979873281769",
+      "title": "October 13, 2026 GMD 4 hearing testimony",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 68,
+      "url": "https://doi.org/10.1017/wsc.2026.10111",
+      "title": "2026 Weed Science study, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 69,
+      "url": "https://eupdate.agronomy.ksu.edu/article/wheat-status-injury-symptoms-from-freeze-damage-687-4",
+      "title": "March 2026 wheat freeze assessment, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 70,
+      "url": "https://agribusiness.purdue.edu/2025-large-commercial-producer-survey-results",
+      "title": "2025 Large Commercial Producer Survey, read",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 71,
+      "url": "https://www.agdaily.com/news/farmers-trust-ag-media-peers-exploring-new-practices",
+      "title": "reported by AGDAILY",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 72,
+      "url": "https://www.scielo.br/j/resr/a/Cp5dGMsPtgBh4G3Mz48SzFs?lang=en",
+      "title": "RESR study in Dois Vizinhos, Paraná",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 73,
+      "url": "https://siteapi.aprosoja.com.br/storage/arquivos/4/240724142657.pdf",
+      "title": "2024 Aprosoja-MT alternative-crop guide",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 74,
+      "url": "https://normativos.bcb.gov.br/Votos/CMN/202535/Voto_do_CMN_35_2025.pdf",
+      "title": "Zoneamento Agrícola de Risco Climático, ZARC",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 75,
+      "url": "https://www.gov.br/agricultura/pt-br/assuntos/politica-agricola/plano-safra/2026-2027/filipeta-plano-safra-2026-2027-defeso.pdf",
+      "title": "Plano Safra",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 76,
+      "url": "https://www.bcb.gov.br/content/estabilidadefinanceira/proagro_docs/resumo_instrucoes_Proagro.pdf",
+      "title": "PROAGRO instructions",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 77,
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?numero=5224&tipo=Resolu%C3%A7%C3%A3o%20CMN",
+      "title": "CMN Resolution 5.224",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 78,
+      "url": "https://www.gov.br/conab/pt-br/atuacao/logistica/boletim-logistico/boletim-logistico-outubro-2026.pdf",
+      "title": "Conab's September 2026 freight survey, published in the October 2026 Logistics Bulletin",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 79,
+      "url": "https://valorinternational.globo.com/agribusiness/news/2025/10/27/input-suppliers-gain-ground-in-brazils-farm-credit-market.ghtml",
+      "title": "CropLife and CropData figures reported in 2025",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 80,
+      "url": "https://rpa.sede.embrapa.br/RPA/article/download/1852/pdf_1/3859",
+      "title": "Embrapa's two-municipality Mato Grosso study",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 81,
+      "url": "https://www.embrapa.br/en/busca-de-noticias/-/noticia/149291203/embrapa-solos-celebra-o-dia-nacional-do-plantio-direto",
+      "title": "Embrapa Solos",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 82,
+      "url": "https://valorinternational.globo.com/agribusiness/news/2026/07/06/el-nino-and-rising-costs-discourage-wheat-sowing-in-brazil.ghtml",
+      "title": "Valor International reported",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 83,
+      "url": "https://revistacultivar.com.br/noticias/pr-safra-2025-26-milho-avanca-com-boas-condicoes",
+      "title": "Revista Cultivar, reporting Deral",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 84,
+      "url": "https://globorural.globo.com/agricultura/noticia/2026/10/previsao-para-a-produtividade-do-trigo-cresce-no-rs-mas-colheita-deve-cair-quase-40percent-em-2026.ghtml",
+      "title": "Globo Rural reported",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 85,
+      "url": "https://tridge.com/news/pr-202526-harvest-prices-slow-wheat-price-ad-vlploh",
+      "title": "Deral report mirrored by Tridge",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 86,
+      "url": "https://valorinternational.globo.com/agribusiness/news/2025/07/08/adverse-weather-hampers-wheat-crop-in-southern-brazil.ghtml",
+      "title": "Valor International's report on Paraná's 2025 crop",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 87,
+      "url": "https://portaldoagronegocio.com.br/agricultura/aveia-trigo-e-cevada/noticias/trigo-no-parana-colheita-chega-a-82-mas-perdas-ameacam-cobertura-dos-custos",
+      "title": "Portal do Agronegócio reported",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 88,
+      "url": "https://valorinternational.globo.com/agribusiness/news/2026/03/31/proagro-changes-cut-access-to-credit-and-crop-protection.ghtml",
+      "title": "Valor and FGV-Agro",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 89,
+      "url": "https://istoedinheiro.com.br/coamo-teve-em-2025-receita-global-de-r-287-bi-e-sobra-liquida-de-r-2-bi",
+      "title": "Coamo",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 90,
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm",
+      "title": "The Forest Code",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 91,
+      "url": "https://fiepr.org.br/relacoes-governamentais/uploadAddress/RESOLUCAO-CMN-N-5.193.2024%5B112038%5D.pdf",
+      "title": "CMN Resolution 5.193/2024",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 92,
+      "url": "https://portaldbo.com.br/select_post/conclusoes-do-cadastro-ambiental-rural-car-enfim-decolam",
+      "title": "Portal DBO's reporting of end-2025 registry data",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 93,
+      "url": "https://environment.ec.europa.eu/topics/forests/deforestation/eu-deforestation-regulation-eudr_en",
+      "title": "EU Deforestation Regulation (EUDR)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 94,
+      "url": "https://congress.gov/crs_external_products/R/PDF/R45210/R45210.26.pdf",
+      "title": "2018 US farm bill",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 95,
+      "url": "https://www.federalregister.gov/documents/full_text/html/2026/02/23/2026-03628.html",
+      "title": "EO 14387",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 96,
+      "url": "https://www.gov.br/agricultura/pt-br/assuntos/politica-agricola/plano-safra/2026-2027",
+      "title": "Plano Safra",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 97,
+      "url": "https://www.epa.gov/pesticides/epa-releases-glyphosate-human-health-open-literature-search-document-public-feedback",
+      "title": "open-literature search",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 98,
+      "url": "https://www.hhs.gov/press-room/hhs-epa-partnership-strengthen-glyphosate-review.html",
+      "title": "memorandum of understanding",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 99,
+      "url": "https://congress.gov/crs_external_products/R/PDF/R48918/R48918.5.pdf",
+      "title": "H.R. 7567",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 100,
+      "url": "https://www.agriculture.senate.gov/agricultural-act-of-2026-farm-bill-20",
+      "title": "Senate Agriculture Committee page",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 101,
+      "url": "https://globorural.globo.com/economia/noticia/2026/11/desembolso-de-credito-rural-cai-26percent-no-1o-quadrimestre-da-safra.ghtml",
+      "title": "November 9, 2026 report",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 102,
+      "url": "https://agriculture.ks.gov/divisions-programs/division-of-water-resources/managing-kansas-water-resources/local-enhanced-management-areas/gmd4-lema",
+      "title": "Greater GMD 4 hearing",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 103,
+      "url": "https://waterboards.ca.gov/sgma/groundwater_basins/tulare_lake_subbasin.html",
+      "title": "Tulare Lake groundwater probation",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 104,
+      "url": "https://eur-lex.europa.eu/eli/reg/2025/2650/oj/eng",
+      "title": "EUDR schedule",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 105,
+      "url": "https://mymarketnews.ams.usda.gov/filerepo/sites/default/files/3195/2026-09-28/1355575/ams_3195_00175.pdf",
+      "title": "Illinois AMS input and diesel observations",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 106,
+      "url": "https://www.dtnpf.com/agriculture/web/ag/news/article/2026/11/10/usda-releases-november-crop-wasde",
+      "title": "USDA November WASDE season-average estimates, reported by DTN",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 107,
+      "url": "https://dtnpf.com/agriculture/web/AG/crops/article/2026/11/04/uan28-continues-lead-fertilizer-week",
+      "title": "A November 2026 secondary report",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 108,
+      "url": "https://nass.usda.gov/Newsroom/2026/06-30-2026.php",
+      "title": "June 2026 NASS acreage and stocks",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 109,
+      "url": "https://cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.txt",
+      "title": "Climate Prediction Center",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 110,
+      "url": "https://www.ncei.noaa.gov/access/monitoring/monthly-report/drought/202607",
+      "title": "NCEI's July 2026 Drought Report",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 111,
+      "url": "https://campograndenews.com.br/lado-rural/incidencia-de-lagarta-da-espiga-salta-de-10-para-70-em-lavouras-de-ms",
+      "title": "A Campo Grande News report published October 22, 2026, on an Aprosoja-MS survey",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 112,
+      "url": "https://agrolink.com.br/noticias/cigarrinha-pode-elevar-perdas-no-milho-safrinha_520237.html",
+      "title": "An October 2026 alert",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 113,
+      "url": "https://doi.org/10.1017/wsc.2026.10102",
+      "title": "A March 2026 paper",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 114,
+      "url": "https://northernag.net/new-palmer-amaranth-detection-in-montana",
+      "title": "An August 2026 report",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 115,
+      "url": "https://gpm.nasa.gov/data/news/update-imerg-v08-transition-schedule-aug-2026",
+      "title": "NASA's August 2026 schedule",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 116,
+      "url": "https://earthdata.nasa.gov/data/alerts-outages/transition-gpm-imerg-products-v08",
+      "title": "NASA's schedule says V07 Final ended",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 117,
+      "url": "https://cpaess.ucar.edu/sites/default/files/grace-fo-2025-presentation/landerer-felix.pdf",
+      "title": "GRACE-FO's October 2025 presentation",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 118,
+      "url": "https://spacedata.swapniltamse.com",
+      "title": "Space Data Atlas home (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 119,
+      "url": "https://spacedata.swapniltamse.com/challenges/field-shift-adapting-farms",
+      "title": "Field Shift challenge page (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 120,
+      "url": "https://spacedata.swapniltamse.com/about",
+      "title": "About page (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 121,
+      "url": "https://spacedata.swapniltamse.com/get-ready",
+      "title": "Get Ready guide (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 122,
+      "url": "https://spacedata.swapniltamse.com/starters",
+      "title": "starter collection (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 123,
+      "url": "https://help.onesoil.ai/en/articles/5235420-how-to-plan-crop-rotation-with-onesoil",
+      "title": "OneSoil's rotation help (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 124,
+      "url": "https://agreena.com/agreenagro",
+      "title": "AgreenaGro product page (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 125,
+      "url": "https://agreena.com/news/what-to-expect-when-you-sign-up-to-agreenagro",
+      "title": "signup guide (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 126,
+      "url": "https://farming.co.uk/news/agreena-launches-agreenagro-to-boost-farmers-financial-and-climate-resilience",
+      "title": "2025 Field Rotation Score coverage (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 127,
+      "url": "https://climate.com/en-us/pricing.html",
+      "title": "FieldView pricing page (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 128,
+      "url": "https://adas.co.uk/news/free-planning-tool-for-crop-rotation-decisions",
+      "title": "ADAS Crop Planner (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 129,
+      "url": "https://www.armonline.com.au/ra",
+      "title": "RotationARM (read)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 130,
+      "url": "https://doi.org/10.1016/j.learninstruc.2006.10.001",
+      "title": "Ginns's 2006 (documented) meta-analysis",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 131,
+      "url": "https://doi.org/10.1007/s10648-018-9435-9",
+      "title": "Schroeder and Cenkci's 2018 (documented) meta-analysis",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 132,
+      "url": "https://doi.org/10.1002/acp.4223",
+      "title": "Zhang, de Koning, and Paas's 2024 (documented) screen-based nephron lesson study",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 133,
+      "url": "https://doi.org/10.1007/s11251-009-9110-0",
+      "title": "De Jong's 2010 (documented) conceptual review",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 134,
+      "url": "https://doi.org/10.1145/2957265.2961864",
+      "title": "Salazar et al. (2016, documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 135,
+      "url": "https://arxiv.org/abs/1811.02164",
+      "title": "Springer and Whittaker (2018, documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 136,
+      "url": "https://doi.org/10.1145/3742413.3789087",
+      "title": "Anik and Bunt (2026, documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 137,
+      "url": "https://doi.org/10.3389/fcomp.2020.590232",
+      "title": "Joslyn and Savelli (2021, documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 138,
+      "url": "https://doi.org/10.1145/3173574.3173823",
+      "title": "Zheng et al. (2018, documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 139,
+      "url": "https://pubmed.ncbi.nlm.nih.gov/36161546",
+      "title": "Wu and colleagues' study, published online in 2022 (documented) and in a 2023 issue (documented)",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 140,
+      "url": "https://doi.org/10.48550/arxiv.2610.03524",
+      "title": "FLINT",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 141,
+      "url": "https://arxiv.org/abs/1811.06096",
+      "title": "Yang and colleagues' 2018 (documented) grammar-augmentation paper",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 142,
+      "url": "https://doi.org/10.3390/mti8020008",
+      "title": "Rosilius and colleagues' 2024 (documented) HoloLens 2 experiment",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 143,
+      "url": "https://doi.org/10.1145/3733155.3734896",
+      "title": "Nowrin and Vertanen's 2025 (documented) eyes-free error study",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 144,
+      "url": "https://nsidc.org/data/spl3smp_e/versions/6",
+      "title": "SMAP's 9 km posting",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 145,
+      "url": "https://doi.org/10.5067/HLS/HLSL30.002",
+      "title": "HLS surface reflectance",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 146,
+      "url": "https://podaac.jpl.nasa.gov/dataset/TELLUS_GRAC-GRFO_MASCON_CRI_GRID_RL06.3_V4",
+      "title": "GRACE's 0.5 degree posting",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 147,
+      "url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M&community=AG&longitude=-55.28&latitude=-11.97&start=20250101&end=20250131&format=JSON&time-standard=UTC",
+      "title": "NASA POWER query",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 148,
+      "url": "https://cmr.earthdata.nasa.gov/search/granules.json?collection_concept_id=C2938664763-NSIDC_CPRD&page_size=5&sort_key=-start_date&bounding_box=-55.50%2C-12.10%2C-55.10%2C-11.80",
+      "title": "CMR metadata",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 149,
+      "url": "https://cmr.earthdata.nasa.gov/search/granules.json?collection_concept_id=C2938664763-NSIDC_CPRD&page_size=5&sort_key=-start_date",
+      "title": "SMAP CMR granule query",
+      "accessed": "2026-11-10"
+    },
+    {
+      "id": 150,
+      "url": "https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGDF_07/summary",
+      "title": "GPM IMERG V07 Final",
+      "accessed": "2026-11-10"
+    }
+  ]
+}

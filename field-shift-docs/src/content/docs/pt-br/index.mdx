@@ -1,0 +1,53 @@
+---
+title: Visão geral
+description: Um único site para a pesquisa do Field Shift, as decisões de design tiradas dela e o build que a entrega.
+template: splash
+hero:
+  title: Field Shift
+  tagline: Decisões de rotação de culturas a partir da observação da Terra pela NASA, feitas para produtores, legíveis pela equipe e por agentes.
+  actions:
+    - text: Comece pelo problema
+      link: /pt-br/10-research/
+      icon: right-arrow
+    - text: Leia como agente
+      link: /40-reference/agent-context/
+      variant: minimal
+---
+
+import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## O que é este site
+
+A documentação de trabalho de uma entrada da NASA Space Apps 2026 para o desafio Field Shift: uma ferramenta de apoio à decisão que ajuda o produtor a ponderar opções de rotação de culturas frente a restrições de solo, água e mercado, usando observação por satélite, com um mapa interativo, um agente que responde perguntas sobre os dados e controle por voz.
+
+Duas portas para o mesmo conteúdo. As páginas de pesquisa trazem as evidências, incluindo as partes que argumentam contra a versão fácil da ideia.
+
+<Tabs syncKey="audience">
+  <TabItem label="Sou da equipe">
+    Leia [Como usar esta documentação](/pt-br/00-start-here/how-to-use/) e siga o caminho do seu papel. Depois leia o problema e os achados antes de escrever código.
+  </TabItem>
+  <TabItem label="Sou um agente">
+    Leia primeiro [Contexto do agente](/pt-br/40-reference/agent-context/), depois `/llms.txt` para o índice de páginas e `/llms-full.txt` para o corpus. A raiz do repositório traz `AGENTS.md` com as regras locais.
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <Card title="Pesquisa" icon="magnifier">
+    Problema, registro de evidências, achados, questões em aberto e todo o dossiê de 29,000 palavras, página por página.
+  </Card>
+  <Card title="Design" icon="pen">
+    As decisões que restringem o build, um registro para cada uma, mais as decisões menores, em um log.
+  </Card>
+  <Card title="Build" icon="setting">
+    Arquitetura, configuração, execução e verificação. Os comandos são os que de fato rodam nesta máquina.
+  </Card>
+  <Card title="Referência" icon="open-book">
+    Glossário e contexto do agente, para que um novo leitor ou agente comece com o mesmo vocabulário.
+  </Card>
+</CardGrid>
+
+## Leia a evidência, não o resumo
+
+O site é uma camada sobre um dossiê citado de 29,000 palavras. Cada afirmação aqui remete a ele.
+
+Leia no site: [seção 1](/pt-br/50-dossier/s1-the-challenge/), e siga adiante. Ele também existe como arquivo único, [field-shift-dossier.md](/field-shift-dossier.md), com o [registro de proveniência](/field-shift-provenance.md).

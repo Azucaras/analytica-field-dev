@@ -1,0 +1,27 @@
+---
+title: "2.1 SMAP soil moisture: a 36 km footprint reading the top 5 cm"
+description: "The SMAP Enhanced L3 user guide (read, December 2023) describes a daily map of retrieved surface soil moisture, not a set of independent field probes."
+checked: 2026-11-10
+---
+
+The [SMAP Enhanced L3 user guide (read, December 2023)](https://nsidc.org/sites/default/files/documents/user-guide/spl3smp_e-v006-userguide.pdf) describes a daily map of retrieved surface soil moisture, not a set of independent field probes. The L band radiometer measures naturally emitted microwave brightness temperature at 1.41 GHz (documented). A retrieval algorithm uses the signal's sensitivity to soil dielectric properties, with vegetation water content and soil temperature inputs, to estimate near surface moisture. The quantity represents roughly the top 0 to 5 cm of soil (documented). It can indicate wetting or drying at the surface, but does not directly observe the moisture available to deeper crop roots.
+
+The map's grid is finer than the instrument's information support. SMAP Enhanced L3 posts values on a 9 km grid (documented), but the radiometer footprint is about 36 km (documented). Backus Gilbert interpolation distributes the footprint signal across the finer grid, using a contributing domain of about 33 km (documented). Neighboring 9 km cells therefore do not represent separate 9 km observations. A crisp-looking boundary between cells is not evidence that moisture changed at that boundary. The physical support remains broad, and a single footprint can include several farms, soil types, crops, and land covers.
+
+Cadence also needs careful reading. SPL3SMP_E is a daily composite from half orbit retrievals. A granule contains separate descending and ascending fields, with nominal overpasses near 6 a.m. and 6 p.m. local solar time (documented). Global revisit is about 2 to 3 days (documented), with an 8 day exact repeat cycle (documented). These are related but not interchangeable statements: an L2 half orbit value describes one pass, while L3 composes the passes into a daily product. The L2 source can help place a wetting or drying event in time, but its posting remains derived from the same broad footprint. Neither the daily label nor the two daily pass opportunities create farm scale information.
+
+The product is most useful as broad water context between rainfall events. A regional or block scale decline can prompt a team to check whether the surface is drying before a planting window, especially for a second crop, and then confirm locally with a probe, gauge, or farmer observation. A rising value can be a clue to recent recharge of the surface layer. It is not a direct measurement of the whole water supply for a crop. Soil texture, rooting depth, residue, canopy, and rainfall distribution can make the field differ from the footprint average.
+
+Retrieval quality can fail for reasons that matter to an agronomic map. Frozen ground, snow, open water, steep terrain, urban fractions, dense vegetation, and residual radio frequency interference can impair or invalidate the estimate. The mission requirement excludes vegetation water content above 5 kg per square metre (documented). Some unsafe or unsuitable conditions are flagged rather than repaired into trustworthy field values. A missing or low quality retrieval is not evidence of dry soil, and a spatially smooth map does not remove the footprint's mixed land cover.
+
+Latency is product specific. NSIDC's latency FAQ, last updated in October 2025 and checked on 2026-11-10 (documented), gives a required 2 days and 2 hours and a normal operating mean of about 1.2 days for L3 (documented). For L2 it gives a required 1 day and a mean of about half a day (documented). The latest L3 granule listed on 2026-11-10 ended on 2026-11-08 (documented). Those dated catalog facts describe availability at that check, not a service guarantee. Users should expose product version and observation date, rather than presenting a recent map as a real time field reading.
+
+**Figure S2-F1. SMAP support and posting (documented).**
+
+| Surface layer represented | Radiometer footprint | Posted grid | Interpretation |
+|---|---:|---:|---|
+| 0 to 5 cm (documented) | about 36 km (documented) | 9 km (documented) | Interpolated posting, not independent field observations |
+
+**Decision it can inform.** Use SMAP as a broad surface wetness or drying flag to decide whether a local check of a planting window is warranted. The documented facts are a 9 km posting and an approximately 36 km footprint; treating these as a roughly 10 to 36 km decision scale is an inference. The SMAP grid is context for a decision, not its field evidence.
+
+**Decision it only illustrates.** It cannot schedule irrigation at a farm gate, estimate root zone depletion, or distinguish moisture in a particular field. In particular, do not infer that a 9 km cell is a farm measurement or that the top 5 cm represents the crop's full rooting layer.

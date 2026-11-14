@@ -1,0 +1,30 @@
+---
+title: "8.4 Voice in a noisy field"
+description: "Speech may be offered only after the named FIELDVOICETEST01 evaluates the intended phone or cabin microphone with local speakers, command language, and representative ambient and machinery noise."
+checked: 2026-11-10
+---
+
+Speech may be offered only after the named `FIELD_VOICE_TEST_01` evaluates the intended phone or cabin microphone with local speakers, command language, and representative ambient and machinery noise. The cited 64.2 dB(A) cutoff (documented) came from a different HoloLens studio setting and is not a Field Shift threshold. Keep labelled on-screen controls as a complete fallback. If the test shows unreliable recognition at the measured noise levels, or users cannot see the screen for confirmation, disable voice for that setting and retain screen or touch operation; do not infer a safe noise threshold from the cited study.
+
+[Yang and colleagues' 2018 (documented) grammar-augmentation paper](https://arxiv.org/abs/1811.06096) used an offline benchmark without human participants (documented). It tested five music commands (documented), with utterances varying in gender, pitch, volume, noise, and accent (documented). Table 2 reports 94.44 percent command success for the cross-entropy method at candidate-set size 150 (documented); the greedy, greedy-refinement, and beam-search variants are non-monotonic as candidate-set size changes (documented); the cross-entropy variant increases monotonically (documented). Its vocabulary was closed (documented), and noise was not an isolated field condition (documented). The result supports careful grammar selection, not a farm recognition rate (documented interpretation).
+
+[Rosilius and colleagues' 2024 (documented) HoloLens 2 experiment](https://doi.org/10.3390/mti8020008) involved 22 native German-speaking students (documented) in a studio, exposed to recorded industrial noise at several sound levels while wearing hearing protection. Recognition errors rose with sound level, and information transfer rate fell from 37.15 bits per minute in quiet to 25.4 in loud noise (documented). The authors judged the system unsuitable above 64.2 dB(A) using their cutoff (documented). Command recognition was less affected than dictation (documented). The test does not validate phones, Brazilian Portuguese, US farm accents, tractor cabins, or this command set (documented study scope). Errors reduced acceptance and raised frustration (documented), but did not raise measured workload or physiological stress (documented), so word error rate alone does not capture user cost.
+
+[Nowrin and Vertanen's 2025 (documented) eyes-free error study](https://doi.org/10.1145/3733155.3734896) involved 48 sighted, native English-speaking crowd workers (documented) judging synthetic speech. Selectively slowing low-confidence utterances produced 85 percent error detection versus 80 percent with normal speed (documented), but the difference was not statistically significant (documented). Participants located only 49 percent of errors overall (documented). Confidence feedback cannot replace read-back and correction. The study had no field-noise manipulation or farm task (documented study scope).
+
+Start with screen-bounded commands: “show field,” “compare rotations,” “next season,” “zoom to field,” “repeat,” and “cancel.” Map each to a visible control. Resolve spoken field names only when unique. For “show moisture,” require a selected field and resolve `moisture` to one allowlisted indicator slot, then read back the field, period, and product before displaying results. Return choices for ambiguous names or indicators instead of selecting the nearest. Exclude open dictation. Voice may initiate a read-only action or a proposed persistent change, but voice alone never writes, including account, boundary, crop-history, sharing, or saved-record changes.
+
+Use idle, listen, constrained parse, read-back, then execute a read-only action or wait for confirmation. Display recognized words and the interpreted action; speak it when the screen cannot be viewed. Provide cancel at every step. If confidence is low, the phrase is out of grammar, a field name is ambiguous, network fails, or noise prevents a reliable transcript, do not execute. Offer manual controls and preserve map state. A confidence score can trigger clarification, never authorize a write.
+
+For a persistent change, voice may only propose the exact operation and target, such as “Save this boundary for Field 12” or “Change crop history for 2024 to soybean.” Display the proposal in a labelled on-screen confirmation control that names the affected record and exact change; only activation of that control writes. Do not provide a spoken, inferred, or silence-based confirmation path. Cancel leaves saved data unchanged. Record the action and outcome without unnecessary private data; provide undo where possible.
+
+**Figure S8-F4. Voice command states and fallback handling (basis: proposed interaction flow, planned and non-evidentiary, conditional on field testing).**
+
+| Command class | Example | Handling |
+|---|---|---|
+| Read-only navigation | “Zoom to field,” “next season” | Read back, execute, preserve map state. |
+| Read-only query | “Compare rotations” | Confirm field and seasons, then show provenance and result. |
+| Persistent change | “Save boundary,” “change crop history” | Voice can stage a proposal, but only a labelled on-screen confirmation writes. |
+| Uncertain parse | Unknown phrase, low confidence, ambiguous field | Do not execute; repeat, clarify, or offer manual controls. |
+
+A thin version uses a button, fixed vocabulary, read-only commands, on-screen read-back, cancel, and manual fallback. A fuller version adds speaker and language evaluation, offline grammar, spoken feedback, device-calibrated noise handling, labelled on-screen confirmation for any write, and audited undo. Studies do not establish farm-safe thresholds or recognition rates. Voice can initiate a write proposal, but only activation of the labelled on-screen control authorizes the write; low-confidence or inferred place names never trigger actions.

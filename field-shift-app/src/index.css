@@ -1,0 +1,851 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+    --animate-skeleton: skeleton 2s -1s infinite linear;
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning: var(--warning);
+    --color-success-foreground: var(--success-foreground);
+    --color-success: var(--success);
+    --color-info-foreground: var(--info-foreground);
+    --color-info: var(--info);
+    --color-destructive-foreground: var(--destructive-foreground);
+  @keyframes skeleton {
+  to {
+    background-position: -200% 0;
+        }
+    }
+}
+
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+    --destructive-foreground: var(--color-red-700);
+    --info: var(--color-blue-500);
+    --info-foreground: var(--color-blue-700);
+    --success: var(--color-emerald-500);
+    --success-foreground: var(--color-emerald-700);
+    --warning: var(--color-amber-500);
+    --warning-foreground: var(--color-amber-700);
+}
+
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+    --destructive-foreground: var(--color-red-400);
+    --info: var(--color-blue-500);
+    --info-foreground: var(--color-blue-400);
+    --success: var(--color-emerald-500);
+    --success-foreground: var(--color-emerald-400);
+    --warning: var(--color-amber-500);
+    --warning-foreground: var(--color-amber-400);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+  @apply font-sans;
+  }
+  }
+
+  :root {
+  font-family: 'Geist Variable', sans-serif;
+  color: #1e2a24;
+  background: #f6f7f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  }
+
+  * { box-sizing: border-box; }
+  body { min-width: 360px; min-height: 100vh; margin: 0; background: #f6f7f4; }
+  button, select { font: inherit; }
+  button { color: inherit; }
+
+  .app-shell { min-height: 100vh; }
+  .topbar { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; background: #fff; border-bottom: 1px solid #e9ece7; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: #1e2a24; font-size: 20px; font-weight: 750; letter-spacing: -1px; text-decoration: none; }
+  .brand-accent { color: #658344; }
+  .brand-mark { display: flex; align-items: end; gap: 2px; height: 22px; padding: 3px; border-radius: 7px; background: #eef3e7; }
+  .brand-mark i { width: 3px; border-radius: 3px; background: #6c8848; }
+  .brand-mark i:nth-child(1) { height: 8px; }.brand-mark i:nth-child(2) { height: 13px; }.brand-mark i:nth-child(3) { height: 17px; }
+  .topbar-meta { display: flex; align-items: center; gap: 20px; }
+  .workspace-label, .eyebrow, .field-list-heading, .season-control > span { color: #899189; font-size: 10px; font-weight: 700; letter-spacing: .11em; }
+  .profile-avatar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: #e9eee2; color: #526b37; font-size: 11px; font-weight: 700; }
+  .content-shell { display: grid; grid-template-columns: 264px minmax(0, 1fr); max-width: 1600px; margin: 0 auto; padding: 26px 36px 34px; gap: 30px; }
+  .field-sidebar { align-self: start; min-height: 500px; padding: 22px 17px 17px; border: 1px solid #e8ebe5; border-radius: 12px; background: #fff; }
+  .sidebar-heading { display: flex; justify-content: space-between; align-items: start; margin: 0 0 29px; }
+  .sidebar-heading .eyebrow, .workspace-title-row .eyebrow, .rotation-heading-row .eyebrow { margin: 0 0 7px; }
+  .sidebar-heading h1, .workspace-title-row h1, .rotation-heading-row h2 { margin: 0; color: #25332a; font-size: 20px; letter-spacing: -.045em; }
+  .location-subtitle { margin: 5px 0 0; color: #8c948b; font-size: 11px; }
+  .location-subtitle span { padding: 0 2px; }
+  .icon-button { width: 30px; height: 30px; border: 1px solid #edf0eb; border-radius: 7px; background: #fff; color: #758073; font-size: 19px; line-height: 1; cursor: pointer; }
+  .field-list-heading { display: flex; justify-content: space-between; padding: 0 2px 10px; border-bottom: 1px solid #f0f1ee; font-size: 9px; }
+  .field-item { display: flex; width: 100%; align-items: center; gap: 10px; padding: 12px 7px; border: 0; border-bottom: 1px solid #f0f1ee; background: transparent; text-align: left; cursor: pointer; }
+  .field-item.selected { margin-top: 4px; border: 1px solid #dfe8d1; border-radius: 8px; background: #f6f9f1; }
+  .field-thumb { position: relative; display: grid; width: 37px; height: 37px; flex: 0 0 auto; place-items: center; overflow: hidden; border-radius: 7px; background: repeating-linear-gradient(25deg, #b1bd78, #b1bd78 4px, #9dac69 4px, #9dac69 7px); }
+  .field-thumb-2 { background: repeating-linear-gradient(150deg, #afbd7b, #afbd7b 4px, #97aa68 4px, #97aa68 7px); }
+  .field-thumb-3 { background: repeating-linear-gradient(70deg, #b5bd82, #b5bd82 4px, #99aa6d 4px, #99aa6d 7px); }
+  .field-thumb span { width: 20px; height: 14px; border: 1px solid #edf2c8; border-radius: 48% 36% 48% 33%; transform: rotate(-20deg); }
+  .field-summary { display: grid; min-width: 0; flex: 1; gap: 4px; }
+  .field-name { overflow: hidden; color: #354238; font-size: 11px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .field-meta { color: #929a91; font-size: 9px; white-space: nowrap; }
+  .field-coverage { color: #667a51; font-size: 10px; font-weight: 700; }
+  .sidebar-footnote { display: flex; align-items: center; gap: 7px; margin: 17px 3px 0; color: #899189; font-size: 10px; }
+  .coverage-dot { display: inline-block; width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #8eaa63; }
+  .workspace { min-width: 0; }
+  .workspace-title-row { display: flex; justify-content: space-between; align-items: end; margin: 2px 0 17px; }
+  .workspace-title-row h1 { font-size: 24px; }
+  .eyebrow-divider { padding: 0 4px; color: #c0c6bc; }
+  .season-control { display: grid; gap: 5px; }
+  .season-control select { min-width: 116px; padding: 8px 27px 8px 10px; border: 1px solid #e1e6dd; border-radius: 7px; background: #fff; color: #43503f; font-size: 11px; }
+  .map-panel { position: relative; height: 330px; overflow: hidden; border: 1px solid #e3e8dc; border-radius: 12px; background: #dce4d2; }
+  .map-canvas { position: absolute; inset: 0; }
+  .map-overlay { position: absolute; z-index: 1; top: 13px; left: 13px; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid #edf0e8; border-radius: 7px; background: rgb(255 255 255 / 93%); color: #3f4b40; font-size: 10px; font-weight: 600; box-shadow: 0 2px 9px #1d301014; }
+  .map-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #86a55c; box-shadow: 0 0 0 3px #86a55c20; }
+  .map-date { padding-left: 8px; border-left: 1px solid #e4e8e1; color: #899189; font-size: 9px; font-weight: 500; }
+  .map-attribution { position: absolute; z-index: 1; left: 10px; right: auto; bottom: 9px; padding: 4px 6px; border-radius: 4px; background: #ffffffd9; color: #747e71; font-size: 9px; }
+  .layer-rail { position: absolute; z-index: 2; right: 10px; bottom: 10px; display: grid; gap: 8px; max-width: min(360px, calc(100% - 20px)); padding: 9px; border: 1px solid #e3e8dc; border-radius: 9px; background: rgb(255 255 255 / 95%); box-shadow: 0 2px 9px #1d301014; }
+  .layer-presets { display: flex; flex-wrap: wrap; gap: 4px; }
+  .layer-presets button { padding: 5px 7px; border: 1px solid #e5e9e1; border-radius: 5px; background: #fff; color: #56634f; font-size: 9px; cursor: pointer; }
+  .layer-presets button[aria-pressed="true"] { border-color: #9db27f; background: #f2f6ea; color: #465d32; font-weight: 700; }
+  .layer-entries { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+  .layer-entry { display: grid; gap: 3px; color: #56634f; font-size: 9px; }
+  .layer-entry-name { font-weight: 650; }
+  .layer-entry-metadata { display: flex; flex-wrap: wrap; gap: 8px; color: #818b7c; font-size: 8px; }
+  .maplibregl-ctrl-group { border-radius: 7px !important; box-shadow: 0 2px 8px #1d301014 !important; }
+  .rotation-heading-row { display: flex; justify-content: space-between; align-items: end; margin: 25px 0 13px; }
+  .rotation-heading-row h2 { font-size: 19px; }
+  .field-coverage-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid #e7ebe2; border-radius: 20px; background: #fff; color: #73806d; font-size: 10px; }
+  .scenario-panel { padding: 17px 17px 14px; border: 1px solid #e8ebe5; border-radius: 11px; background: #fff; }
+  .section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-heading .eyebrow { margin: 0 0 4px; }
+  .section-heading h2 { margin: 0; font-size: 15px; letter-spacing: -.025em; }
+  .season-chip { padding: 5px 8px; border-radius: 5px; background: #f3f5f0; color: #7b8674; font-size: 9px; }
+  .scenario-list { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr); grid-template-columns: none; align-items: stretch; gap: 10px; margin: 0; padding: 0; list-style: none; overflow-x: auto; scroll-snap-type: x proximity; }
+  .scenario-card { min-width: 0; padding: 12px 11px 10px; border: 1px solid #eaede7; border-radius: 8px; background: #fff; scroll-snap-align: start; }
+  .scenario-card.is-current { border-color: #cddbb9; background: #fbfcf8; }
+  .scenario-card-heading { display: flex; justify-content: space-between; align-items: start; min-height: 46px; gap: 6px; }
+  .scenario-kicker { display: block; margin-bottom: 4px; color: #899384; font-size: 8px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .scenario-card h3 { margin: 0; color: #2e3b30; font-size: 12px; line-height: 1.35; }
+  .current-badge { padding: 4px 5px; border-radius: 4px; background: #e8efdd; color: #637e43; font-size: 7px; font-weight: 750; letter-spacing: .04em; }
+  .scenario-facts { display: grid; gap: 7px; margin: 10px 0; }
+  .scenario-facts div { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 4px; }
+  .scenario-facts dt { color: #7f8b78; font-size: 9px; font-weight: 700; }
+  .scenario-facts dd { margin: 0; color: #657064; font-size: 9px; line-height: 1.4; }
+  .evidence-rows { display: grid; gap: 5px; padding-top: 8px; border-top: 1px solid #eff1ed; }
+  .evidence-row { display: grid; grid-template-columns: 1fr auto; gap: 3px 5px; align-items: center; color: #7f897b; font-size: 8px; }
+  .evidence-layer { overflow: hidden; color: #505e4e; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .basis-label { padding: 2px 4px; border-radius: 3px; background: #f0f3ec; color: #78866d; font-size: 7px; }
+  .basis-modelled { background: #f4efe4; color: #907b50; }.basis-entered { background: #edf1f2; color: #647982; }
+  .evidence-row time { grid-column: 1; }.evidence-row a { grid-column: 2; grid-row: 2; color: #798c60; text-decoration: none; }
+  .abstention-notice, .error-notice { margin: 8px 0; padding: 9px 10px; border: 1px solid #e8d9b6; border-radius: 6px; background: #fcf8ed; color: #816b3a; font-size: 11px; }
+  .error-notice { border-color: #eed7d2; background: #fff8f6; color: #a94e3c; }
+  .loading-copy, .empty-copy { color: #828b80; font-size: 11px; }
+  .app-footer { display: flex; justify-content: space-between; padding: 13px 36px; border-top: 1px solid #e7eae4; background: #fff; color: #929a90; font-size: 9px; }
+  .app-footer span:first-child { font-weight: 750; letter-spacing: .1em; }
+
+  @media (max-width: 1020px) {
+  .content-shell { grid-template-columns: 220px minmax(0, 1fr); padding: 22px 20px; gap: 18px; }
+  .scenario-card-heading { min-height: 0; }
+  .map-panel { height: 280px; }
+  }
+  @media (max-width: 700px) {
+  .topbar { height: 58px; padding: 0 17px; }
+  .workspace-label { display: none; }
+  .content-shell { grid-template-columns: minmax(0, 1fr); padding: 15px 13px 25px; }
+  .field-sidebar { min-height: 0; padding: 14px; }
+  .sidebar-heading { margin-bottom: 17px; }
+  .field-item { display: none; }
+  .field-item.selected { display: flex; }
+  .field-list-heading { margin-top: 12px; }
+  .workspace-title-row h1 { font-size: 21px; }
+  .map-panel { height: 255px; }
+  .rotation-heading-row { align-items: start; gap: 8px; }
+  .field-coverage-pill { white-space: nowrap; }
+  .app-footer { padding: 12px 16px; }
+  }
+
+  html, body, #root { width: 100%; height: 100%; min-height: 0; overflow: hidden; }
+  body { min-width: 360px; }
+  .app-shell { position: relative; width: 100vw; height: 100vh; height: 100dvh; min-height: 0; overflow: hidden; isolation: isolate; background: #dce4d2; }
+  .topbar, .content-shell, .app-footer { display: none; }
+  .workspace { display: none; }
+  .map-panel { position: fixed; z-index: 0; inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; border: 0; border-radius: 0; background: #dce4d2; }
+  .map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map-overlay, .map-attribution { pointer-events: none; }
+  .map-overlay { top: 18px; left: 170px; }
+  .map-attribution { top: auto; left: auto; right: 14px; bottom: 92px; }
+  .app-shell .maplibregl-ctrl-bottom-right { bottom: 92px; right: 10px; }
+  .overlay { position: fixed; z-index: 2; pointer-events: none; }
+  .anchor-top-left, .anchor-left, .anchor-top-right { z-index: 20; }
+  .anchor-field-title { z-index: 20; }
+  [aria-label="Layers"], .anchor-bottom-right .layer-rail { z-index: 25; }
+  .anchor-bottom-right { z-index: 30; }
+  .anchor-notice { z-index: 36; }
+  .anchor-bottom-left { z-index: 35; }
+  .anchor-bottom-centre { z-index: 40; }
+  .overlay-interactive { pointer-events: auto; }
+  .chip, .field-chip, .topbar-chip, .season-band, .field-chip-name, .field-chip-value { color: #131d0b; font-weight: 650; text-shadow: 0 0 3px #ffffff, 0 0 8px #ffffffd9, 0 1px 0 #fff; }
+  .anchor-top-left { top: 0; left: 0; display: flex; align-items: flex-start; justify-content: flex-start; padding: 18px 20px; }
+  .anchor-top-right { top: 0; right: 58px; display: flex; align-items: flex-start; justify-content: flex-end; padding: 18px 20px; }
+  .anchor-field-title { top: 0; left: 0; width: 100vw; display: flex; align-items: flex-start; justify-content: center; padding: 88px 20px 0; }
+  .anchor-left { top: 100px; left: 0; display: flex; align-items: flex-start; justify-content: flex-start; padding: 0 20px; }
+  .anchor-notice { top: 70px; left: 0; width: 100vw; display: flex; justify-content: center; padding: 0 20px; }
+  .anchor-bottom-left { bottom: 0; left: 0; display: flex; align-items: flex-end; justify-content: flex-start; padding: 16px 20px 42px; max-height: 62vh; }
+  .anchor-bottom-left > * { max-height: 100%; overflow: auto; }
+  .anchor-bottom-right { bottom: 0; right: 0; display: flex; align-items: flex-end; justify-content: flex-end; padding: 16px 20px; max-height: 46vh; }
+  .anchor-bottom-right > * { max-height: 100%; overflow: auto; }
+  .anchor-bottom-centre { bottom: 0; left: 50%; transform: translateX(-50%); display: flex; align-items: flex-end; justify-content: center; padding: 16px 20px; }
+  .field-list-anchor { width: min(340px, 30vw); height: auto; max-height: 39vh; }
+  .field-sidebar { width: 100%; min-height: 0; max-height: 100%; overflow: auto; padding: 16px; border: 1px solid rgb(232 235 229 / 80%); border-radius: 12px; background: rgb(255 255 255 / 88%); box-shadow: 0 8px 28px #1d30101c; }
+  .sidebar-heading { margin-bottom: 14px; }
+  .field-list-heading { margin-top: 8px; }
+  .anchor-notice { display: flex; justify-content: center; padding: 72px 20px 0; }
+  .notice-anchor { width: min(580px, calc(100vw - 40px)); max-height: 20vh; overflow: auto; }
+  .notice-anchor > :first-child { margin-top: 0; }
+  .anchor-bottom-left { bottom: 0; left: 0; display: flex; align-items: flex-end; justify-content: flex-start; padding: 16px 20px 42px; max-height: 62vh; }
+  .anchor-bottom-left > * { max-height: 100%; overflow: auto; }
+  .scenario-anchor { width: min(460px, 48vw); max-height: 43vh; overflow: auto; border: 1px solid rgb(232 235 229 / 75%); border-radius: 12px; background: rgb(255 255 255 / 86%); box-shadow: 0 8px 28px #1d30101c; }
+  .rotation-heading-row { margin: 0; padding: 13px 16px 10px; }
+  .scenario-panel { padding: 13px 16px 14px; border: 0; border-top: 1px solid rgb(232 235 229 / 80%); border-radius: 0; background: transparent; }
+  /* R-11: the three cards are one row at every width. This rule used to be
+     grid-template-columns: 1fr, which stacked the cards at 1440 as well because it
+     was the last .scenario-list rule in the main overlay scope. Cards keep a 240 px
+     minimum and the row scrolls horizontally when it does not fit. */
+  .scenario-list { grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr); grid-template-columns: none; align-items: stretch; overflow-x: auto; scroll-snap-type: x proximity; }
+  .scenario-card { padding: 9px 10px; }
+  .scenario-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 9px; }
+  .scenario-facts div { grid-template-columns: 45px minmax(0, 1fr); }
+  .anchor-bottom-right { display: flex; align-items: flex-end; justify-content: flex-end; padding: 16px 20px; }
+  .layer-rail-anchor { z-index: 3; bottom: 0; height: 128px; }
+  .evidence-anchor { bottom: 92px; height: auto; max-height: 28vh; padding-top: 0; }
+  .evidence-anchor > .overlay-interactive { width: min(350px, 30vw); max-height: 100%; overflow: auto; border: 1px solid rgb(232 235 229 / 75%); border-radius: 12px; background: rgb(255 255 255 / 86%); box-shadow: 0 8px 28px #1d30101c; }
+  .evidence-panel { border: 0; background: transparent; }
+  .layer-rail { position: static; width: min(350px, 30vw); max-height: 110px; overflow: auto; }
+  .anchor-bottom-centre { display: flex; align-items: flex-end; justify-content: center; padding: 16px 20px; }
+  .agent-anchor { max-width: min(460px, 42vw); padding: 8px; border: 1px solid rgb(232 235 229 / 75%); border-radius: 12px; background: rgb(255 255 255 / 88%); box-shadow: 0 8px 28px #1d30101c; }
+  .agent-command { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+  .agent-command label { display: grid; gap: 4px; min-width: 120px; font-size: 9px; }
+  .agent-command input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #e1e6dd; border-radius: 6px; background: #fff; font-size: 10px; }
+  .agent-command button { padding: 7px 10px; border: 1px solid #dfe8d1; border-radius: 6px; background: #f2f6ea; color: #465d32; font-size: 10px; cursor: pointer; }
+  .agent-command p { width: 100%; margin: 2px 0 0; font-size: 10px; }
+  .brand-chip { padding: 8px 10px; border: 1px solid rgb(232 235 229 / 75%); border-radius: 10px; background: rgb(255 255 255 / 84%); box-shadow: 0 4px 16px #1d301014; }
+  .brand { font-size: 17px; }
+  .field-title-chip { padding: 7px 14px; text-align: center; border: 1px solid rgb(232 235 229 / 75%); border-radius: 10px; background: rgb(255 255 255 / 78%); box-shadow: 0 4px 16px #1d301014; }
+  .field-title-chip .eyebrow { margin: 0 0 2px; }
+  .field-title-chip h1 { margin: 0; color: #25332a; font-size: 17px; letter-spacing: -.045em; }
+  .topbar-meta .season-control { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgb(232 235 229 / 75%); border-radius: 9px; background: rgb(255 255 255 / 84%); }
+  .topbar-meta .season-control select { min-width: 116px; padding: 6px 25px 6px 8px; }
+  .profile-avatar { background: rgb(233 238 226 / 88%); }
+
+  /* Techo dos paineis: aplica antes dos blocos de faixa estreita para eles vencerem. */
+  /* Techo real dos paineis inferiores: teto em vh em cada nivel, rolagem so no cartao. */
+  .anchor-bottom-left { max-height: 40vh; align-items: flex-end; }
+  .anchor-bottom-left .scenario-anchor { max-height: 40vh; overflow: auto; }
+  .anchor-bottom-left .scenario-panel, .anchor-bottom-left .scenario-list { max-height: none; }
+  .anchor-bottom-right { max-height: 40vh; }
+  .anchor-bottom-right .evidence-anchor { max-height: 40vh; overflow: auto; }
+  .maplibregl-ctrl-attrib { background: #ffffffd9; border-radius: 4px; }
+
+  @media (max-width: 640px) {
+    .anchor-top-left { width: auto; height: auto; padding: 12px; }
+    .anchor-top-right { width: auto; height: auto; top: 0; right: 0; left: auto; justify-content: flex-end; padding: 12px; }
+    .topbar-meta { max-width: min(58vw, 380px); overflow-x: auto; }
+    .topbar-meta .workspace-label { display: none; }
+    .anchor-left.field-list-anchor { top: 58px; left: 0; width: 100vw; height: auto; max-height: none; padding: 0 8px; }
+    .field-chip-stack { width: 100%; max-height: none; flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+    .field-chip { flex: 0 0 auto; }
+    .anchor-notice { top: 56px; }
+    .anchor-bottom-left { padding: 8px 8px 88px; }
+    .anchor-bottom-right { padding: 8px; }
+    .anchor-bottom-centre { left: 0; width: 100vw; transform: none; padding: 8px; }
+  }
+
+  /* Floating, transparent top chips; the map remains the top-level surface. */
+  .anchor-top-left, .anchor-top-right { z-index: 5; }
+  .anchor-top-left { top: 0; left: 0; padding: 18px 22px; }
+  .anchor-top-right { top: 0; right: 0; padding: 18px 22px; }
+  .topbar-meta { display: flex; align-items: center; gap: 18px; }
+  .top-chip { display: inline-flex; align-items: center; gap: 8px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: #25372a; pointer-events: auto; text-shadow: 0 1px 2px rgb(255 255 255 / 82%); }
+  .brand-chip { padding: 0; border: 0; background: transparent; box-shadow: none; }
+  .brand { gap: 9px; color: #25372a; font-size: 19px; text-shadow: 0 1px 3px rgb(255 255 255 / 85%); }
+  .brand-accent { color: #59793d; }
+  .brand-mark { background: transparent; }
+  .brand-mark i { background: #59793d; }
+  .workspace-label { display: inline-flex; color: #25372a; font-size: 10px; letter-spacing: .13em; }
+  .profile-avatar { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgb(37 55 42 / 75%); border-radius: 50%; color: #25372a; font-size: 10px; text-shadow: 0 1px 2px rgb(255 255 255 / 82%); }
+  .season-control { display: inline-flex; align-items: center; gap: 7px; color: #25372a; font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
+  .top-chip.season-control { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  .top-chip.season-control [data-slot="select-trigger"] { width: auto; min-width: 84px; min-height: 0; gap: 5px; padding: 2px 0; border: 0; background: transparent; box-shadow: none; color: #25372a; font-size: 11px; text-shadow: 0 1px 2px rgb(255 255 255 / 82%); }
+  .top-chip.season-control [data-slot="select-trigger"]:focus-visible { outline: 1px solid #25372a; outline-offset: 3px; }
+  .anchor-left.field-list-anchor { top: 72px; left: 0; width: min(320px, 28vw); height: auto; max-height: 50vh; padding: 0 22px; }
+  .field-chip-stack { display: flex; width: 100%; max-height: 20vh; flex-direction: column; align-items: flex-start; gap: 11px; overflow: auto; }
+  .field-chip { width: 100%; justify-content: space-between; gap: 14px; padding: 1px 0; border: 0; background: transparent; color: #25372a; text-align: left; cursor: pointer; }
+  .field-chip-name { overflow: hidden; color: #25372a; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+  .field-chip-value { flex: 0 0 auto; color: #59793d; font-size: 10px; font-weight: 700; }
+  .field-chip.selected .field-chip-name { color: #59793d; }
+  .field-empty-copy { display: grid; gap: 8px; color: #25372a; font-size: 11px; }
+  .field-empty-copy button { color: #25372a; pointer-events: auto; }
+  .map-overlay { top: auto; bottom: 18px; left: 50%; transform: translateX(-50%); border: 0; background: transparent; box-shadow: none; color: #25372a; text-shadow: 0 1px 2px rgb(255 255 255 / 82%); }
+  .map-date { color: #53644f; }
+  @media (max-width: 640px) {
+    .anchor-top-left { padding: 12px; }
+    .anchor-top-right { padding: 12px; }
+    .topbar-meta { max-width: min(58vw, 380px); gap: 10px; }
+    .anchor-left.field-list-anchor { top: 58px; left: 0; width: 100vw; height: auto; max-height: none; padding: 0 8px; }
+    .field-chip-stack { width: 100%; max-height: none; flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+    .field-chip { width: auto; min-width: max-content; justify-content: flex-start; }
+    .map-overlay { top: 112px; }
+  }
+
+  /* Overlay anchors and z-index tokens: see ZOrder in App.tsx. */
+  .layer-controls { z-index: 60; }
+  .layer-agent { z-index: 70; }
+  .layer-cards { z-index: 50; }
+  .layer-notice { z-index: 40; }
+  .layer-evidence { z-index: 30; }
+  .layer-rail-anchor { z-index: 20 !important; }
+  .layer-chips { z-index: 10; }
+  .layer-panel { z-index: 0; }
+
+  .field-list-anchor { contain: layout paint; }
+  .anchor-top-left { top: 0; left: 0; padding: 18px 22px; }
+  .anchor-top-right { top: 0; right: 0; left: auto; padding: 18px 22px; }
+  .anchor-left.field-list-anchor { top: 72px; left: 0; width: min(320px, 28vw); height: auto; max-height: 20vh; padding: 0 22px; }
+  .anchor-notice { top: 92px; left: auto; right: 82px; width: min(380px, calc(100vw - 104px)); max-height: 20vh; justify-content: flex-end; padding: 0; }
+  .anchor-bottom-left { bottom: 0; left: 0; padding: 16px 20px 42px; max-height: 40vh; min-height: 0; }
+  .anchor-bottom-left > .overlay-interactive, .scenario-anchor { max-height: 100%; overflow: auto; }
+  .anchor-bottom-right { right: 0; bottom: 0; padding: 0; max-height: 46vh; }
+  .evidence-anchor, .evidence-anchor > .overlay-interactive { max-height: 46vh; overflow: auto; }
+  .anchor-bottom-centre { bottom: 0; left: 50%; padding: 12px 20px; }
+
+  .panel-surface {
+    min-width: 0;
+    border: 1px solid rgb(232 235 229 / 78%);
+    border-radius: 12px;
+    background: rgb(255 255 255 / 72%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: 0 8px 28px rgb(29 48 16 / 12%), inset 0 1px 0 rgb(255 255 255 / 72%);
+    overscroll-behavior: contain;
+  }
+  .notice-anchor { width: 100%; max-height: 20vh; overflow: auto; padding: 9px 10px; }
+  .notice-anchor > :first-child { margin-top: 0; }
+  .scenario-anchor { width: min(460px, 48vw); max-height: 43vh; overflow: auto; }
+  .scenario-anchor .scenario-panel { border: 0; border-top: 1px solid rgb(232 235 229 / 78%); border-radius: 0 0 11px 11px; background: transparent; }
+  .evidence-anchor { bottom: 152px; right: 20px; width: min(350px, 30vw); max-height: 28vh; padding: 0; }
+  .evidence-anchor > .overlay-interactive { width: 100%; max-height: 28vh; overflow: auto; }
+  .evidence-anchor .evidence-panel { border: 0; background: transparent; }
+  .evidence-panel table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 9px; }
+  .evidence-panel th, .evidence-panel td { min-width: 0; overflow: hidden; padding: 5px 3px; text-overflow: ellipsis; white-space: nowrap; }
+  .evidence-panel th { color: #56634f; font-weight: 650; text-align: left; }
+  .evidence-panel td { color: #657064; }
+  .evidence-panel th:first-child { width: 27%; }
+  .evidence-panel th:nth-child(2) { width: 16%; }
+  .evidence-panel th:nth-child(3) { width: 14%; }
+  .evidence-panel th:nth-child(4) { width: 20%; }
+  .evidence-panel th:last-child { width: 23%; }
+  .evidence-panel td a { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .layer-rail-anchor { right: 20px; bottom: 12px; width: min(350px, 30vw); height: auto; padding: 0; }
+  .layer-rail-anchor > .overlay-interactive { width: 100%; }
+  .layer-rail { position: static; width: 100%; max-height: 118px; overflow: auto; border: 0; background: transparent; box-shadow: none; }
+  .agent-anchor { max-width: min(460px, 42vw); max-height: 18vh; overflow: auto; padding: 8px; }
+
+  /* Keep map attribution clear of the Field 01 chip at the left edge. */
+  .map-attribution { top: 58px; left: max(400px, calc(28vw + 44px)); right: auto; bottom: auto; }
+  .top-chip { text-shadow: 0 1px 2px rgb(255 255 255 / 88%), 0 0 1px rgb(255 255 255 / 72%); }
+  .field-chip-name, .field-chip-value { text-shadow: 0 1px 2px rgb(255 255 255 / 92%), 0 0 1px rgb(255 255 255 / 78%); }
+  .layer-chips .top-chip, .brand-chip { background: transparent; }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .panel-surface { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
+  /* Keep the non-compact MapLibre credit clear of the bottom overlays. */
+  .app-shell > .map-panel .maplibregl-ctrl-bottom-right {
+    z-index: 45;
+    right: 8px;
+    bottom: 104px;
+  }
+
+  @media (max-width: 640px) {
+    html, body, #root {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: clip;
+    }
+
+    .app-shell { width: 100%; max-width: 100%; }
+    .map-panel { width: 100%; max-width: 100%; }
+    .anchor-top-left { top: 0; left: 0; width: auto; padding: 12px; }
+    .anchor-top-right { top: 0; right: 0; left: auto; width: auto; padding: 12px; }
+    .topbar-meta { max-width: min(58vw, 220px); gap: 9px; overflow-x: auto; }
+    .anchor-left.field-list-anchor {
+      top: 58px;
+      left: 0;
+      right: auto;
+      width: min(62vw, calc(100vw - 16px));
+      max-height: none;
+      padding: 0 8px;
+    }
+    .field-chip-stack {
+      width: 100%;
+      max-height: none;
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 16px;
+      white-space: nowrap;
+    }
+    .field-chip { width: auto; min-width: max-content; justify-content: flex-start; }
+    .anchor-notice { top: 116px; right: 8px; width: min(300px, calc(100vw - 16px)); max-height: 8vh; padding: 0; }
+    .notice-anchor { max-height: 8vh; }
+    .app-shell .anchor-bottom-left {
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30vh;
+      max-height: 30vh;
+      align-items: flex-end;
+      padding: 8px;
+    }
+    .app-shell .anchor-bottom-left .scenario-anchor { width: 100%; max-height: 30vh; overflow: auto; padding-bottom: 104px; }
+    .anchor-bottom-right { right: 0; bottom: 0; padding: 0; max-height: none; }
+    .layer-rail-anchor { right: 8px; bottom: calc(30vh + 14vh + 58px); width: min(270px, 72vw); }
+    .layer-rail { max-height: 84px; }
+    .app-shell .evidence-anchor { right: 8px; bottom: calc(30vh + 52px); width: min(320px, calc(100vw - 16px)); max-height: 14vh; overflow: hidden; }
+    .app-shell .evidence-anchor > .overlay-interactive { max-height: 14vh; overflow: auto; }
+    .anchor-bottom-centre { bottom: 0; left: 0; width: 100%; padding: 8px; transform: none; }
+    .agent-anchor { max-width: min(460px, 100%); max-height: 15vh; }
+    .map-attribution { top: auto; right: 8px; bottom: calc(30vh + 16px); left: auto; font-size: 8px; max-width: 62%; }
+    .maplibregl-ctrl-attrib-inner { white-space: normal; line-height: 1.15; }
+    .app-shell > .map-panel .maplibregl-ctrl-top-right { top: 92px; right: 4px; }
+    .app-shell > .map-panel .maplibregl-ctrl-bottom-right { right: 8px; bottom: calc(30vh + 16px); }
+  }
+
+  /* Block 3, wave 1: control strip toggles, collapsible field roster and the right edge panel column. */
+  .toggle-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: #25372a;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    cursor: pointer;
+    pointer-events: auto;
+    text-shadow: 0 1px 2px rgb(255 255 255 / 88%);
+  }
+  .toggle-control:hover { background: rgb(255 255 255 / 45%); }
+  .toggle-control:focus-visible { outline: 1px solid #25372a; outline-offset: 3px; }
+  .toggle-control[aria-expanded="true"] { color: #59793d; }
+
+  .field-chip-stack > [data-slot="collapsible"] { width: 100%; min-width: 0; }
+  .fields-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .fields-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #25372a;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    cursor: pointer;
+    pointer-events: auto;
+    text-shadow: 0 1px 2px rgb(255 255 255 / 88%);
+  }
+  .fields-trigger:focus-visible { outline: 1px solid #25372a; outline-offset: 3px; }
+  .field-chip-row { display: flex; width: 100%; flex-direction: column; align-items: flex-start; gap: 11px; padding-top: 11px; }
+  .field-list-status { margin: 0; color: #25372a; font-size: 11px; }
+
+  .anchor-right-column {
+    z-index: auto;
+    top: 60px;
+    right: 22px;
+    bottom: auto;
+    left: auto;
+    width: min(400px, 45vw);
+    max-height: calc(100vh - 84px);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .right-column-stack {
+    display: flex;
+    width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    overflow: auto;
+  }
+  .anchor-right-column .agent-anchor { width: 100%; max-width: none; max-height: 40vh; overflow: auto; }
+  .anchor-right-column .evidence-anchor {
+    position: static;
+    inset: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    max-height: 30vh;
+    overflow: auto;
+    padding: 0;
+  }
+
+  @media (max-width: 640px) {
+    /* 360 stack: the roster stays one 44 px strip inside the left flow column, and the
+       right edge panel column starts below it so no open box is fully covered. */
+    .field-chip-stack { flex-direction: row; overflow-x: auto; overflow-y: hidden; max-height: 48px; }
+    .field-chip-stack > [data-slot="collapsible"] { display: flex; width: 100%; flex-direction: row; align-items: center; gap: 12px; }
+    .fields-header { flex: 0 0 auto; }
+    #fields-chip-row { min-width: 0; flex: 1; overflow: hidden; }
+    .field-chip-row { flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 16px; padding-top: 0; white-space: nowrap; }
+    .anchor-right-column {
+      top: calc(120px + 15vh);
+      right: 64px;
+      left: 8px;
+      width: auto;
+      max-height: calc(100vh - 112px - 15vh - 30vh - 28px);
+    }
+    .anchor-right-column .agent-anchor { max-height: 17vh; }
+    .anchor-right-column .evidence-anchor { max-height: 13vh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="collapsible-panel"] { transition-duration: 0s; }
+  }
+
+  /* Block 3, wave 2: rotation flip cards and the two front visuals. */
+  .rotation-card { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+  .rotation-card .scenario-card-heading { align-items: flex-start; min-height: 0; }
+  .card-heading-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  /* The card body is the flip control. One transparent button covers the body and the
+     card itself carries the affordance: background and border change on hover or focus. */
+  .flip-face { position: relative; display: flex; min-width: 0; flex: 1; flex-direction: column; transition-property: none; transition-duration: 0s; }
+  .flip-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  /* The card ring is the focus indicator, so the transparent button draws none of its own. */
+  .flip-overlay:focus-visible { outline: 0; }
+  .rotation-card:hover, .rotation-card:focus-within { border-color: #cddbb9; background: #f6f9f1; }
+  .rotation-card:focus-within { outline: 2px solid #59793d; outline-offset: -2px; }
+  .flip-visuals { display: grid; gap: 8px; }
+  .visual-caption { display: block; color: #7f8b78; font-size: 8px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+  .smap-visual, .crop-history { display: grid; min-width: 0; gap: 4px; }
+  .smap-track { position: relative; width: 100%; height: 6px; overflow: hidden; border-radius: 3px; background: #edf0e9; }
+  .smap-fill { height: 100%; border-radius: 3px; background: #7f9c5c; transition-duration: 0s; }
+  .smap-readout, .crop-readout { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; color: #7f897b; font-size: 8px; }
+  .smap-value { color: #354238; font-size: 9px; font-weight: 700; }
+  .smap-empty-label { color: #8e978a; font-size: 8px; }
+  .crop-bar-list { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+  /* AC-10: the label column has a fixed width, so both tracks in a card share one
+     length. An `auto` label column is sized by the crop name, which made the tracks
+     15.40 px apart. The label truncates instead of widening its column. */
+  .crop-bar { display: grid; grid-template-columns: minmax(0, 1fr) 64px; align-items: center; gap: 6px; }
+  .crop-bar-track { display: block; width: 100%; height: 6px; overflow: hidden; border-radius: 3px; background: #edf0e9; }
+  .crop-bar-fill { display: block; width: 100%; height: 100%; border-radius: 3px; background: #a8bb8a; }
+  .crop-bar-label { overflow: hidden; color: #56634f; font-size: 8px; font-weight: 650; white-space: nowrap; text-overflow: ellipsis; }
+
+
+  /* Block 3, wave 3: layout contract, z order, pointer and resize invariants.
+     The rules in this section are the block 3 contract for R-27 to R-40 and they
+     override the earlier anchor rules above, which waves 1 and 2 prefixed. */
+
+  /* R-27, R-32, R-33: the MapLibre control container moves from the top right corner
+     to the vertical centre of the right edge, still inside the map container and
+     outside every overlay, so it takes no overlay z index. The margins are zeroed so
+     the visible control group, not only its container, is centred and 16 px in. */
+  .app-shell > .map-panel .maplibregl-ctrl-top-right {
+    top: 50%;
+    right: 16px;
+    bottom: auto;
+    left: auto;
+    transform: translateY(-50%);
+  }
+  .app-shell > .map-panel .maplibregl-ctrl-top-right .maplibregl-ctrl { margin: 0; }
+
+  /* R-30: the rotation panel sits on the bottom edge and stops 12 px left of the
+     right edge column, which is x 1006 at 1440 and x 395 at 780. */
+  .anchor-bottom-left {
+    top: auto;
+    left: 22px;
+    right: calc(34px + min(400px, 45vw));
+    bottom: 16px;
+    max-height: 46vh;
+    align-items: flex-end;
+    padding: 0;
+  }
+  .anchor-bottom-left > .overlay-interactive { width: 100%; max-height: 46vh; overflow: auto; }
+  .anchor-bottom-left .scenario-anchor { width: 100%; max-height: 46vh; }
+
+  /* R-23: one notice node, at right 22 and top 60, and the right edge column starts
+     8 px below its measured height. Geometry, not DOM nesting, because one node
+     cannot also be the first box of the 360 left stack. */
+  .anchor-notice {
+    top: 60px;
+    right: 22px;
+    left: auto;
+    width: min(400px, 45vw);
+    max-height: 20vh;
+    padding: 0;
+    justify-content: flex-end;
+  }
+  .notice-anchor { width: 100%; max-height: 20vh; }
+  /* R-23, AC-15: the column bottom edge cannot pass y 393, which is 8 px above the
+     navigation control top edge at y 401. The column starts at 60 plus the notice
+     block, so the cap subtracts both. Content beyond it scrolls inside the stack.
+     Measured in the browser at 1440 and 780, with and without the notice. */
+  .anchor-right-column {
+    top: calc(60px + var(--fs-notice-block, 0px));
+    max-height: calc(393px - 60px - var(--fs-notice-block, 0px));
+  }
+
+  /* R-23: at 780 the notice is capped at 112 px with internal scroll, so its bottom
+     edge stays above the clear centre rectangle top edge at y 180. */
+  @media (min-width: 641px) and (max-width: 1020px) {
+    .anchor-notice { max-height: 112px; }
+    .notice-anchor { max-height: 112px; overflow: auto; }
+  }
+
+  /* Layout note 5: the left column is 26vw wide, not 30vw, so the fields panel ends
+     left of the clear centre rectangle at 780. Its 20vh cap keeps the bottom edge
+     clear of the rotation panel. */
+  .anchor-left.field-list-anchor { width: min(320px, 26vw); }
+
+  /* The left stack wrapper takes part in the 360 flow column only. Above 640 it
+     generates no box, so its two children keep their own fixed anchors. */
+  .left-stack { display: contents; pointer-events: none; }
+
+  @media (max-width: 640px) {
+    /* R-39 (AM-14): the fields panel is one normal flow column on its own at top 58,
+       left 8, right 64, with the status notice above it in the same 8 px gap band. The
+       64 px right inset is the navigation gutter. The column stops above the right
+       edge column. */
+    .left-stack {
+      position: fixed;
+      top: 58px;
+      left: 8px;
+      right: 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      max-height: calc(100vh - 30vh - 128px - 58px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      pointer-events: none;
+    }
+    .left-stack > .overlay {
+      position: static;
+      inset: auto;
+      width: auto;
+      max-height: none;
+      padding: 0;
+    }
+    .left-stack > * { flex: 0 0 auto; }
+    .left-stack .anchor-notice { justify-content: stretch; }
+    .left-stack .notice-anchor { width: 100%; max-height: 8vh; }
+    .left-stack .anchor-left.field-list-anchor { width: auto; height: auto; max-height: none; }
+
+    /* R-39: the expanded fields panel is exactly two rows, 44 px header plus one
+       44 px chip row with an 11 px gap. The chip row scrolls horizontally, never wraps. */
+    .field-chip-stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      max-height: none;
+      overflow: visible;
+    }
+    .field-chip-stack > [data-slot="collapsible"] { display: block; width: 100%; }
+    .fields-header { min-height: 44px; align-items: center; }
+    #fields-chip-row { overflow-x: auto; overflow-y: hidden; }
+    .field-chip-row {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 16px;
+      margin-top: 11px;
+      padding-top: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+    }
+    .field-chip-row .field-chip {
+      width: auto;
+      min-width: max-content;
+      min-height: 44px;
+      flex: 0 0 auto;
+      justify-content: flex-start;
+    }
+
+    /* R-30: below 640 the rotation panel spans the 8 px gutters and stops 8 px above
+       the bottom edge, with its own internal scroll. */
+    .app-shell .anchor-bottom-left {
+      top: auto;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      width: auto;
+      height: auto;
+      max-height: 30vh;
+      padding: 0;
+      align-items: flex-end;
+    }
+    .app-shell .anchor-bottom-left .scenario-anchor {
+      width: 100%;
+      max-height: 30vh;
+      overflow: auto;
+      padding-bottom: 0;
+    }
+
+    /* R-40: the command form and the evidence panel share one right edge column that
+       sits entirely above the rotation panel with an 8 px gap and a 104 px cap. */
+    .app-shell .anchor-right-column {
+      top: auto;
+      left: 8px;
+      right: 64px;
+      bottom: calc(30vh + 16px);
+      width: auto;
+      max-height: 104px;
+      padding: 0;
+    }
+    .anchor-right-column .right-column-stack { max-height: 104px; overflow: auto; }
+    .anchor-right-column .agent-anchor,
+    .anchor-right-column .evidence-anchor { max-height: 104px; overflow: auto; }
+
+    /* R-28 and R-39: the layer rail takes the 64 px navigation gutter at 360 so the
+       centre right navigation control owns the right edge. This is the only place
+       where the block 2 rail anchor changes: reverting it means restoring
+       right: 8px and bottom: calc(30vh + 14vh + 58px) in this one rule. */
+    .layer-rail-anchor { right: 64px; bottom: 8px; }
+  }

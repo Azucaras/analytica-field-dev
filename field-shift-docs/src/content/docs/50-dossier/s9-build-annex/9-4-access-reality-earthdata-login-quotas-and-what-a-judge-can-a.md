@@ -1,0 +1,232 @@
+---
+title: "9.4 Access reality: Earthdata Login, quotas, and what a judge can actually run"
+description: "Executed on 2026-11-10 (documented execution record): a scratch CPython 3.12 virtual environment installed and imported earthaccess==0.19.0, requests..."
+checked: 2026-11-10
+---
+
+## Status and access boundary
+
+Executed on 2026-11-10 (documented execution record): a scratch CPython 3.12 virtual environment installed and imported `earthaccess==0.19.0`, `requests`, and `rasterio==1.4.4`; Rasterio reported bundled GDAL 3.10.3 (documented). No-login [NASA POWER](https://power.larc.nasa.gov/docs/services/api/temporal/daily/) requests for a US point and a Brazil point returned HTTP 200 and 31 daily T2M values each for January 2025 (documented execution results). The public [SMAP CMR granule query](https://cmr.earthdata.nasa.gov/search/granules.json?collection_concept_id=C2938664763-NSIDC_CPRD&page_size=5&sort_key=-start_date) returned HTTP 200 and five granule records (documented execution result). That executed CMR request had no temporal or spatial filter. Its records are global catalogue data for that collection, not evidence for a selected field or time window. A synthetic Rasterio reprojection completed (documented execution result). System `gdalinfo` and `gdalwarp` binaries were absent (documented system check). No NASA science granule was downloaded or inspected.
+
+Planned: all commands below are reproducible examples for a judge to run. They were not run as part of this edit and do not change the executed set above. Earthdata Login, authenticated downloads, and file inspection were not run because credentials were unavailable. The public path remains the demo floor. Catalogue visibility does not authorize a DAAC file request.
+
+## Public preflight and authenticated extension
+
+Run the setup from the working directory shown in the command. It prefers CPython 3.12 and falls back to `python3` only if it is CPython 3.10 or newer. The tested dependency pins remain `earthaccess==0.19.0`, `requests`, and `rasterio==1.4.4`.
+
+```sh
+# Binaries/builds: Bash 5.x and GNU coreutils; python3.12 (CPython 3.12.x), then python3 (CPython >=3.10); pip runs as .venv/bin/python -m pip.
+PYTHON_BIN=""
+for candidate in python3.12 python3; do
+  if command -v "&#36;candidate" >/dev/null 2>&1 && \
+     "&#36;candidate" -c 'import sys; raise SystemExit(0 if sys.implementation.name == "cpython" and sys.version_info >= (3, 10) else 1)'; then
+    PYTHON_BIN="&#36;(command -v "&#36;candidate")"
+    break
+  fi
+done
+if [ -z "&#36;PYTHON_BIN" ]; then
+  printf '%s\n' 'Need CPython 3.10 or newer; python3.12 and python3 were not found.' >&2
+  exit 1
+fi
+"&#36;PYTHON_BIN" -c 'import sys; print(sys.version.split()[0]); raise SystemExit(0 if sys.version_info >= (3, 10) else "Need CPython 3.10 or newer")' || exit 1
+WORKDIR="&#36;HOME/earthdata-s9-demo"
+mkdir -p "&#36;WORKDIR" && cd "&#36;WORKDIR" || exit 1
+"&#36;PYTHON_BIN" -m venv .venv && \
+  .venv/bin/python -m pip install --only-binary=:all: --disable-pip-version-check earthaccess==0.19.0 requests rasterio==1.4.4 && \
+  .venv/bin/python -c 'import earthaccess, rasterio; assert earthaccess.__version__ == "0.19.0"; assert rasterio.__version__ == "1.4.4"; print("earthaccess", earthaccess.__version__, "rasterio", rasterio.__version__, "GDAL", rasterio.__gdal_version__)'
+```
+
+Recovery rung: if neither interpreter exists or the version gate fails, install CPython 3.10 or newer and rerun this block. If venv creation or wheel installation fails, keep the pins, inspect the displayed error and platform wheel availability, then use a supported CPython build. Do not continue to the request commands until the final import and version assertions pass.
+
+The two public POWER requests below use `curl` 8.x and `.venv/bin/python` from the setup. Each request includes its point and January 2025 interval. The no-login outputs are `power-us.json` and `power-br.json`. Each immediately parses the saved JSON, checks the POWER response shape, and requires 31 daily T2M values.
+
+```sh
+# Binaries/builds: curl 8.x (checked with curl 8.23.0); .venv/bin/python, CPython >=3.10.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+curl --fail --show-error --silent --location --get --retry 3 --retry-max-time 120 --connect-timeout 20 --max-time 120 \
+  'https://power.larc.nasa.gov/api/temporal/daily/point' \
+  --data-urlencode 'parameters=T2M' --data-urlencode 'community=AG' \
+  --data-urlencode 'longitude=-98.0' --data-urlencode 'latitude=37.0' \
+  --data-urlencode 'start=20250101' --data-urlencode 'end=20250131' \
+  --data-urlencode 'format=JSON' --data-urlencode 'time-standard=UTC' \
+  --output power-us.json && \
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+p = json.loads(Path("power-us.json").read_text())
+values = p["properties"]["parameter"]["T2M"]
+assert isinstance(values, dict), "POWER T2M must be a date-to-value object"
+assert len(values) == 31, f"expected 31 daily T2M values, got {len(values)}"
+assert "20250101" in values and "20250131" in values
+print(f"POWER US JSON shape valid; T2M count={len(values)}")
+PY
+```
+
+Recovery rung: if curl fails, inspect the HTTP/service error and query parameters. For HTTP 429, curl retries with backoff up to the configured retry window. If it still fails, wait 60 seconds before one manual retry and avoid parallel requests. If the JSON shape or count check fails, retain the response for diagnosis, confirm the requested dates and point, and do not treat the file as valid data.
+
+```sh
+# Binaries/builds: curl 8.x (checked with curl 8.23.0); .venv/bin/python, CPython >=3.10.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+curl --fail --show-error --silent --location --get --retry 3 --retry-max-time 120 --connect-timeout 20 --max-time 120 \
+  'https://power.larc.nasa.gov/api/temporal/daily/point' \
+  --data-urlencode 'parameters=T2M' --data-urlencode 'community=AG' \
+  --data-urlencode 'longitude=-56.1' --data-urlencode 'latitude=-15.8' \
+  --data-urlencode 'start=20250101' --data-urlencode 'end=20250131' \
+  --data-urlencode 'format=JSON' --data-urlencode 'time-standard=UTC' \
+  --output power-br.json && \
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+p = json.loads(Path("power-br.json").read_text())
+values = p["properties"]["parameter"]["T2M"]
+assert isinstance(values, dict), "POWER T2M must be a date-to-value object"
+assert len(values) == 31, f"expected 31 daily T2M values, got {len(values)}"
+assert "20250101" in values and "20250131" in values
+print(f"POWER Brazil JSON shape valid; T2M count={len(values)}")
+PY
+```
+
+Recovery rung: if curl fails, inspect the HTTP/service error and query parameters. For HTTP 429, curl retries with backoff up to the configured retry window. If it still fails, wait 60 seconds before one manual retry and avoid parallel requests. If the JSON shape or count check fails, retain the response for diagnosis, confirm the requested dates and point, and do not treat the file as valid data.
+
+This planned CMR query is deliberately scoped by the January 2025 temporal interval and a bounding box around the US POWER point. Unlike the executed unscoped query, it is not a global-to-the-collection catalogue listing. The `feed.entry` shape and returned count are checked before any result is used.
+
+```sh
+# Binaries/builds: curl 8.x (checked with curl 8.23.0); .venv/bin/python, CPython >=3.10.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+curl --fail --show-error --silent --location --get --retry 3 --retry-max-time 120 --connect-timeout 20 --max-time 120 \
+  'https://cmr.earthdata.nasa.gov/search/granules.json' \
+  --data-urlencode 'collection_concept_id=C2938664763-NSIDC_CPRD' \
+  --data-urlencode 'page_size=5' --data-urlencode 'sort_key=-start_date' \
+  --data-urlencode 'temporal=2025-01-01T00:00:00Z,2025-01-31T23:59:59Z' \
+  --data-urlencode 'bounding_box=-99,36,-97,38' \
+  --output smap-cmr-scoped.json && \
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+feed = json.loads(Path("smap-cmr-scoped.json").read_text())["feed"]
+entries = feed["entry"]
+assert isinstance(entries, list), "CMR feed.entry must be a list"
+assert 0 < len(entries) <= 5, f"expected 1 to 5 scoped entries, got {len(entries)}"
+assert all(isinstance(row, dict) and row.get("id") and row.get("title") for row in entries)
+print(f"Scoped CMR JSON shape valid; granule count={len(entries)} (maximum 5)")
+PY
+```
+
+Recovery rung: for HTTP 429, let curl use its retry backoff; if retries are exhausted, wait 60 seconds and retry once. If the response is not valid JSON or lacks `feed.entry`, check the CMR endpoint and response before retrying. If the valid result count is zero, verify the collection concept ID and coordinate order, then widen the temporal interval or bounding box. If the count exceeds the requested page size, stop and correct the query or parser. A successful metadata query still does not authorize data access.
+
+Earthdata Login has separate credential paths. Do not type credentials into a command, set them in a command literal, or place them in shell history. The `.netrc` path stores plaintext credentials, so use it only on a trusted personal machine, protect it with mode `600`, and do not use it on a shared account. The interactive `earthaccess` prompt is used to create it without placing the password in the command line:
+
+```sh
+# Binaries/builds: .venv/bin/python, CPython >=3.10 with earthaccess 0.19.0; chmod and stat from GNU coreutils.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+umask 077
+.venv/bin/python -c 'import earthaccess; auth = earthaccess.login(strategy="interactive", persist=True); assert auth.authenticated; print("Earthdata Login authenticated")' && \
+  chmod 600 "&#36;HOME/.netrc" && stat -c 'mode=%a path=%n' "&#36;HOME/.netrc"
+```
+
+Recovery rung: if the interactive login raises an authentication exception, check the account at Earthdata Login and retry the prompt without copying credentials into a command. If `.netrc` is missing or its mode is not `600`, stop, correct the file location or permissions, then rerun the login check. Do not print or share the file contents.
+
+Verify the netrc login and then separately test authorization against the selected NSIDC collection. The probe makes a one-byte range request to a returned data URL, reads no response body, and is not a granule download. It is planned and was not executed.
+
+```sh
+# Binaries/builds: .venv/bin/python, CPython >=3.10 with earthaccess 0.19.0 and requests.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+EDL_STRATEGY=netrc .venv/bin/python - <<'PY'
+import os
+import earthaccess
+
+assert os.environ["EDL_STRATEGY"] == "netrc"
+auth = earthaccess.login(strategy="netrc")
+assert auth.authenticated, "Earthdata Login netrc authentication failed"
+granules = earthaccess.search_data(
+    count=1,
+    concept_id="C2938664763-NSIDC_CPRD",
+    temporal=("2025-01-01", "2025-01-31"),
+    bounding_box=(-99, 36, -97, 38),
+)
+assert granules, "No granule matched this collection, date, and bounding box"
+links = granules[0].data_links(access="external")
+assert links, "CMR returned no external data link for the granule"
+session = earthaccess.get_requests_https_session()
+response = session.get(
+    links[0], headers={"Range": "bytes=0-0"}, timeout=(15, 30), stream=True
+)
+try:
+    assert response.status_code in (200, 206), f"DAAC authorization probe returned HTTP {response.status_code}"
+    print(f"NSIDC collection data-link authorization probe: HTTP {response.status_code}; response body not read")
+finally:
+    response.close()
+PY
+```
+
+Recovery rung: on an authentication exception, repair the netrc entry or account login and rerun the netrc login step. On HTTP 401 or 403 from the data URL, the account is authenticated but the selected collection or its DAAC data endpoint did not authorize access; check collection access and any required EULA, then rerun this exact collection probe. If no granule matches, verify the concept ID, date interval, and bounding box or widen the query. Do not infer file permission from public CMR metadata.
+
+The environment-variable route uses `read -s` so the password is entered silently, not stored in shell history, and unset when the subshell exits. Its login strategy is explicitly `environment`, not `netrc`:
+
+```sh
+# Binaries/builds: Bash 5.x; .venv/bin/python, CPython >=3.10 with earthaccess 0.19.0 and requests.
+cd "&#36;HOME/earthdata-s9-demo" || exit 1
+(
+  set +x
+  cleanup_edl() { unset EARTHDATA_USERNAME EARTHDATA_PASSWORD; }
+  trap cleanup_edl EXIT HUP INT TERM
+  read -r -p 'Earthdata username: ' EARTHDATA_USERNAME
+  read -r -s -p 'Earthdata password: ' EARTHDATA_PASSWORD
+  printf '\n'
+  export EARTHDATA_USERNAME EARTHDATA_PASSWORD
+  EDL_STRATEGY=environment .venv/bin/python - <<'PY'
+import os
+import earthaccess
+
+assert os.environ["EDL_STRATEGY"] == "environment"
+auth = earthaccess.login(strategy="environment")
+assert auth.authenticated, "Earthdata Login environment authentication failed"
+granules = earthaccess.search_data(
+    count=1,
+    concept_id="C2938664763-NSIDC_CPRD",
+    temporal=("2025-01-01", "2025-01-31"),
+    bounding_box=(-99, 36, -97, 38),
+)
+assert granules, "No granule matched this collection, date, and bounding box"
+links = granules[0].data_links(access="external")
+assert links, "CMR returned no external data link for the granule"
+session = earthaccess.get_requests_https_session()
+response = session.get(
+    links[0], headers={"Range": "bytes=0-0"}, timeout=(15, 30), stream=True
+)
+try:
+    assert response.status_code in (200, 206), f"DAAC authorization probe returned HTTP {response.status_code}"
+    print(f"NSIDC collection data-link authorization probe: HTTP {response.status_code}; response body not read")
+finally:
+    response.close()
+PY
+)
+```
+
+Recovery rung: on an environment authentication exception, confirm the account credentials at Earthdata Login and repeat the silent prompt. The subshell unsets both variables on exit. On HTTP 401 or 403, successful login did not authorize this collection data URL; check the selected collection's access and any required EULA, then rerun the same probe. If the scoped search is empty, correct the collection ID or widen the query interval or bbox. Never print or persist the environment variables.
+
+| Path | Boundary |
+|---|---|
+| POWER | No login, daily gridded context |
+| CMR | Public metadata search, not file authorization |
+| NSIDC collection probe | Authenticated one-byte range request; not a download |
+| Five recommended science products | Earthdata Login required for download; collection authorization must be checked separately |
+
+**Figure S9-F4. Public and authenticated access paths (documented public tests; authenticated access remains planned).**
+
+## Latency, quotas, and recovery order
+
+As checked on 2026-11-10 (documented), POWER's typical meteorological latency was 2 to 3 days and solar latency 5 to 7 days (documented). [HLS](https://doi.org/10.5067/HLS/HLSL30.002) states a 1 to 2 day processing target (documented), while checked granules lagged by about 3 days (documented). SMAP L3 reported mean latency was about 1.2 days (documented). [ECOSTRESS JET](https://www.earthdata.nasa.gov/data/catalog/lpcloud-eco-l3t-jet-003)'s newest granule was at least 13 days old (documented). [GPM IMERG V07 Final](https://disc.gsfc.nasa.gov/datasets/GPM_3IMERGDF_07/summary) ended on 2025-09-30 (documented); a V08 Final release in fall 2026 was projected, not guaranteed (documented). These are not real-time promises. No numeric CMR quota is established, so do not invent one.
+
+On failure, first verify the binary, version, HTTP status, requested parameters, and response shape. For a missing interpreter or failed package install, use the setup recovery rung above. For an Earthdata Login exception, use the recovery rung beside the selected credential path. For HTTP 429, honor the curl retry backoff and wait 60 seconds before a single manual retry. For a valid but empty scoped CMR result, verify the collection ID and bbox order, then widen the date window or bounding box. Next use no-login POWER for public context, then public CMR metadata without claiming file authorization. Then fetch one required available product only after the separate collection authorization check passes, removing optional layers in this order: ECOSTRESS, HLS, then coarse context if the comparison can proceed without it. Next reduce display or processing resolution while retaining native-support caveats. Finally use a separately built, labelled, source-dated static fixture. Never relax authentication, QA, field or season joins, uncertainty disclosure, or abstention rules.
+
+## Suggested PDFs and articles for a possible second research pass
+
+The packs surfaced six documents worth a second pass that this run could not read in full or did not open, listed as follow-ups only and not counted as consulted evidence.
+
+1. O'Neill et al., SMAP calibration and validation assessment report, JPL D-56297 (2019-08-15), the validation basis behind the SMAP ubRMSE figures quoted in section 2.1, reachable from the NSIDC product page.
+2. The GRACE Level 3 handbook, table 2, which carries the mascon gain-factor and correction guidance section 2.5 depends on.
+3. The HLS v2.0 product guide and the L30 and S30 issue lists, for the aerosol and Fmask failure modes section 2.4 states.
+4. The 2026 GPM V08 transition notices, to settle whether the Final run resumes on the projected autumn 2026 date, which section 2.3 keeps open.
+5. A peer-reviewed source on rotation and cover-crop economics in the Cerrado, since section 5.3 leans on co-op and trader reporting for the netback arithmetic.
+6. Any published validation of a crop-type classifier over Brazilian soy-maize rotations at 30 m, because section 9.2 has to label crop identification planned rather than validated.

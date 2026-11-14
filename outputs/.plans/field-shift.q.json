@@ -1,0 +1,26 @@
+{
+  "executor": {
+    "type": "choice",
+    "instructions": "Which execution mode should the deep run waves use, given a live dispatcher, an unrelated active board the user has not approved replacing, and a user request for gpt 6 luna subagents?",
+    "criteria": {
+      "a": "delegate_task batches, every child pinned to explabs_gpt_6_luna, no DB change",
+      "b": "create a field-shift kanban board with model-pinned cards, canary gate, five-minute fallback to batches"
+    }
+  },
+  "shape": {
+    "type": "choice",
+    "instructions": "Which report shape best serves a team that must hand in a buildable app, given the challenge asks for at least three rotation strategies with evidence, gaps and risks per strategy?",
+    "criteria": {
+      "a": "nine sections including a per-dataset capability table, a non-NASA soil and crop source section, and a build annex covering text-to-SQL, voice and map interaction",
+      "b": "seven sections, evidence and agronomy only, build annex deferred until the user supplies the app idea"
+    }
+  },
+  "budget": {
+    "type": "choice",
+    "instructions": "Where should the depth budget sit, given three of the user's four questions are about challenge anatomy, farmer needs and the spacedata companion site, and the fourth is UX?",
+    "criteria": {
+      "a": "spread evenly, three subsections per section across all sections",
+      "b": "concentrate on data inventory, farmer decision drivers and UX, and hold prior-art and policy sections to fewer, denser subsections"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+---
+title: Overview
+description: One site for the Field Shift research, the design decisions taken from it, and the build that ships it.
+template: splash
+hero:
+  title: Field Shift
+  tagline: Rotation decisions from NASA Earth observation, built for farmers, readable by the team and by agents.
+  actions:
+    - text: Start with the problem
+      link: /10-research/
+      icon: right-arrow
+    - text: Read this as an agent
+      link: /40-reference/agent-context/
+      variant: minimal
+---
+
+import { Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+
+## What this site is
+
+The working documentation for a NASA Space Apps 2026 entry to the Field Shift challenge: a decision-support tool that helps a farmer weigh rotation options against soil, water and market constraints using satellite observation, with an interactive map, an agent that answers questions over the data, and voice control.
+
+Two doors into the same content. The research pages carry the evidence, including the parts that argue against the easy version of the idea.
+
+<Tabs syncKey="audience">
+  <TabItem label="I am on the team">
+    Read [How to use these docs](/00-start-here/how-to-use/) and take the path for your role. Then read the problem and the findings before you write code.
+  </TabItem>
+  <TabItem label="I am an agent">
+    Read [Agent context](/40-reference/agent-context/) first, then `/llms.txt` for the page index and `/llms-full.txt` for the corpus. The repository root carries `AGENTS.md` for local rules.
+  </TabItem>
+</Tabs>
+
+<CardGrid>
+  <Card title="Research" icon="magnifier">
+    Problem, evidence log, findings, open questions, and the whole 29,000 word dossier page by page.
+  </Card>
+  <Card title="Design" icon="pen">
+    The decisions that constrain the build, one record each, plus the small calls in a log.
+  </Card>
+  <Card title="Build" icon="setting">
+    Architecture, setup, run and verify. Commands are the ones actually run on this machine.
+  </Card>
+  <Card title="Reference" icon="open-book">
+    Glossary and agent context, so a new reader or agent starts with the same vocabulary.
+  </Card>
+</CardGrid>
+
+## Read the evidence, not the summary
+
+The site is a layer over a 29,000 word cited dossier. Every claim here traces to it.
+
+Read it in the site: [section 1](/50-dossier/s1-the-challenge/), then forward. It is also a single file, [field-shift-dossier.md](/field-shift-dossier.md), with its [provenance record](/field-shift-provenance.md).

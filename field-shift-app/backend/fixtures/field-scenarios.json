@@ -1,0 +1,45 @@
+{
+  "seasons": ["2023/24", "2024/25", "2025/26"],
+  "default_season": "2025/26",
+  "fields": [
+    {
+      "id": "mt-santa-carmem-01",
+      "name": "Field 01",
+      "location": "Santa Carmem, Mato Grosso",
+      "coverage": 86,
+      "center": [-55.27, -11.91],
+      "boundary": {"type": "Polygon", "coordinates": [[[-55.285, -11.9], [-55.26, -11.9], [-55.26, -11.92], [-55.285, -11.92], [-55.285, -11.9]]]},
+      "scenarios": [
+        {"id": "current-sequence", "name": "Current sequence", "is_current": true, "crops": ["Soybean", "Corn"], "why": "The current farm plan is the reference for comparison.", "evidence": "Three seasons of field history are available.", "benefit": "Known operating fit for this field.", "gap": "Input-cost records are not available.", "risk": "Weather variability can shift planting windows.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.28 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Crop history", "value": "Soybean → Corn", "basis": "entered", "as_of": "2025-06-30", "source": "https://field-shift.local/fixtures/crop-history"}]},
+        {"id": "soy-corn-cover", "name": "Soybean → Corn cover", "is_current": false, "crops": ["Soybean", "Corn"], "why": "Alternating crop families maintains the current rotation pattern.", "evidence": "SMAP soil moisture retrieval is available for the reference date.", "benefit": "Familiar sequence with a cover-crop window.", "gap": "Cover-crop establishment is not recorded.", "risk": "A short dry spell may reduce emergence.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.28 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Rotation suitability", "value": "0.74", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}]},
+        {"id": "soy-cotton", "name": "Soybean → Cotton", "is_current": false, "crops": ["Soybean", "Cotton"], "why": "Introduces a fiber crop after soybean.", "evidence": "Three seasons of crop history support a rotation comparison.", "benefit": "Adds a potential market outlet.", "gap": "Buyer access and credit terms are unknown.", "risk": "Cotton requires higher working capital.", "evidence_rows": [{"layer": "Rotation suitability", "value": "0.68", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}, {"layer": "Market outlet", "value": "Not entered", "basis": "entered", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/producer-inputs"}]}
+      ]
+    },
+    {
+      "id": "mt-santa-carmem-02",
+      "name": "Field 02",
+      "location": "Santa Carmem, Mato Grosso",
+      "coverage": 91,
+      "center": [-55.24, -11.94],
+      "boundary": {"type": "Polygon", "coordinates": [[[-55.255, -11.93], [-55.23, -11.93], [-55.23, -11.95], [-55.255, -11.95], [-55.255, -11.93]]]},
+      "scenarios": [
+        {"id": "current-sequence", "name": "Current sequence", "is_current": true, "crops": ["Soybean", "Corn"], "why": "The current farm plan is the reference for comparison.", "evidence": "Three seasons of field history are available.", "benefit": "Known operating fit for this field.", "gap": "Input-cost records are not available.", "risk": "Weather variability can shift planting windows.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.31 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Crop history", "value": "Soybean → Corn", "basis": "entered", "as_of": "2025-06-30", "source": "https://field-shift.local/fixtures/crop-history"}]},
+        {"id": "soy-corn-cover", "name": "Soybean → Corn cover", "is_current": false, "crops": ["Soybean", "Corn"], "why": "Alternating crop families maintains the current rotation pattern.", "evidence": "SMAP soil moisture retrieval is available for the reference date.", "benefit": "Familiar sequence with a cover-crop window.", "gap": "Cover-crop establishment is not recorded.", "risk": "A short dry spell may reduce emergence.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.31 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Rotation suitability", "value": "0.79", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}]},
+        {"id": "soy-cotton", "name": "Soybean → Cotton", "is_current": false, "crops": ["Soybean", "Cotton"], "why": "Introduces a fiber crop after soybean.", "evidence": "Three seasons of crop history support a rotation comparison.", "benefit": "Adds a potential market outlet.", "gap": "Buyer access and credit terms are unknown.", "risk": "Cotton requires higher working capital.", "evidence_rows": [{"layer": "Rotation suitability", "value": "0.72", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}, {"layer": "Market outlet", "value": "Not entered", "basis": "entered", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/producer-inputs"}]}
+      ]
+    },
+    {
+      "id": "mt-santa-carmem-03",
+      "name": "Field 03",
+      "location": "Santa Carmem, Mato Grosso",
+      "coverage": 62,
+      "center": [-55.21, -11.97],
+      "boundary": {"type": "Polygon", "coordinates": [[[-55.225, -11.96], [-55.2, -11.96], [-55.2, -11.98], [-55.225, -11.98], [-55.225, -11.96]]]},
+      "scenarios": [
+        {"id": "current-sequence", "name": "Current sequence", "is_current": true, "crops": ["Soybean", "Corn"], "why": "The current farm plan is the reference for comparison.", "evidence": "Three seasons of field history are available.", "benefit": "Known operating fit for this field.", "gap": "Input-cost records are not available.", "risk": "Weather variability can shift planting windows.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.19 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Crop history", "value": "Soybean → Corn", "basis": "entered", "as_of": "2025-06-30", "source": "https://field-shift.local/fixtures/crop-history"}]},
+        {"id": "soy-corn-cover", "name": "Soybean → Corn cover", "is_current": false, "crops": ["Soybean", "Corn"], "why": "Alternating crop families maintains the current rotation pattern.", "evidence": "SMAP soil moisture retrieval is available for the reference date.", "benefit": "Familiar sequence with a cover-crop window.", "gap": "Cover-crop establishment is not recorded.", "risk": "A short dry spell may reduce emergence.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.19 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Rotation suitability", "value": "0.58", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}]},
+        {"id": "soy-cotton", "name": "Soybean → Cotton", "is_current": false, "crops": ["Soybean", "Cotton"], "why": "Introduces a fiber crop after soybean.", "evidence": "Three seasons of crop history support a rotation comparison.", "benefit": "Adds a potential market outlet.", "gap": "Buyer access and credit terms are unknown.", "risk": "Low moisture coverage raises uncertainty.", "evidence_rows": [{"layer": "Rotation suitability", "value": "0.46", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}, {"layer": "Market outlet", "value": "Not entered", "basis": "entered", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/producer-inputs"}]}
+      ]
+    }
+  ]
+}

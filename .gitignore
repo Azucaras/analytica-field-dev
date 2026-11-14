@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+
+# python virtualenv and bytecode
+.venv/
+__pycache__/
+*.py[cod]
+
+# build output
+dist/
+dist-ssr/
+.astro/
+
+# capture output from the verification gates
+# screenshots are produced by the browser at run time and are not versioned.
+# the markdown checkpoints and the json/txt measurement dumps stay in the tree.
+field-shift-app/artifacts/*.png
+
+# runtime caches
+.tile-cache/
+
+# logs and editor or OS noise
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea

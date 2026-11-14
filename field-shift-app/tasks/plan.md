@@ -1,0 +1,20 @@
+# Plan: bloco 1, mapa de composicao
+- 01-mapa-e-selecao-de-talhao.md: done
+- 02-presets-de-composicao-e-trilho-de-camadas.md: done
+- 03-proxy-de-tiles-com-cache.md: done
+- 04-abstencao-no-servidor-e-aviso.md: done
+- 05-cartao-de-cenario-com-cinco-campos.md: done
+- 06-painel-de-evidencias-com-base-e-lacuna.md: done
+- 07-restricoes-com-desconhecido-e-assumes.md: done
+- 08-seletor-de-safra.md: done
+- 09-registro-de-comandos-e-barra-do-agente.md: done
+- 10-strings-em-ingles-com-t.md: done
+- 11-estados-de-carga-e-vazio.md: done
+- 12-backend-fora-sem-derrubar-a-tela.md: done
+- 13-checkpoint-do-bloco.md: done
+- 14-mapa-em-tela-cheia-com-ponteiro-atravessavel.md: done
+- 15-chips-de-topo-sem-barra.md: done
+- 16-ancoras-dos-paineis-com-superficie-e-rolagem.md: done
+- 17-faixa-estreita-e-atribuicao.md: done
+- 18-legibilidade-do-mapa.md: done
+- 19-checkpoint-do-hud.md: done

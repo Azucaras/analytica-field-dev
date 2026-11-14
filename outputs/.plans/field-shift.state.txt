@@ -1,0 +1,11 @@
+Deep research run on the NASA Space Apps 2026 challenge "Field Shift: Adapting Farms with NASA Data" (spaceappschallenge.org). Deliverable is a cited research report that grounds a decision-support app build (interactive map, text-to-SQL agent, voice commands, game-derived UX), scoped to Brazil and the USA, freshness window 2025 to 2026.
+
+Measured session facts:
+- Dispatcher: kanban.dispatch_in_gateway = true; gateway pid 1117 running, active_agents 2. Creating a per-topic board is a DB change needing user confirmation.
+- Current kanban board is benchmark-eval (unrelated project, done=229, archived=23); 11 boards exist, none about this topic.
+- User asked specifically for gpt 6 luna subagents (delegate_task option explabs_gpt_6_luna).
+- Channels probed: Obscura MCP reachable but network-errors on spaceappschallenge.org; hound stealthy fetch returns that page (200 OK); desktop_preview open plus read returns a logged-in X timeline with handles and dates; portal_x_search absent; Semantic Scholar, OpenAlex and Crossref APIs all return results.
+- Host: 12 cores, 15 GiB RAM, 8.9 GiB free-ish (853Mi free + 6.3Gi cache).
+- Existing material: hackathon_nasa_2026 holds a 2024/2025 winners report, a health-monitoring research doc and screenshots; analytica-field-dev holds Game UX.md only.
+
+Trade-offs: delegate_task batches avoid a DB change and let every child be pinned to luna, but they hand no board-level resumability, so a stall costs a whole wave. A board card gets dispatch, retries and a canary gate, but the board must be created first and the unchanged stall rule falls back to batches anyway.

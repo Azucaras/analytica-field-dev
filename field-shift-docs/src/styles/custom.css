@@ -1,0 +1,24 @@
+/* Wide tables are the most common layout failure in a documentation site.
+   Density keeps the columns inside the content column on a laptop screen. */
+
+.sl-markdown-content table {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.sl-markdown-content table th,
+.sl-markdown-content table td {
+  padding: 0.4rem 0.6rem;
+  vertical-align: top;
+}
+
+.sl-markdown-content table td code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* A table that still needs scrolling gets a visible affordance instead of a silent clip. */
+.sl-markdown-content table {
+  display: table;
+  width: 100%;
+}

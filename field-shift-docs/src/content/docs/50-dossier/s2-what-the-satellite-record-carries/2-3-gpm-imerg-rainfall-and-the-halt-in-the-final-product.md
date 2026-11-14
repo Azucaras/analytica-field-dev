@@ -1,0 +1,27 @@
+---
+title: "2.3 GPM IMERG rainfall, and the halt in the Final product"
+description: "The IMERG V07 ATBD (read, 2023-07-12) describes a gridded satellite precipitation estimate, not a rain gauge at the farm."
+checked: 2026-11-10
+---
+
+The [IMERG V07 ATBD (read, 2023-07-12)](https://arthurhou.pps.eosdis.nasa.gov/Documents/IMERG_V07_ATBD_final.pdf) describes a gridded satellite precipitation estimate, not a rain gauge at the farm. The GPM constellation combines microwave precipitation estimates, interpolates them with motion vectors, and fills time between microwave overpasses with infrared estimates. IMERG Daily aggregates 48 half hourly estimates (documented). The grid is 0.1 degree, approximately 11 km at the equator (documented), so a cell averages conditions across land covers and farms. Daily totals provide regional context, not field rainfall.
+
+Final and Late differ in the timing and adjustment of the estimates. V07 Final applies a later monthly adjustment using GPCC gauge data (documented), making it suited to retrospective regional seasonal totals. It is not an in season product. The V07 Final record ended on 2025-09-30 (documented). NASA's April 28, 2026 transition notice initially projected V08 Final for summer 2026, and its August 6, 2026 update moved that projection to fall 2026 (documented); status checked 2026-11-10, release not verified.
+
+Late is the faster, less adjusted alternative. It is available the next day (documented), before Final's monthly gauge adjustment. The official latency numbers conflict: the ATBD says 12 hours and the [GES DISC Late product page](https://www.earthdata.nasa.gov/data/catalog/ges-disc-gpm-3imergdl-07) says 14 hours (documented). In use, describe this as next day context and preserve the discrepancy rather than choosing one number as a guarantee. NASA's checked catalog calls Late a hybrid that ingests GPROF V08 while holding CORRA calibration to a prior year climatology (documented). It is not equivalent to the later gauge adjusted Final series, especially in an anomalous year.
+
+A credible use is to show completed season regional rainfall with V07 Final through its explicit cutoff, or to use Late as a next day indication that a planting window may have had rain. The latter should be checked against a local gauge or a farmer's report before an action depends on the amount. The question it can help frame is whether the broader area appears wet enough to warrant checking a second crop window. A gridded estimate can help prioritize that check. It cannot decide whether an individual field was planted, received enough rain, or can be worked.
+
+Skill weakens over frozen surfaces, complex terrain, coasts, and warm rain regimes (documented). Grid averaging and changing constellation inputs can obscure local storms or introduce record discontinuities. T1 has no target farm gauge validation, and rainfall alone does not describe soil storage, runoff, drainage, or irrigation.
+
+**Figure S2-F3. IMERG product timing and role (documented, status checked 2026-11-10).**
+
+| Product status | Period or latency | Appropriate role |
+|---|---|---|
+| V07 Final halted | Through 2025-09-30 (documented) | Retrospective regional seasonal totals |
+| V07 Late | Next day; official latency 12 or 14 hours (documented) | Faster regional clue, locally checked |
+| V08 Final | Fall 2026 projected, not verified as launched (documented) | Do not claim current availability |
+
+**Decision it can inform.** Choose whether an area wide planting window merits local rainfall verification, or compare regional completed season totals with V07 Final through 2025-09-30. Show the product version, valid period, and source freshness.
+
+**Decision it only illustrates.** IMERG cannot trigger irrigation for a particular field or establish field precipitation truth. V07 Final cannot support post 2025-09-30 values, and Late cannot be presented as gauge adjusted Final quality. The product is a regional estimate to check locally, not a farm rain gauge.

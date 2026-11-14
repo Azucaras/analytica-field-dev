@@ -1,0 +1,9 @@
+
+ RUN  v5.1.0 /run/media/carloshnp/D/Programming/analytica-field-dev/field-shift-app
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  02:49:01
+   Duration  1.53s (tests 53%, environment 21%, import 19%, setup 4%, transform 3%)
+
