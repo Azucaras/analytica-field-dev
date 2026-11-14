@@ -1,8 +1,7 @@
 AC-43 the rotation panel collapsed and expanded, at the three widths
 
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
-of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
-(wave4-source-hashes.txt). CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
 Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
 because the card forbids PNGs in the repository.
 
@@ -28,3 +27,8 @@ contract's 142 px is the block 3 header block, measured from the panel's top edg
 and that block still measures 142.00 px at all three widths (table above). The extra pixel is the panel's own
 1 px bottom border, which the header block does not include. AC-29 and AC-39 both allow 2 px on the gap, and
 the measured gap between the dock and the collapsed panel is 8.00 px at 1440x900 and 780x900.
+
+Tab walk with the rotation panel collapsed at 1440x900 (CDP Tab presses from the toggle):
+   NASA GIBS · SMAP L4 · 9 km | OpenFreeMap © OpenMap -> Map -> Zoom in -> Zoom out -> Drag to rotate map, click to reset north -> OpenFreeMap
+   cards in the DOM while collapsed: 0; no card control appears in the walk.
+   The toggle itself is reached by Shift+Tab from the first card while expanded (see AC-42-collapse-toggle.txt).
