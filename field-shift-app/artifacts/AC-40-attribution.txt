@@ -1,0 +1,52 @@
+AC-29 and AC-40 checks, computed from the measured rectangles in AC-29-rects.txt
+
+criterion rule | measured | expected | verdict
+--------------------------------------------------------------------------------------------------------------
+1440 dock left edge | 22 | 22 | PASS
+1440 dock right edge | 1006 | 1006 | PASS
+1440 dock height | 92 | 92 | PASS
+1440 dock top at or below y 448 | 457.81 | >= 448 | PASS
+1440 gap dock bottom to panel top | 8.0 | 8 | PASS
+1440 collapsed: dock left/right/height | 22/1006/92 | 22/1006/92 | PASS
+1440 collapsed: gap dock bottom to collapsed panel top | 8 | 8 | PASS
+780 first paint: panel collapsed | true | true | PASS
+780 first paint: dock left/right/height | 22/395/92 | 22/395/92 | PASS
+780 first paint: gap dock bottom to measured collapsed panel top | 8 | 8.00 (measured top 741.00) | PASS
+780 first paint: dock top/bottom (recorded) | 641/733 | 642/734 with a 142 px header | PASS
+780 panel expanded: dock top not above 450 | 450 | >= 450 | PASS
+780 panel expanded: dock top/bottom | 450/542 | 450/542 | PASS
+780 panel expanded: dock bottom at most 2 px below panel top | 0.81 | <= 2 | PASS
+780 expanded, panel collapsed: toggle box | 22.00,589.00,44.00,44.00 | x 22 to 66, y 590 to 634 | PASS
+780 expanded, panel collapsed: toggle vs clear centre | 0.0 | 0 | PASS
+780 expanded, panel expanded: toggle box | 22.00,398.00,44.00,44.00 | x 22 to 66, y 398 to 442 | PASS
+780 expanded, panel expanded: toggle vs clear centre | 0.0 | 0 | PASS
+780 collapsed dock: toggle bottom gap to panel top | 8 | 8 | PASS
+780 collapsed dock: toggle width equals the column | 373 | 373 | PASS
+780 collapsed dock with panel expanded: toggle y | 490.81/534.81 | 490.81/534.81 | PASS
+360 first paint: dock collapsed, no region | False | false | PASS
+360 first paint: toggle box | x 8, y 224, 288x44 | x 8 to 296, y 224 to 268 | PASS
+360 band is fixed when the panel expands | 224/268 | same as first paint 224/268 | PASS
+360 expanded dock box | x 8, y 224, 288x92 | x 8 to 296, y 224 to 316 | PASS
+360 expanded toggle inside region at x 8 to 52, y 224 to 268 | x 8, y 224.5, 44x44 | x 8 to 52, y 224 to 268 | PASS
+360 expanded toggle is the region first control | True | true | PASS
+360 band clears block 3 right edge column (positive area) | 0.0 | 0 | PASS
+360 expanded toggle vs block 3 right edge column | 0.0 | 0 | PASS
+
+Zero area intersection matrix: area in px2 between the dock (or the collapsed toggle when the region is not mounted)
+and each named box of the rule. Columns: attribution, navigation control, layer rail, fields stack, abstention notice,
+top right strip, clear centre (1440: 432,180,1008,450; 780: 234,180,546,450; 360: block 3 right edge column 8,328,296,432), compare divider.
+
+viewport   state              member            attrib     nav    rail  fields  notice   strip  centre  divider
+---------------------------------------------------------------------------------------------------------------
+1440x900   first-paint        dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+1440x900   rotation-toggled   dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+1440x900   timeline-toggled   dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+1440x900   both-toggled       dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+780x900    first-paint        dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+780x900    rotation-toggled   dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+780x900    timeline-toggled   collapsed toggle    0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+780x900    both-toggled       collapsed toggle    0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+360x640    first-paint        collapsed toggle    0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+360x640    rotation-toggled   collapsed toggle    0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+360x640    timeline-toggled   dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00
+360x640    both-toggled       dock                0.00    0.00    0.00    0.00    0.00    0.00    0.00     0.00

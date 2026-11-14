@@ -210,4 +210,9 @@ export const en = {
   'timeline.no_season_data': 'No planting window data for {season}',
   'timeline.sentinel2_track': 'Sentinel-2 scenes',
   'timeline.fixture_data': 'Fixture data for {season}, not for {derived}',
+  // Block 4, wave 4: the dock toggle (R-46) and the rotation panel toggle (R-48). The
+  // names are fixed by those requirements, so neither is written in a component (R-42).
+  'timeline.controls': 'Timeline controls',
+  'rotation.collapse': 'Collapse Rotation outlook',
+  'rotation.expand': 'Expand Rotation outlook',
 } as const

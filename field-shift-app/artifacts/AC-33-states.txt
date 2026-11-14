@@ -1,0 +1,39 @@
+AC-33 resize chain: 1440x900 -> 780x900 -> 360x640, with the dock and the panel toggles pressed
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
+of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
+(wave4-source-hashes.txt). CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
+screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
+the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
+
+
+step 1-1440 at 1440x900
+   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
+   rotation collapsed true; Timeline controls aria-expanded None; region mounted True; toggle inside region None
+   dock [22.00, 641.00, 984.00, 92.00]; toggle [not mounted]; panel [22.00, 741.00, 984.00, 143.00]
+   compare divider [698.00, 0.00, 44.00, 900.00]
+
+step 2-resized-780 at 780x900
+   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
+   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region False
+   dock [22.00, 641.00, 373.00, 92.00]; toggle [22.00, 589.00, 44.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
+   compare divider [368.00, 0.00, 44.00, 900.00]
+
+step 3-press1-collapse at 780x900
+   chosen date None; pin aria-pressed true; compare aria-pressed true
+   rotation collapsed true; Timeline controls aria-expanded false; region mounted False; toggle inside region False
+   dock [not mounted]; toggle [22.00, 689.00, 373.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
+   compare divider [368.00, 0.00, 44.00, 900.00]
+
+step 4-press2-expand at 780x900
+   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
+   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region False
+   dock [22.00, 641.00, 373.00, 92.00]; toggle [22.00, 589.00, 44.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
+   compare divider [368.00, 0.00, 44.00, 900.00]
+
+step 5-resized-360 at 360x640
+   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
+   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region True
+   dock [8.00, 224.00, 288.00, 92.00]; toggle [8.00, 224.50, 44.00, 44.00]; panel [8.00, 489.00, 344.00, 143.00]
+   compare divider [158.00, 0.00, 44.00, 640.00]

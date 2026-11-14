@@ -30,9 +30,23 @@ type ScenarioCardsProps = {
   threshold: string | null
   isLoading?: boolean
   emptyReason?: string | null
+  /**
+   * R-49: while the rotation panel is collapsed the three cards and the list
+   * `Rotation scenarios` are unmounted, not hidden, so neither is in the DOM or in the
+   * accessibility tree and no card control can take focus. The heading block stays,
+   * because the collapsed panel's height is that measured header.
+   */
+  collapsed?: boolean
 }
 
-export function ScenarioCards({ scenarios, state, threshold, isLoading = false, emptyReason }: ScenarioCardsProps) {
+export function ScenarioCards({
+  scenarios,
+  state,
+  threshold,
+  isLoading = false,
+  emptyReason,
+  collapsed = false,
+}: ScenarioCardsProps) {
   return (
     <section className="scenario-panel" aria-labelledby="scenario-title">
       <div className="section-heading">
@@ -42,34 +56,38 @@ export function ScenarioCards({ scenarios, state, threshold, isLoading = false, 
         </div>
         <span className="season-chip">{t('scenarios.season', { season: '2025/26' })}</span>
       </div>
-      {state === 'abstained' && (
-        <p className="abstention-notice" role="status">
-          {t('notice.ranking_withheld_period', { threshold: t(threshold === 'coverage_below_80_percent' ? 'notice.coverage_below_80_percent' : threshold) })}
-        </p>
+      {collapsed ? null : (
+        <>
+          {state === 'abstained' && threshold !== null && (
+            <p className="abstention-notice" role="status">
+              {t('notice.ranking_withheld_period', { threshold: t(threshold === 'coverage_below_80_percent' ? 'notice.coverage_below_80_percent' : threshold) })}
+            </p>
+          )}
+          <ul className="scenario-list" aria-label={t('scenarios.list_label')}>
+            {isLoading ? (
+              Array.from({ length: 3 }, (_, index) => (
+                <li className="scenario-card" aria-hidden="true" key={`skeleton-${index}`}>
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="mt-4 h-4 w-full" />
+                  <Skeleton className="mt-2 h-4 w-5/6" />
+                  <Skeleton className="mt-4 h-12 w-full" />
+                </li>
+              ))
+            ) : emptyReason ? (
+              <li className="scenario-card empty-scenario">
+                <Empty className="py-8">
+                  <EmptyHeader>
+                    <EmptyTitle>{t('scenarios.no_scenarios_available')}</EmptyTitle>
+                    <EmptyDescription>{emptyReason}</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              </li>
+            ) : [...scenarios].sort((a, b) => Number(b.is_current) - Number(a.is_current)).map((scenario) => (
+              <RotationFlipCard key={scenario.id} scenario={scenario} />
+            ))}
+          </ul>
+        </>
       )}
-      <ul className="scenario-list" aria-label={t('scenarios.list_label')}>
-        {isLoading ? (
-          Array.from({ length: 3 }, (_, index) => (
-            <li className="scenario-card" aria-hidden="true" key={`skeleton-${index}`}>
-              <Skeleton className="h-6 w-2/3" />
-              <Skeleton className="mt-4 h-4 w-full" />
-              <Skeleton className="mt-2 h-4 w-5/6" />
-              <Skeleton className="mt-4 h-12 w-full" />
-            </li>
-          ))
-        ) : emptyReason ? (
-          <li className="scenario-card empty-scenario">
-            <Empty className="py-8">
-              <EmptyHeader>
-                <EmptyTitle>{t('scenarios.no_scenarios_available')}</EmptyTitle>
-                <EmptyDescription>{emptyReason}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </li>
-        ) : [...scenarios].sort((a, b) => Number(b.is_current) - Number(a.is_current)).map((scenario) => (
-          <RotationFlipCard key={scenario.id} scenario={scenario} />
-        ))}
-      </ul>
     </section>
   )
 }
