@@ -208,6 +208,7 @@ export const en = {
   'timeline.no_municipality_data': 'No planting window data for this municipality',
   'timeline.no_crop_data': 'No planting window data for {crop}',
   'timeline.no_season_data': 'No planting window data for {season}',
+  'timeline.no_window_source': 'No planting window source for this region',
   'timeline.sentinel2_track': 'Sentinel-2 scenes',
   'timeline.fixture_data': 'Fixture data for {season}, not for {derived}',
 } as const

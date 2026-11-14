@@ -1,0 +1,75 @@
+AC-25 (f) and the R-31 source boundary, block 4 revision 8
+==========================================================
+
+Spec read: field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8.
+raw sha256 dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c, 681 lines.
+Freeze digest f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e.
+The ZARC snapshot is unchanged: artifacts/zarc-mt-snapshot.json,
+sha256 b53c8a7be60948fccb72e5cfa108b95debfdd932f5f15b315363d42a332dfde9.
+
+1. What the boundary is
+-----------------------
+src/lib/window-source.ts holds one interface and one implementation.
+
+  WindowSource = { region, windowsFor({ date, crops }) }
+  WindowSourceResult = { season, windows, empty }
+
+  brazilWindowSource(place, snapshot) is the only implementation. It calls
+  seasonForDate(date) for the derived Y/YY label and buildSeasonBand for the rows, so the
+  Y/YY to Y/YYYY normalisation stays inside the Brazil source and uses the one documented
+  mapping (snapshotSeasonKey of src/lib/timeline.ts, reused by src/lib/season-band.ts).
+
+  windowSourceFor(location, snapshot) selects the source of the field's region and returns
+  null when that region has none. Block 4 reads the region from the field's location text,
+  where a Brazilian field names its state; the United States source is OD-23, owned by
+  block 7, and block 5 supplies the active regionId.
+
+src/components/SeasonBand.tsx draws what the source answers. Three states, kept apart:
+  no field selected        -> the band renders nothing (R-35, unchanged from wave 3)
+  source for the region    -> the windows and empty texts of wave 3, unchanged for Brazil
+  no source for the region -> no window, one empty text naming the reason
+
+2. The new state, AC-25 (f): a field whose region has no source
+---------------------------------------------------------------
+Rendered at chosen date 2026-11-12 with a United States location and the ZARC snapshot
+still in the tree (the source is absent, not the data):
+
+  <div class="timeline-season-band" data-season-band="true" aria-label="Planting windows">
+    <span class="timeline-band-empty" data-season-empty="no_source">No planting window source for this region</span>
+  </div>
+
+Zero [data-season-window] nodes. No normalised season key is computed, because the source
+boundary is never crossed. Text key: timeline.no_window_source.
+
+3. Brazil is unchanged: the band DOM of both trees, compared
+------------------------------------------------------------
+The wave 3 tree (commit b0ab039, the branch this patch sits on) and this branch were each
+rendered through the same seven Brazil states in jsdom and their band innerHTML compared
+byte for byte, including the class names, the data attributes, the label strings and the
+inline left/width percentages:
+
+  state              wave 3 sha256    this branch sha256   result
+  2026-11-12         468ad059f5a2f990 468ad059f5a2f990    same
+  2025-11-10         a939dd93702a2d36 a939dd93702a2d36    same
+  2024-11-01         338f036ebdbe9311 338f036ebdbe9311    same
+  no-snapshot-file   b8f011c3d23da415 b8f011c3d23da415    same
+  no-cotton          278ad7dae5b9c801 278ad7dae5b9c801    same
+  no-field           e3b0c44298fc1c14 e3b0c44298fc1c14    same (empty, as R-35 requires)
+  no-municipality    b8f011c3d23da415 b8f011c3d23da415    same
+
+The capture harness was a temporary test file in the wave 3 worktree and in this branch; it
+is not part of this branch, because the comparisons it proves are recorded here instead.
+No CSS file is touched by this patch, so the identical DOM with identical inline styles
+draws the identical pixels.
+
+4. Commands and their output
+----------------------------
+  npx tsc -b --noEmit        exit 0
+  npx vitest run             21 files passed (21), 195 tests passed (195)
+                             baseline on b0ab039: 19 files, 182 tests; +2 files, +13 tests
+  npm run build              exit 0, built in 693ms, wall 4.099s
+
+The new tests are src/lib/window-source.test.ts (9) and src/components/SeasonBand.test.tsx
+(4). The wave 3 tests are unedited: src/lib/season-band.test.ts and
+src/components/TimelineDock.test.tsx still pass as written, including the four window
+labels, the two pinned dates and the three Brazil empty texts.
