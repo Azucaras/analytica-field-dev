@@ -1,0 +1,30 @@
+AC-39 the dock toggle at 360x640 and at 780x900, first paint and after each press
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
+screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
+the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
+
+
+viewport 360x640
+   start          aria-expanded false, region mounted False, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after enter    aria-expanded true, region mounted True, toggle inside region True, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after space    aria-expanded false, region mounted False, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after enter 2  aria-expanded true, region mounted True, toggle inside region True, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+
+viewport 780x900
+   start          aria-expanded true, region mounted True, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after enter    aria-expanded false, region mounted False, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after space    aria-expanded true, region mounted True, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+   after enter 2  aria-expanded false, region mounted False, toggle inside region False, focus on 'Timeline controls', visible text 'Timeline controls 2026-11-14'
+
+Boxes per state, from AC-29-rects.txt:
+   360x640 first-paint        dock [not mounted], toggle [8.00, 224.00, 288.00, 44.00], panel top 489.00, region mounted False
+   360x640 rotation-toggled   dock [not mounted], toggle [8.00, 224.00, 288.00, 44.00], panel top 440.00, region mounted False
+   360x640 timeline-toggled   dock [8.00, 224.00, 288.00, 92.00], toggle [8.00, 224.50, 44.00, 44.00], panel top 489.00, region mounted True
+   360x640 both-toggled       dock [8.00, 224.00, 288.00, 92.00], toggle [8.00, 224.50, 44.00, 44.00], panel top 440.00, region mounted True
+   780x900 first-paint        dock [22.00, 641.00, 373.00, 92.00], toggle [22.00, 589.00, 44.00, 44.00], panel top 741.00, region mounted True
+   780x900 rotation-toggled   dock [22.00, 450.00, 373.00, 92.00], toggle [22.00, 398.00, 44.00, 44.00], panel top 542.81, region mounted True
+   780x900 timeline-toggled   dock [not mounted], toggle [22.00, 689.00, 373.00, 44.00], panel top 741.00, region mounted False
+   780x900 both-toggled       dock [not mounted], toggle [22.00, 490.81, 373.00, 44.00], panel top 542.81, region mounted False

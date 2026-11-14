@@ -1,0 +1,32 @@
+AC-36 keyboard log at 1440x900 (dock controls), and AC-31 keys are covered by vitest (TimelineDock.test.tsx)
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
+screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
+the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
+
+start date 2026-11-14
+Previous day + Enter -> 2026-11-13, focus stays on Previous day
+Previous day + Space -> 2026-11-12, focus stays on Previous day
+Next day + Enter -> 2026-11-13, focus stays on Next day
+Tab walk from Previous day: Previous day -> Timeline date -> Next day -> Collapse Rotation outlook -> Charts for Current sequence
+The typed-date and clamp branches are vitest (TimelineDock.test.tsx: 'sets the chosen date from the Go to date input',
+'clamps a typed date outside the axis and says which bound it used (AC-23)').
+
+The comparator divider and the row controls, keyboard only (AC-37, AC-38 equality with the pointer):
+   opacity_start: {"value": "0.55", "focus": "Opacity, SMAP soil moisture"}
+   opacity_right: {"value": "0.6", "focus": "Opacity, SMAP soil moisture"}
+   opacity_right2: {"value": "0.65", "focus": "Opacity, SMAP soil moisture"}
+   opacity_home: {"value": "0", "focus": "Opacity, SMAP soil moisture"}
+   order_before: ["smap-l3", "smap-l4-surface", "smap-l4-root", "imerg-daily", "imerg-30min", "ndvi-8day", "evi-8day", "ndvi-monthly", "lst-terra", "lst-aqua", "hls-l30", "hls-s30", "grace-mascon"]
+   order_after_enter: ["smap-l4-surface", "smap-l3", "smap-l4-root", "imerg-daily", "imerg-30min", "ndvi-8day", "evi-8day", "ndvi-monthly", "lst-terra", "lst-aqua", "hls-l30", "hls-s30", "grace-mascon"]
+   order_focus: "Move SMAP soil moisture down"
+   pin_start: {"pressed": "false", "focus": "Pin date, SMAP soil moisture", "text": "retrieved9 km"}
+   pin_enter: {"pressed": "true", "focus": "Pin date, SMAP soil moisture", "text": "retrieved9 kmpinned"}
+   pin_space: {"pressed": "false", "focus": "Pin date, SMAP soil moisture", "text": "retrieved9 km"}
+   compare_enter: {"pressed": "true", "focus": "Compare, MODIS NDVI, 8 day", "divider": true}
+   compare_space: {"pressed": "false", "focus": "Compare, MODIS NDVI, 8 day", "divider": false}
+   divider_start: {"value": "50", "now": "50", "focus": "Compare divider"}
+   divider_right: {"value": "51", "now": "51", "focus": "Compare divider"}
+   divider_left: {"value": "50", "now": "50", "focus": "Compare divider"}

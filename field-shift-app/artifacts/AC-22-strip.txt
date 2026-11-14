@@ -1,0 +1,37 @@
+AC-22 top right strip children and the dock half of the criterion, at 1440x900
+
+Measured 2026-11-14 on the dev server of branch block4/wave4-dock at 1440x900.
+
+strip children (DOM order): [
+ {
+  "tag": "span",
+  "cls": "top-chip workspace-label",
+  "name": null,
+  "text": "FIELD INTELLIGENCE"
+ },
+ {
+  "tag": "span",
+  "cls": "top-chip profile-avatar",
+  "name": "Grower profile",
+  "text": "GM"
+ },
+ {
+  "tag": "button",
+  "cls": "top-chip toggle-control command-toggle",
+  "name": null,
+  "text": "Command"
+ },
+ {
+  "tag": "button",
+  "cls": "top-chip toggle-control supporting-data-toggle",
+  "name": null,
+  "text": "Supporting data"
+ }
+]
+
+element named 'Season' anywhere: False; select elements in the document: 0
+
+The strip is the workspace label, the avatar, Command and Supporting data, in that order, with no Season.
+The dock half: the region 'Timeline' is mounted at 1440x900 and holds Go to date, Previous day, Timeline date and
+Next day (AC-30-hit-1440.txt), and the season control that block 3 put in this strip does not exist.
+vitest: src/App.test.tsx 'R-41, AC-22: the top right strip is the label, the avatar, Command and Supporting data in that order'.

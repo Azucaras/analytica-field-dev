@@ -1,0 +1,25 @@
+AC-42 the rotation outlook toggle at 1440x900, 780x900 and 360x640
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
+because the card forbids PNGs in the repository.
+
+Key log at 1440x900 (CDP Enter then Space on the focused toggle):
+   start name 'Collapse Rotation outlook'
+   Enter -> {"label": "Expand Rotation outlook", "expanded": "false", "focus": "Expand Rotation outlook", "cards": 0}
+   Space -> {"label": "Collapse Rotation outlook", "expanded": "true", "focus": "Collapse Rotation outlook", "cards": 3}
+   Tab from the dock reaches it after 'Next day': Previous day -> Timeline date -> Next day -> Collapse Rotation outlook
+   Shift+Tab from the toggle lands on 'Next day'; Tab from it lands on 'Charts for Current sequence'
+
+Box and state at the three widths (measured; collapsed means aria-expanded false and the name 'Expand Rotation outlook'):
+   1440x900 first               toggle [169.14, 578.31, 44.00, 44.00], button/Collapse Rotation outlook/aria-expanded true, tabIndex 0, disabled False, panel height 326.19, cards 3
+   1440x900 after_press         toggle [169.14, 761.50, 44.00, 44.00], button/Expand Rotation outlook/aria-expanded false, tabIndex 0, disabled False, panel height 143.00, cards 0
+   1440x900 after_second_press  toggle [169.14, 578.31, 44.00, 44.00], button/Collapse Rotation outlook/aria-expanded true, tabIndex 0, disabled False, panel height 326.19, cards 3
+   1440x900 after_reload        toggle [169.14, 578.31, 44.00, 44.00], button/Collapse Rotation outlook/aria-expanded true, tabIndex 0, disabled False, panel height 326.19, cards 3
+   780x900  first               toggle [169.14, 761.50, 44.00, 44.00], button/Expand Rotation outlook/aria-expanded false, tabIndex 0, disabled False, panel height 143.00, cards 0
+   780x900  after_press         toggle [169.14, 563.31, 44.00, 44.00], button/Collapse Rotation outlook/aria-expanded true, tabIndex 0, disabled False, panel height 341.19, cards 3
+   780x900  after_reload        toggle [169.14, 761.50, 44.00, 44.00], button/Expand Rotation outlook/aria-expanded false, tabIndex 0, disabled False, panel height 143.00, cards 0
+   360x640  first               toggle [155.14, 509.50, 44.00, 44.00], button/Expand Rotation outlook/aria-expanded false, tabIndex 0, disabled False, panel height 143.00, cards 0
+   360x640  after_press         toggle [155.14, 460.50, 44.00, 44.00], button/Collapse Rotation outlook/aria-expanded true, tabIndex 0, disabled False, panel height 192.00, cards 3
+   360x640  after_reload        toggle [155.14, 509.50, 44.00, 44.00], button/Expand Rotation outlook/aria-expanded false, tabIndex 0, disabled False, panel height 143.00, cards 0

@@ -1,0 +1,32 @@
+AC-32 reduced motion at 1440x900 and at 360x640 after the press that expands the dock
+
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
+(vite, http://127.0.0.1:5173/), CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
+Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
+screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
+the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
+
+Emulation.setEmulatedMedia features [{name: prefers-reduced-motion, value: reduce}] before the load.
+
+viewport 1440x900: matchMedia('(prefers-reduced-motion: reduce)').matches = True
+   dock             transition-duration 0s, animation-duration 0s
+   dateRow          transition-duration 0s, animation-duration 0s
+   rangeRow         transition-duration 0s, animation-duration 0s
+   timelineToggle   not mounted at this width
+   rotationPanel    transition-duration 0s, animation-duration 0s
+   railRow          transition-duration 0s, animation-duration 0s
+   railTrigger      transition-duration 0s, animation-duration 0s
+   chosen date at the start 2026-11-14, after 3.0 s with no date press 2026-11-14
+
+viewport 360x640: matchMedia('(prefers-reduced-motion: reduce)').matches = True
+   dock             transition-duration 0s, animation-duration 0s
+   dateRow          transition-duration 0s, animation-duration 0s
+   rangeRow         transition-duration 0s, animation-duration 0s
+   timelineToggle   transition-duration 0s, animation-duration 0s
+   rotationPanel    transition-duration 0s, animation-duration 0s
+   railRow          transition-duration 0s, animation-duration 0s
+   railTrigger      transition-duration 0s, animation-duration 0s
+   chosen date at the start 2026-11-14, after 3.0 s with no date press 2026-11-14
+
+No timer writes the date: the front end of block 4 has no setInterval or setTimeout at all
+(grep -rn 'setInterval\|setTimeout' src/components/TimelineDock.tsx src/components/ScenarioCards.tsx src/App.tsx src/lib/timeline.ts returns nothing).

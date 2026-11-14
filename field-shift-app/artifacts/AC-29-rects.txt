@@ -1,0 +1,308 @@
+AC-29 dock geometry at 1440x900, 780x900 and 360x640, block 4 wave 4
+Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/) of branch block4/wave4-dock,
+CDP Emulation.setDeviceMetricsOverride, deviceScaleFactor 1, page foregrounded.
+State of the page in every measurement: Field 03 selected, so the abstention notice is mounted,
+and the Fields panel expanded. Boxes are [x, y, width, height] from getBoundingClientRect, CSS px.
+States per width: 'first paint' is the load state of that width; then one press on the rotation
+toggle; then one press on 'Timeline controls' (not mounted at 1440x900); then both toggled.
+
+====================================================================================================
+VIEWPORT 1440x900
+====================================================================================================
+
+-- state: first-paint  (rotationCollapsed=false, timeline region mounted=True, dock toggle inside region=None, cards=3)
+   dock region Timeline         [22.00, 457.81, 984.00, 92.00]
+   dock date row                [31.00, 458.81, 966.00, 44.00]
+   dock range row               [31.00, 506.81, 966.00, 44.00]
+   Timeline controls toggle     [not mounted]
+   Go to date                   [31.00, 458.81, 98.00, 44.00]
+   Previous day                 [31.00, 506.81, 44.00, 44.00]
+   Timeline date range          [83.00, 506.81, 862.00, 44.00]
+   Next day                     [953.00, 506.81, 44.00, 44.00]
+   rotation panel               [22.00, 557.81, 984.00, 326.19]
+   rotation header row          [23.00, 558.81, 982.00, 73.50]
+   rotation heading copy        [39.00, 571.81, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 578.31, 44.00, 44.00]
+   coverage pill                [868.02, 591.31, 120.98, 31.00]
+   section heading              [39.00, 646.31, 950.00, 41.50]
+   first rotation card          [39.00, 699.81, 310.00, 169.19]
+   map attribution              [935.80, 776.00, 496.20, 20.00]
+   navigation control           [1395.00, 406.50, 29.00, 87.00]
+   layer rail                   [1070.00, 768.00, 350.00, 120.00]
+   fields stack                 [0.00, 72.00, 320.00, 137.00]
+   abstention notice            [1018.00, 60.00, 400.00, 64.50]
+   top right strip              [972.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 557.8125px
+
+-- state: rotation-toggled  (rotationCollapsed=true, timeline region mounted=True, dock toggle inside region=None, cards=0)
+   dock region Timeline         [22.00, 641.00, 984.00, 92.00]
+   dock date row                [31.00, 642.00, 966.00, 44.00]
+   dock range row               [31.00, 690.00, 966.00, 44.00]
+   Timeline controls toggle     [not mounted]
+   Go to date                   [31.00, 642.00, 98.00, 44.00]
+   Previous day                 [31.00, 690.00, 44.00, 44.00]
+   Timeline date range          [83.00, 690.00, 862.00, 44.00]
+   Next day                     [953.00, 690.00, 44.00, 44.00]
+   rotation panel               [22.00, 741.00, 984.00, 143.00]
+   rotation header row          [23.00, 742.00, 982.00, 73.50]
+   rotation heading copy        [39.00, 755.00, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 761.50, 44.00, 44.00]
+   coverage pill                [868.02, 774.50, 120.98, 31.00]
+   section heading              [39.00, 829.50, 950.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [935.80, 776.00, 496.20, 20.00]
+   navigation control           [1395.00, 406.50, 29.00, 87.00]
+   layer rail                   [1070.00, 768.00, 350.00, 120.00]
+   fields stack                 [0.00, 72.00, 320.00, 137.00]
+   abstention notice            [1018.00, 60.00, 400.00, 64.50]
+   top right strip              [972.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 741px
+
+-- state: timeline-toggled  (rotationCollapsed=false, timeline region mounted=True, dock toggle inside region=None, cards=3)
+   dock region Timeline         [22.00, 457.81, 984.00, 92.00]
+   dock date row                [31.00, 458.81, 966.00, 44.00]
+   dock range row               [31.00, 506.81, 966.00, 44.00]
+   Timeline controls toggle     [not mounted]
+   Go to date                   [31.00, 458.81, 98.00, 44.00]
+   Previous day                 [31.00, 506.81, 44.00, 44.00]
+   Timeline date range          [83.00, 506.81, 862.00, 44.00]
+   Next day                     [953.00, 506.81, 44.00, 44.00]
+   rotation panel               [22.00, 557.81, 984.00, 326.19]
+   rotation header row          [23.00, 558.81, 982.00, 73.50]
+   rotation heading copy        [39.00, 571.81, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 578.31, 44.00, 44.00]
+   coverage pill                [868.02, 591.31, 120.98, 31.00]
+   section heading              [39.00, 646.31, 950.00, 41.50]
+   first rotation card          [39.00, 699.81, 310.00, 169.19]
+   map attribution              [935.80, 776.00, 496.20, 20.00]
+   navigation control           [1395.00, 406.50, 29.00, 87.00]
+   layer rail                   [1070.00, 768.00, 350.00, 120.00]
+   fields stack                 [0.00, 72.00, 320.00, 137.00]
+   abstention notice            [1018.00, 60.00, 400.00, 64.50]
+   top right strip              [972.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 557.8125px
+
+-- state: both-toggled  (rotationCollapsed=true, timeline region mounted=True, dock toggle inside region=None, cards=0)
+   dock region Timeline         [22.00, 641.00, 984.00, 92.00]
+   dock date row                [31.00, 642.00, 966.00, 44.00]
+   dock range row               [31.00, 690.00, 966.00, 44.00]
+   Timeline controls toggle     [not mounted]
+   Go to date                   [31.00, 642.00, 98.00, 44.00]
+   Previous day                 [31.00, 690.00, 44.00, 44.00]
+   Timeline date range          [83.00, 690.00, 862.00, 44.00]
+   Next day                     [953.00, 690.00, 44.00, 44.00]
+   rotation panel               [22.00, 741.00, 984.00, 143.00]
+   rotation header row          [23.00, 742.00, 982.00, 73.50]
+   rotation heading copy        [39.00, 755.00, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 761.50, 44.00, 44.00]
+   coverage pill                [868.02, 774.50, 120.98, 31.00]
+   section heading              [39.00, 829.50, 950.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [935.80, 776.00, 496.20, 20.00]
+   navigation control           [1395.00, 406.50, 29.00, 87.00]
+   layer rail                   [1070.00, 768.00, 350.00, 120.00]
+   fields stack                 [0.00, 72.00, 320.00, 137.00]
+   abstention notice            [1018.00, 60.00, 400.00, 64.50]
+   top right strip              [972.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 741px
+
+====================================================================================================
+VIEWPORT 780x900
+====================================================================================================
+
+-- state: first-paint  (rotationCollapsed=true, timeline region mounted=True, dock toggle inside region=False, cards=0)
+   dock region Timeline         [22.00, 641.00, 373.00, 92.00]
+   dock date row                [31.00, 642.00, 355.00, 44.00]
+   dock range row               [31.00, 690.00, 355.00, 44.00]
+   Timeline controls toggle     [22.00, 589.00, 44.00, 44.00]
+   Go to date                   [31.00, 642.00, 98.00, 44.00]
+   Previous day                 [31.00, 690.00, 44.00, 44.00]
+   Timeline date range          [83.00, 690.00, 251.00, 44.00]
+   Next day                     [342.00, 690.00, 44.00, 44.00]
+   rotation panel               [22.00, 741.00, 373.00, 143.00]
+   rotation header row          [23.00, 742.00, 371.00, 73.50]
+   rotation heading copy        [39.00, 755.00, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 761.50, 44.00, 44.00]
+   coverage pill                [257.02, 774.50, 120.98, 31.00]
+   section heading              [39.00, 829.50, 339.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [275.80, 776.00, 496.20, 20.00]
+   navigation control           [735.00, 406.50, 29.00, 87.00]
+   layer rail                   [526.00, 768.00, 234.00, 120.00]
+   fields stack                 [0.00, 72.00, 202.80, 137.00]
+   abstention notice            [407.00, 60.00, 351.00, 64.50]
+   top right strip              [312.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 741px
+
+-- state: rotation-toggled  (rotationCollapsed=false, timeline region mounted=True, dock toggle inside region=False, cards=3)
+   dock region Timeline         [22.00, 450.00, 373.00, 92.00]
+   dock date row                [31.00, 451.00, 355.00, 44.00]
+   dock range row               [31.00, 499.00, 355.00, 44.00]
+   Timeline controls toggle     [22.00, 398.00, 44.00, 44.00]
+   Go to date                   [31.00, 451.00, 98.00, 44.00]
+   Previous day                 [31.00, 499.00, 44.00, 44.00]
+   Timeline date range          [83.00, 499.00, 251.00, 44.00]
+   Next day                     [342.00, 499.00, 44.00, 44.00]
+   rotation panel               [22.00, 542.81, 373.00, 341.19]
+   rotation header row          [23.00, 543.81, 371.00, 73.50]
+   rotation heading copy        [39.00, 556.81, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 563.31, 44.00, 44.00]
+   coverage pill                [257.02, 576.31, 120.98, 31.00]
+   section heading              [39.00, 631.31, 339.00, 41.50]
+   first rotation card          [39.00, 684.81, 240.00, 169.19]
+   map attribution              [275.80, 776.00, 496.20, 20.00]
+   navigation control           [735.00, 406.50, 29.00, 87.00]
+   layer rail                   [526.00, 768.00, 234.00, 120.00]
+   fields stack                 [0.00, 72.00, 202.80, 137.00]
+   abstention notice            [407.00, 60.00, 351.00, 64.50]
+   top right strip              [312.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 542.8125px
+
+-- state: timeline-toggled  (rotationCollapsed=true, timeline region mounted=False, dock toggle inside region=False, cards=0)
+   dock region Timeline         [not mounted]
+   Timeline controls toggle     [22.00, 689.00, 373.00, 44.00]
+   rotation panel               [22.00, 741.00, 373.00, 143.00]
+   rotation header row          [23.00, 742.00, 371.00, 73.50]
+   rotation heading copy        [39.00, 755.00, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 761.50, 44.00, 44.00]
+   coverage pill                [257.02, 774.50, 120.98, 31.00]
+   section heading              [39.00, 829.50, 339.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [275.80, 776.00, 496.20, 20.00]
+   navigation control           [735.00, 406.50, 29.00, 87.00]
+   layer rail                   [526.00, 768.00, 234.00, 120.00]
+   fields stack                 [0.00, 72.00, 202.80, 137.00]
+   abstention notice            [407.00, 60.00, 351.00, 64.50]
+   top right strip              [312.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock auto (anchor 45), rotation panel 50
+   --fs-rotation-top 741px
+
+-- state: both-toggled  (rotationCollapsed=false, timeline region mounted=False, dock toggle inside region=False, cards=3)
+   dock region Timeline         [not mounted]
+   Timeline controls toggle     [22.00, 490.81, 373.00, 44.00]
+   rotation panel               [22.00, 542.81, 373.00, 341.19]
+   rotation header row          [23.00, 543.81, 371.00, 73.50]
+   rotation heading copy        [39.00, 556.81, 130.14, 50.50]
+   rotation collapse toggle     [169.14, 563.31, 44.00, 44.00]
+   coverage pill                [257.02, 576.31, 120.98, 31.00]
+   section heading              [39.00, 631.31, 339.00, 41.50]
+   first rotation card          [39.00, 684.81, 240.00, 169.19]
+   map attribution              [275.80, 776.00, 496.20, 20.00]
+   navigation control           [735.00, 406.50, 29.00, 87.00]
+   layer rail                   [526.00, 768.00, 234.00, 120.00]
+   fields stack                 [0.00, 72.00, 202.80, 137.00]
+   abstention notice            [407.00, 60.00, 351.00, 64.50]
+   top right strip              [312.88, 0.00, 467.13, 80.00]
+   right edge column            [not mounted]
+   z-index: dock auto (anchor 45), rotation panel 50
+   --fs-rotation-top 542.8125px
+
+====================================================================================================
+VIEWPORT 360x640
+====================================================================================================
+
+-- state: first-paint  (rotationCollapsed=true, timeline region mounted=False, dock toggle inside region=False, cards=0)
+   dock region Timeline         [not mounted]
+   Timeline controls toggle     [8.00, 224.00, 288.00, 44.00]
+   rotation panel               [8.00, 489.00, 344.00, 143.00]
+   rotation header row          [9.00, 490.00, 342.00, 73.50]
+   rotation heading copy        [25.00, 503.00, 130.14, 50.50]
+   rotation collapse toggle     [155.14, 509.50, 44.00, 44.00]
+   coverage pill                [214.02, 503.00, 120.98, 31.00]
+   section heading              [25.00, 577.50, 310.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [0.00, 404.41, 352.00, 27.59]
+   navigation control           [315.00, 276.50, 29.00, 87.00]
+   layer rail                   [36.81, 546.00, 259.19, 86.00]
+   fields stack                 [8.00, 117.19, 288.00, 99.00]
+   abstention notice            [8.00, 58.00, 288.00, 51.19]
+   top right strip              [127.20, 0.00, 232.80, 68.00]
+   right edge column            [not mounted]
+   z-index: dock auto (anchor 45), rotation panel 50
+   --fs-rotation-top 489px
+
+-- state: rotation-toggled  (rotationCollapsed=false, timeline region mounted=False, dock toggle inside region=False, cards=3)
+   dock region Timeline         [not mounted]
+   Timeline controls toggle     [8.00, 224.00, 288.00, 44.00]
+   rotation panel               [8.00, 440.00, 344.00, 192.00]
+   rotation header row          [9.00, 441.00, 327.00, 73.50]
+   rotation heading copy        [25.00, 454.00, 130.14, 50.50]
+   rotation collapse toggle     [155.14, 460.50, 44.00, 44.00]
+   coverage pill                [199.02, 454.00, 120.98, 31.00]
+   section heading              [25.00, 528.50, 295.00, 41.50]
+   first rotation card          [25.00, 582.00, 240.00, 169.19]
+   map attribution              [0.00, 404.41, 352.00, 27.59]
+   navigation control           [315.00, 276.50, 29.00, 87.00]
+   layer rail                   [36.81, 546.00, 259.19, 86.00]
+   fields stack                 [8.00, 117.19, 288.00, 99.00]
+   abstention notice            [8.00, 58.00, 288.00, 51.19]
+   top right strip              [127.20, 0.00, 232.80, 68.00]
+   right edge column            [not mounted]
+   z-index: dock auto (anchor 45), rotation panel 50
+   --fs-rotation-top 440px
+
+-- state: timeline-toggled  (rotationCollapsed=true, timeline region mounted=True, dock toggle inside region=True, cards=0)
+   dock region Timeline         [8.00, 224.00, 288.00, 92.00]
+   dock date row                [17.00, 225.00, 270.00, 44.00]
+   dock range row               [17.00, 273.00, 270.00, 44.00]
+   Timeline controls toggle     [8.00, 224.50, 44.00, 44.00]
+   Go to date                   [60.00, 225.00, 106.00, 44.00]
+   Previous day                 [17.00, 273.00, 44.00, 44.00]
+   Timeline date range          [69.00, 273.00, 166.00, 44.00]
+   Next day                     [243.00, 273.00, 44.00, 44.00]
+   rotation panel               [8.00, 489.00, 344.00, 143.00]
+   rotation header row          [9.00, 490.00, 342.00, 73.50]
+   rotation heading copy        [25.00, 503.00, 130.14, 50.50]
+   rotation collapse toggle     [155.14, 509.50, 44.00, 44.00]
+   coverage pill                [214.02, 503.00, 120.98, 31.00]
+   section heading              [25.00, 577.50, 310.00, 41.50]
+   first rotation card          [not mounted]
+   map attribution              [0.00, 404.41, 352.00, 27.59]
+   navigation control           [315.00, 276.50, 29.00, 87.00]
+   layer rail                   [36.81, 546.00, 259.19, 86.00]
+   fields stack                 [8.00, 117.19, 288.00, 99.00]
+   abstention notice            [8.00, 58.00, 288.00, 51.19]
+   top right strip              [127.20, 0.00, 232.80, 68.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 489px
+
+-- state: both-toggled  (rotationCollapsed=false, timeline region mounted=True, dock toggle inside region=True, cards=3)
+   dock region Timeline         [8.00, 224.00, 288.00, 92.00]
+   dock date row                [17.00, 225.00, 270.00, 44.00]
+   dock range row               [17.00, 273.00, 270.00, 44.00]
+   Timeline controls toggle     [8.00, 224.50, 44.00, 44.00]
+   Go to date                   [60.00, 225.00, 106.00, 44.00]
+   Previous day                 [17.00, 273.00, 44.00, 44.00]
+   Timeline date range          [69.00, 273.00, 166.00, 44.00]
+   Next day                     [243.00, 273.00, 44.00, 44.00]
+   rotation panel               [8.00, 440.00, 344.00, 192.00]
+   rotation header row          [9.00, 441.00, 327.00, 73.50]
+   rotation heading copy        [25.00, 454.00, 130.14, 50.50]
+   rotation collapse toggle     [155.14, 460.50, 44.00, 44.00]
+   coverage pill                [199.02, 454.00, 120.98, 31.00]
+   section heading              [25.00, 528.50, 295.00, 41.50]
+   first rotation card          [25.00, 582.00, 240.00, 169.19]
+   map attribution              [0.00, 404.41, 352.00, 27.59]
+   navigation control           [315.00, 276.50, 29.00, 87.00]
+   layer rail                   [36.81, 546.00, 259.19, 86.00]
+   fields stack                 [8.00, 117.19, 288.00, 99.00]
+   abstention notice            [8.00, 58.00, 288.00, 51.19]
+   top right strip              [127.20, 0.00, 232.80, 68.00]
+   right edge column            [not mounted]
+   z-index: dock 45 (anchor 45), rotation panel 50
+   --fs-rotation-top 440px
+

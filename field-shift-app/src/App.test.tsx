@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { useMapStore } from '@/lib/map-store'
 import { en } from './strings/en'
 import { layersResponse } from '@/test/api-fixtures'
@@ -1167,5 +1169,265 @@ describe('block 4 wave 3: the timeline replaces the season control', () => {
     await waitFor(() => expect((screen.getByLabelText('Go to date') as HTMLInputElement).value).toBe('2015-04-01'))
     const smap = document.querySelector('.layer-entry[data-layer-id="smap-l3"]') as HTMLElement
     await waitFor(() => expect(smap.textContent).toContain('2015-04-01'))
+  })
+})
+
+describe('block 4 wave 4: the dock states, the two toggles and the motion rules', () => {
+  type Width = '1440' | '780' | '360'
+
+  /** The two queries the block 4 layout reads, keyed by the width they stand for. */
+  function widthMatches(query: string, width: Width): boolean {
+    if (query === '(max-width: 640px)') return width === '360'
+    if (query === '(max-width: 1020px)') return width !== '1440'
+    return false
+  }
+
+  function stubWidth(width: Width) {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: widthMatches(query, width),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }))
+  }
+
+  /** A matchMedia stub a test can resize, dispatching `change` the way a real resize does. */
+  function stubResizableWidth(initial: Width) {
+    const current: { width: Width } = { width: initial }
+    const listeners = new Map<string, Set<(event: MediaQueryListEvent) => void>>()
+    const set = (width: Width) => {
+      current.width = width
+      for (const [query, handlers] of listeners) {
+        const event = { matches: widthMatches(query, width), media: query } as MediaQueryListEvent
+        for (const handler of handlers) handler(event)
+      }
+    }
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      get matches() { return widthMatches(query, current.width) },
+      media: query,
+      onchange: null,
+      addEventListener: (type: string, handler: (event: MediaQueryListEvent) => void) => {
+        if (type !== 'change') return
+        if (!listeners.has(query)) listeners.set(query, new Set())
+        listeners.get(query)?.add(handler)
+      },
+      removeEventListener: (type: string, handler: (event: MediaQueryListEvent) => void) => {
+        if (type === 'change') listeners.get(query)?.delete(handler)
+      },
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }))
+    return { set }
+  }
+
+  const timelineToggle = () => screen.getByRole('button', { name: 'Timeline controls' })
+  const timelineRegion = () => screen.queryByRole('region', { name: 'Timeline' })
+  const rotationCollapsedState = () => document.querySelector('[data-rotation-panel]')?.getAttribute('data-collapsed')
+  const chosenDate = () => useMapStore.getState().chosenDate
+
+  it('R-46, AC-39: at 360x640 the dock is the collapsed toggle and Enter expands it as the region first control', async () => {
+    stubWidth('360')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await waitFor(() => expect(timelineRegion()).toBeNull())
+    expect(screen.queryByRole('region', { name: 'Timeline' })).toBeNull()
+    const toggle = timelineToggle()
+    expect(toggle.tagName).toBe('BUTTON')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.textContent).toContain('2026-11-14')
+    expect(toggle.tabIndex).toBe(0)
+
+    toggle.focus()
+    await user.keyboard('{Enter}')
+    const region = await screen.findByRole('region', { name: 'Timeline' })
+    expect(timelineToggle().getAttribute('aria-expanded')).toBe('true')
+    expect(region.querySelector('.timeline-date-row')?.firstElementChild).toBe(timelineToggle())
+    expect(document.activeElement).toBe(timelineToggle())
+    // The four R-37 controls stay four at this width.
+    expect(within(region).getByLabelText('Go to date')).toBeTruthy()
+    expect(within(region).getByLabelText('Previous day')).toBeTruthy()
+    expect(within(region).getByLabelText('Timeline date')).toBeTruthy()
+    expect(within(region).getByLabelText('Next day')).toBeTruthy()
+
+    await user.keyboard(' ')
+    await waitFor(() => expect(timelineRegion()).toBeNull())
+    expect(timelineToggle().getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(timelineToggle())
+  })
+
+  it('R-46, AC-39: at 780x900 the dock is expanded at first paint and its toggle is a sibling of the region', async () => {
+    stubWidth('780')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    const region = await screen.findByRole('region', { name: 'Timeline' })
+    const toggle = timelineToggle()
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(region.contains(toggle)).toBe(false)
+    expect(toggle.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await user.click(toggle)
+    await waitFor(() => expect(timelineRegion()).toBeNull())
+    expect(timelineToggle().getAttribute('aria-expanded')).toBe('false')
+    expect(timelineToggle().textContent).toContain('2026-11-14')
+
+    await user.click(timelineToggle())
+    expect(await screen.findByRole('region', { name: 'Timeline' })).toBeTruthy()
+  })
+
+  it('R-40, R-51, R-52, AC-33: a resize keeps the chosen date and the states the user set', async () => {
+    const viewport = stubResizableWidth('1440')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+    act(() => useMapStore.setState({ chosenDate: '2026-11-12' }))
+    await user.click(screen.getByRole('button', { name: 'Collapse Rotation outlook' }))
+    expect(rotationCollapsedState()).toBe('true')
+
+    act(() => viewport.set('780'))
+    await waitFor(() => expect(rotationCollapsedState()).toBe('true'))
+    expect(timelineRegion()).toBeTruthy()
+    expect(chosenDate()).toBe('2026-11-12')
+
+    // Two presses at 780: the expanded state is a press value, not the width default.
+    await user.click(timelineToggle())
+    expect(timelineRegion()).toBeNull()
+    await user.click(timelineToggle())
+    expect(timelineRegion()).toBeTruthy()
+
+    act(() => viewport.set('360'))
+    await waitFor(() => expect(timelineToggle().getAttribute('aria-expanded')).toBe('true'))
+    const region = await screen.findByRole('region', { name: 'Timeline' })
+    expect(region.querySelector('.timeline-date-row')?.firstElementChild).toBe(timelineToggle())
+    expect(chosenDate()).toBe('2026-11-12')
+    // 360x640's own default is collapsed, and the resize does not reapply it.
+    expect(rotationCollapsedState()).toBe('true')
+  })
+
+  it('R-48, AC-42: the rotation toggle is a native button whose name states the action and whose keys toggle it', async () => {
+    stubWidth('1440')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    const toggle = await screen.findByRole('button', { name: 'Collapse Rotation outlook' })
+    expect(toggle.tagName).toBe('BUTTON')
+    expect(toggle.tabIndex).toBe(0)
+    expect((toggle as HTMLButtonElement).disabled).toBe(false)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+
+    toggle.focus()
+    await user.keyboard('{Enter}')
+    const collapsed = screen.getByRole('button', { name: 'Expand Rotation outlook' })
+    expect(collapsed.getAttribute('aria-expanded')).toBe('false')
+    expect(document.activeElement).toBe(collapsed)
+
+    await user.keyboard(' ')
+    const expanded = screen.getByRole('button', { name: 'Collapse Rotation outlook' })
+    expect(expanded.getAttribute('aria-expanded')).toBe('true')
+    expect(document.activeElement).toBe(expanded)
+  })
+
+  it('R-49, AC-43: collapsing unmounts the three cards and the Rotation scenarios list', async () => {
+    stubWidth('1440')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
+    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Collapse Rotation outlook' }))
+    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(0))
+    expect(screen.queryByRole('list', { name: 'Rotation scenarios' })).toBeNull()
+    expect(document.querySelectorAll('.rotation-card').length).toBe(0)
+    // The heading block stays, because the collapsed panel's height is that header.
+    expect(screen.getByRole('heading', { name: 'Rotation outlook' })).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Expand Rotation outlook' }))
+    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
+    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
+    for (const face of document.querySelectorAll('.scenario-card .flip-face')) {
+      expect(face.getAttribute('data-face')).toBe('front')
+    }
+  })
+
+  it('R-37, AC-36: Enter and Space step the date from Previous day and Next day and keep focus', async () => {
+    stubWidth('1440')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+
+    const previous = screen.getByRole('button', { name: 'Previous day' })
+    previous.focus()
+    await user.keyboard('{Enter}')
+    expect(chosenDate()).toBe('2026-11-13')
+    expect(document.activeElement).toBe(previous)
+    await user.keyboard(' ')
+    expect(chosenDate()).toBe('2026-11-12')
+    expect(document.activeElement).toBe(previous)
+
+    const next = screen.getByRole('button', { name: 'Next day' })
+    next.focus()
+    await user.keyboard('{Enter}')
+    expect(chosenDate()).toBe('2026-11-13')
+    expect(document.activeElement).toBe(next)
+  })
+
+  it('R-53, AC-45: a block 4 press leaves the card faces and values alone, and wave 4 imports no other panel state', async () => {
+    stubWidth('780')
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    // 780x900 loads with the rotation panel collapsed (R-52), so the cards mount after a press.
+    await user.click(await screen.findByRole('button', { name: 'Expand Rotation outlook' }))
+    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
+    const flip = document.querySelector('.scenario-card .flip-overlay') as HTMLElement
+    await user.click(flip)
+    const face = () => document.querySelector('.scenario-card .flip-face')?.getAttribute('data-face')
+    expect(face()).toBe('back')
+    const value = document.querySelector('.smap-value')?.textContent ?? null
+
+    await user.click(timelineToggle())
+    expect(face()).toBe('back')
+    await user.click(timelineToggle())
+    expect(face()).toBe('back')
+    expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3)
+    expect(document.querySelector('.smap-value')?.textContent ?? null).toBe(value)
+
+    const wave4Sources = ['src/components/TimelineDock.tsx', 'src/components/ScenarioCards.tsx', 'src/lib/viewport.ts']
+      .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
+      .join('\n')
+    expect(wave4Sources).not.toMatch(/useCommandToggle|useSupportingDataToggle|SUPPORTING_DATA_PANEL_ID/)
+  })
+
+  it('R-41, AC-22: the top right strip is the label, the avatar, Command and Supporting data in that order', async () => {
+    stubWidth('1440')
+    mockApi()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+    const strip = document.querySelector('.anchor-top-right .topbar-meta') as HTMLElement
+    const children = [...strip.children]
+    expect(children).toHaveLength(4)
+    expect(children[0].textContent).toBe('FIELD INTELLIGENCE')
+    expect(children[1].getAttribute('aria-label')).toBe('Grower profile')
+    expect(children[2].textContent).toBe('Command')
+    expect(children[3].textContent).toBe('Supporting data')
+    expect(document.querySelector('[aria-label="Season"]')).toBeNull()
+    expect(document.querySelector('select')).toBeNull()
   })
 })
