@@ -9,6 +9,7 @@ import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
+import { useLayers } from '@/lib/use-layers'
 import { t, translationKeyFor } from '@/strings'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -78,6 +79,10 @@ function App() {
   // R-40: which right edge panel was opened last. The transition into 360 keeps it
   // and closes the other; leaving 360 never reopens anything (R-35).
   const lastRightPanelRef = useRef<'command' | 'supporting' | null>(null)
+
+  // Block 4: one `/layers` request per chosen date and viewport tile feeds both the rail
+  // and the map (R-14, R-24). The rail no longer fetches on its own.
+  useLayers(mapTile)
 
   const hasNotice = Boolean(error || (scenarioState === 'abstained' && threshold && scenarios.length > 0))
 
@@ -232,7 +237,7 @@ function App() {
     <main className="app-shell" style={shellStyle}>
       <MapCanvas fields={fields} selectedField={selectedField} onTileChange={setMapTile} />
       <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
-        <div className="overlay-interactive panel-surface layer-panel"><LayerRail tile={mapTile} /></div>
+        <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
       </div>
 
       <div className="overlay anchor-top-left layer-chips" style={{ zIndex: ZOrder.chips }}>
