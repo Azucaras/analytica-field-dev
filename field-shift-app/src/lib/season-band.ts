@@ -1,9 +1,14 @@
 /**
- * R-31 and OD-21: the season band reads the ZARC snapshot at the field's municipality.
- * The file holds 93 rows over soil and cycle codes, and the field record carries no soil
- * or cycle, so the band draws the envelope of `window_risk_20` per crop and season
- * (earliest start, latest end), which is OD-22.
+ * R-31 (revision 8): the Brazil window data, read from the ZARC snapshot at the field's
+ * municipality. The band itself is region neutral (`src/lib/window-source.ts` selects this
+ * reader only for a Brazil field); this module holds the Brazil vocabulary, which is the
+ * snapshot's file, the crop table and the season key. The file holds 93 rows over soil and
+ * cycle codes, and the field record carries no soil or cycle, so the band draws the
+ * envelope of `window_risk_20` per crop and season (earliest start, latest end), which is
+ * OD-22.
  */
+
+import { snapshotSeasonKey } from './timeline'
 
 export type ZarcWindow = { start_date: string; end_date: string }
 
@@ -73,14 +78,6 @@ function envelope(rows: readonly ZarcRow[]): { start: string; end: string } | nu
   return start !== null && end !== null ? { start, end } : null
 }
 
-function snapshotSeason(season: string): string {
-  const [yearText, shortYearText] = season.split('/')
-  const year = Number(yearText)
-  let end = Math.floor(year / 100) * 100 + Number(shortYearText)
-  while (end <= year) end += 100
-  return `${year}/${end}`
-}
-
 /**
  * R-31: draws the windows the snapshot holds for the field's municipality and crops, for
  * the derived season only, and names the one thing it could not read. The empty cases are
@@ -101,7 +98,10 @@ export function buildSeasonBand(snapshot: ZarcSnapshot | null | undefined, query
     return { windows: [], empty: [{ kind: 'municipality' }] }
   }
 
-  const seasonKey = snapshotSeason(query.season)
+  // R-31, M-25: the snapshot writes its season as `Y/YYYY` while the band's label is `Y/YY`;
+  // `snapshotSeasonKey` of R-29 is the one documented conversion between the two forms, and
+  // this source reuses it rather than holding a second copy of the rule.
+  const seasonKey = snapshotSeasonKey(query.season)
   if (!municipalityRows.some((row) => row.season === seasonKey)) {
     return { windows: [], empty: [{ kind: 'season' }] }
   }
