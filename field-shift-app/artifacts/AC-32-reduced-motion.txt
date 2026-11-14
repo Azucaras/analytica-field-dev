@@ -1,7 +1,8 @@
 AC-32 reduced motion at 1440x900 and at 360x640 after the press that expands the dock
 
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
-(vite, http://127.0.0.1:5173/), CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
+Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
+of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
+(wave4-source-hashes.txt). CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
 Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
 screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
 the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.

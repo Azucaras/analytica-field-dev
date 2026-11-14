@@ -1,5 +1,6 @@
 AC-29 dock geometry at 1440x900, 780x900 and 360x640, block 4 wave 4
-Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/) of branch block4/wave4-dock,
+Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/) of the main checkout, whose seven
+block 4 source files are byte-identical to branch block4/wave4-dock-home (wave4-source-hashes.txt),
 CDP Emulation.setDeviceMetricsOverride, deviceScaleFactor 1, page foregrounded.
 State of the page in every measurement: Field 03 selected, so the abstention notice is mounted,
 and the Fields panel expanded. Boxes are [x, y, width, height] from getBoundingClientRect, CSS px.
