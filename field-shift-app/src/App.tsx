@@ -11,6 +11,13 @@ import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { useLayers } from '@/lib/use-layers'
 import { seasonForDate } from '@/lib/timeline'
+import {
+  COMPACT_QUERY,
+  NARROW_QUERY,
+  isCompactViewport,
+  isNarrowViewport,
+  useMediaMatch,
+} from '@/lib/viewport'
 import { t, translationKeyFor } from '@/strings'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -51,14 +58,6 @@ export const ZOrder = Object.freeze({
   agentBar: 70,
 })
 
-/** R-40: below 640 px the right edge column holds one panel at a time. */
-const NARROW_QUERY = '(max-width: 640px)'
-
-function isNarrowViewport() {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
-  return window.matchMedia(NARROW_QUERY).matches
-}
-
 function App() {
   const selectedFieldId = useMapStore((state) => state.selectedFieldId)
   const selectField = useMapStore((state) => state.selectField)
@@ -82,11 +81,53 @@ function App() {
   // and closes the other; leaving 360 never reopens anything (R-35).
   const lastRightPanelRef = useRef<'command' | 'supporting' | null>(null)
 
+  // R-40, R-51, R-52: the two block 4 toggle states. Each takes the default of the width
+  // the app loads at, once, and is never re-derived: a resize keeps the value the user's
+  // last press set, and only a reload returns the default.
+  const [timelineExpanded, setTimelineExpanded] = useState(() => !isNarrowViewport())
+  const [rotationCollapsed, setRotationCollapsed] = useState(() => isCompactViewport())
+  // Structure only, never state (R-40): the timeline toggle is mounted at 360 and 780, and
+  // at 360 it is the region's first control rather than the region's sibling (R-46).
+  const compactViewport = useMediaMatch(COMPACT_QUERY)
+  const narrowViewport = useMediaMatch(NARROW_QUERY)
+  // R-35 and R-36: the dock's top edge follows the rotation panel's measured top edge, so
+  // the 8 px gap and the y 450 floor are kept without hard-coding either panel height.
+  const rotationPanelRef = useRef<HTMLDivElement | null>(null)
+  const [rotationTop, setRotationTop] = useState<number | null>(null)
+
   // Block 4: one `/layers` request per chosen date and viewport tile feeds both the rail
   // and the map (R-14, R-24). The rail no longer fetches on its own.
   useLayers(mapTile)
 
   const hasNotice = Boolean(error || (scenarioState === 'abstained' && threshold && scenarios.length > 0))
+
+  // R-35, R-36: the rotation panel's top edge is the only anchor the dock needs. It is
+  // measured, not assumed, because a collapsed panel's height is its header and a
+  // resized viewport moves it.
+  useLayoutEffect(() => {
+    const node = rotationPanelRef.current
+    if (!node) return
+    const next = node.getBoundingClientRect().top
+    setRotationTop((current) => (current === null || Math.abs(current - next) > 0.1 ? next : current))
+  })
+
+  useEffect(() => {
+    const node = rotationPanelRef.current
+    if (!node || typeof ResizeObserver === 'undefined') return
+    const measure = () => {
+      setRotationTop((current) => {
+        const next = node.getBoundingClientRect().top
+        return current === null || Math.abs(current - next) > 0.1 ? next : current
+      })
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(node)
+    window.addEventListener('resize', measure)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [rotationCollapsed])
 
   // The status notice and the right edge column are separate fixed overlays, so the
   // 8 px gap of R-23 is kept by measuring the notice, not by nesting it. The measure
@@ -209,6 +250,14 @@ function App() {
 
   // R-40: at 360 opening one panel closes the other. Above 640 both may stay open (R-23).
   // The width is read at press time so a resize cannot leave the rule stale.
+  const handleToggleTimeline = useCallback(() => {
+    setTimelineExpanded((current) => !current)
+  }, [])
+
+  const handleToggleRotation = useCallback(() => {
+    setRotationCollapsed((current) => !current)
+  }, [])
+
   const handleToggleCommand = useCallback(() => {
     const willOpen = !command.isOpen
     if (isNarrowViewport() && willOpen) supportingData.close()
@@ -241,6 +290,7 @@ function App() {
 
   const shellStyle = {
     '--fs-notice-block': `${hasNotice ? noticeHeight + 8 : 0}px`,
+    ...(rotationTop === null ? {} : { '--fs-rotation-top': `${rotationTop}px` }),
   } as CSSProperties
 
   return (
@@ -295,37 +345,71 @@ function App() {
         </div>
       </div>
 
+      {/* Block 4 wave 4: the dock is its own anchor at z 45, between the abstention notice
+          (40) and the rotation panel (50). It is fixed, so at 780 its 8 px gap and the
+          y 450 floor are both kept while block 3's panel boxes do not move. */}
+      <div className="overlay anchor-timeline-dock" style={{ zIndex: ZOrder.timelineDock }}>
+        <TimelineDock
+          crops={fieldCrops}
+          location={selectedField?.location ?? null}
+          expanded={timelineExpanded}
+          onToggle={handleToggleTimeline}
+          showToggle={compactViewport}
+          toggleInside={narrowViewport && timelineExpanded}
+        />
+      </div>
+
       <div className="overlay anchor-bottom-left layer-cards" style={{ zIndex: ZOrder.scenarioCards }}>
-        <div className="bottom-left-column">
-          <TimelineDock
-            crops={fieldCrops}
-            location={selectedField?.location ?? null}
-          />
-          <div className="overlay-interactive panel-surface scenario-anchor" style={{ zIndex: ZOrder.scenarioCards }}>
-            <div className="rotation-heading-row">
+        <div
+          ref={rotationPanelRef}
+          className="overlay-interactive panel-surface scenario-anchor"
+          data-collapsed={rotationCollapsed ? 'true' : 'false'}
+          data-rotation-panel
+          style={{ zIndex: ZOrder.scenarioCards }}
+        >
+          <div className="rotation-heading-row">
+            <div className="rotation-heading-copy">
               <div>
                 <p className="eyebrow">{t('map.plan_with_evidence')}</p>
                 <h2>{t('map.rotation_outlook')}</h2>
               </div>
-              <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
-              {showFixtureNote && (
-                <p className="fixture-season-note">
-                  {t('timeline.fixture_data', { season: fixtureSeason, derived: derivedSeason })}
-                </p>
-              )}
+              {/* R-48: native button, name states the action, 44 by 44 px, focus stays. */}
+              <button
+                aria-expanded={!rotationCollapsed}
+                aria-label={t(rotationCollapsed ? 'rotation.expand' : 'rotation.collapse')}
+                className="rotation-collapse-toggle"
+                onClick={handleToggleRotation}
+                type="button"
+              >
+                <svg aria-hidden="true" focusable="false" height="14" viewBox="0 0 14 14" width="14">
+                  <path
+                    d={rotationCollapsed ? 'M2 5l5 5 5-5' : 'M2 9l5-5 5 5'}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                </svg>
+              </button>
             </div>
-            <ScenarioCards
-              emptyReason={isLoadingFields || isLoadingScenarios
-                ? null
-                : error ?? (!selectedFieldId
-                  ? t('empty.select_field')
-                  : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
-              isLoading={isLoadingFields || isLoadingScenarios}
-              scenarios={scenarios}
-              state={scenarioState === 'abstained' ? null : scenarioState}
-              threshold={scenarioState === 'abstained' ? null : threshold}
-            />
+            <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
+            {showFixtureNote && (
+              <p className="fixture-season-note">
+                {t('timeline.fixture_data', { season: fixtureSeason, derived: derivedSeason })}
+              </p>
+            )}
           </div>
+          <ScenarioCards
+            collapsed={rotationCollapsed}
+            emptyReason={isLoadingFields || isLoadingScenarios
+              ? null
+              : error ?? (!selectedFieldId
+                ? t('empty.select_field')
+                : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
+            isLoading={isLoadingFields || isLoadingScenarios}
+            scenarios={scenarios}
+            state={scenarioState === 'abstained' ? null : scenarioState}
+            threshold={scenarioState === 'abstained' ? null : threshold}
+          />
         </div>
       </div>
 
