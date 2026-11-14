@@ -7,7 +7,8 @@
  },
  "gibs_capabilities": {
   "url": "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml",
-  "layer_count": 1353,
+  "layer_count": 1330,
+  "layer_count_correction": "1353 was the line count of the capabilities file, not the number of layer identifiers. Recounted 2026-11-14: 1330 unique identifiers, 0 ECOSTRESS. See gibs-capabilities-extract-2026-11-14.json, raw_bytes 5842320.",
   "fetched_at": "2026-11-14T15:45:00-03:00"
  },
  "gibs_layers": [

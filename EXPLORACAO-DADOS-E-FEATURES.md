@@ -26,7 +26,7 @@ O GIBS publica tiles PNG em Web Map Tile Service, sem conta e sem chave. A lista
     curl -s https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/WMTSCapabilities.xml -o gibs-caps.xml
     grep -o '<ows:Identifier>[^<]*' gibs-caps.xml | sed 's/<ows:Identifier>//' | sort -u | wc -l
 
-Medido hoje: 1353 camadas, arquivo de 5,6 MB. Não é preciso ler o arquivo inteiro: dá para filtrar por nome.
+Medido hoje: 1330 camadas, arquivo de 5,8 MB. Não é preciso ler o arquivo inteiro: dá para filtrar por nome.
 
 ### 2.2 A regra que quebra o código atual
 
@@ -177,7 +177,7 @@ Isso é o tipo de número que transforma overlay em afirmação por campo, e é 
 Estes existem e são os melhores para o argumento agronômico, mas são arquivos, não tiles, e exigem conta gratuita mais `earthaccess` ou AppEEARS:
 
 - SMAP L3 e L4 em resolução nativa, com QA por célula.
-- ECOSTRESS ET e índice de estresse evaporativo em 70 m. Não existe no GIBS, confirmado: zero camadas com esse nome nas 1353.
+- ECOSTRESS ET e índice de estresse evaporativo em 70 m. Não existe no GIBS, confirmado: zero camadas com esse nome nas 1330.
 - HLS completo, com bandas, não só o compósito visual.
 - IMERG Final, calibrado com pluviômetro.
 - GEDI biomassa.
@@ -409,7 +409,7 @@ Testes do projeto:
 
 ## 11. Proveniência
 
-- Capabilities do GIBS, 1353 camadas, arquivo de 5,6 MB, obtido em 2026-11-14 às 15h45.
+- Capabilities do GIBS, 1330 camadas, arquivo de 5,8 MB, obtido em 2026-11-14 às 15h45. Correção: a primeira contagem, 1353, contou linhas do arquivo e não identificadores de camada.
 - Sondagem de 15 camadas com tile real no ponto -55.27, -11.91, resultado em `field-shift-app/artifacts/data-probe-2026-11-14.json`.
 - Teste da regra de matriz com 400 e 200 reais para NDVI e SMAP.
 - Varredura de 25 dias de HLS L30 no zoom 12 para medir frequência de imagem utilizável.
