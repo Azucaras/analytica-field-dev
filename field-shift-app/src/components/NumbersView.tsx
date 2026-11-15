@@ -312,7 +312,12 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
           })}
         </p>
       ) : (
-        <p className="numbers-abstain">{t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })}</p>
+        <p className="numbers-abstain" data-window-abstain>
+          {t('numbers.abstain.window_climate', {
+            reason: abstainReason(climate.error, 'climate', gaps),
+            source: climate.source,
+          })}
+        </p>
       )}
       <p className="numbers-cell-statement">{t('numbers.climate.cell')}</p>
       <dl className="numbers-rows">
@@ -346,15 +351,18 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
   )
 }
 
-function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance'] }) {
+function WaterCard({ water, gaps = NO_GAPS }: { water: NumbersPayload['sections']['water_balance']; gaps?: GapRow[] }) {
   const missing = water.missing
   // R-22 prints the window the balance was computed over. R-48's unavailable section and the
   // abstention with no consolidated rain day carry `window: null`, and then the card prints its
-  // reason in place of the window line instead of reading five nulls into it.
+  // reason in place of the window line instead of reading five nulls into it. R-12 makes that text
+  // name the window and the section source, with the section error or the water balance gap cause,
+  // or the sentence that says the reason was not recorded.
   const windowFacts = printedWindow(water.window)
-  const noWindow = water.error
-    ? t('numbers.abstain.climate', { error: water.error })
-    : t('numbers.no_value')
+  const noWindow = t('numbers.abstain.window_water', {
+    reason: abstainReason(water.error, 'water_balance', gaps),
+    source: water.source,
+  })
   // R-23: the balance abstains as a whole. The reason is printed once for the card, and each of
   // the three numbers shows `not computed`, so no partial sum and no zero stands in for it.
   const cell = (value: number | null) => (value === null && missing ? t('numbers.water.not_computed') : t('numbers.no_value'))
@@ -388,7 +396,7 @@ function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance
       {windowFacts ? (
         <p className="numbers-window">{t('numbers.water.window', { start: windowFacts.start, end: windowFacts.end, days: windowFacts.days })}</p>
       ) : (
-        <p className="numbers-abstain">{noWindow}</p>
+        <p className="numbers-abstain" data-window-abstain>{noWindow}</p>
       )}
       <p className="numbers-statement">{t('numbers.water.out_statement')}</p>
       <p className="numbers-statement">{t('numbers.water.statement')}</p>
@@ -921,7 +929,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
         )}
         <div className="numbers-cards">
           <ClimateCard climate={s.climate} window={payload.query.window} gaps={payload.gaps} />
-          <WaterCard water={s.water_balance} />
+          <WaterCard water={s.water_balance} gaps={payload.gaps} />
           <SmapCard smap={s.smap} gaps={payload.gaps} />
           <NdviCard ndvi={s.ndvi} gaps={payload.gaps} />
           <SoilCard soil={s.soil} />
