@@ -287,6 +287,11 @@ export const en = {
   'numbers.climate.normals_heading': 'Same window, 1991 to 2025',
   'numbers.climate.normals_statement': 'Source is reanalysis, modelled, on a cell of about half a degree.',
   'numbers.abstain.aggregate': 'Not computed: {parameter} is valid on {valid} of {days} days ({missing} missing). The threshold is 80 percent.',
+  // An aggregate object absent from the payload: the input it would have read is a different thing
+  // from the section, so it names the input and the source instead of the section name (R-12, AC-11).
+  'numbers.abstain.aggregate_absent': 'Not computed: the climate payload carries no aggregate over {parameter}: {reason}. Source: {source}.',
+  'numbers.abstain.ndvi_scene_count': 'NDVI scene count not read: {reason}. Source: {source}.',
+  'numbers.abstain.ndvi_clear_count': 'NDVI clear scene count not read: {reason}. Source: {source}.',
   'numbers.abstain.normals': 'Normals not computed: {reason}. Source: {source}.',
   'numbers.abstain.climate': 'Climate source unavailable: {error}.',
   'numbers.abstain.water': 'Balance not computed: {parameter} is missing on {missing} window days. No partial sum is printed.',

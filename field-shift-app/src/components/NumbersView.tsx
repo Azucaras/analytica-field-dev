@@ -15,6 +15,7 @@ import {
   formatMetric,
   interiorPoint,
   METRICS,
+  printedWindow,
   type AggregateName,
   type ClimateSection,
   type ClimateSeries,
@@ -61,7 +62,8 @@ const NO_GAPS: GapRow[] = []
  * one; otherwise the cause of the section's gap row, which is where the route records why the input
  * is missing; otherwise a sentence that says the reason was not recorded, so the text never falls
  * back to `No value`. `needle` picks the gap row of a section that records more than one cause: the
- * municipality section records the municipal cause and the state cause.
+ * municipality section records the municipal cause and the state cause. A per-row cause never
+ * borrows another row's, so when the needle finds no gap the row fails closed to that sentence.
  */
 function abstainReason(
   reason: string | null | undefined,
@@ -72,8 +74,9 @@ function abstainReason(
   const own = typeof reason === 'string' ? reason.trim() : ''
   if (own !== '') return own
   const sectionGaps = gaps.filter((gap) => gap.section === section)
-  const gap = (needle ? sectionGaps.find((entry) => entry.cause.toLowerCase().includes(needle)) : undefined)
-    ?? sectionGaps[0]
+  const gap = needle
+    ? sectionGaps.find((entry) => entry.cause.toLowerCase().includes(needle))
+    : sectionGaps[0]
   const cause = gap?.cause?.trim() ?? ''
   return cause === '' ? t('numbers.abstain.not_recorded') : cause
 }
@@ -253,11 +256,18 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
     { key: 'hot_days_median', metric: 'hot_days_median' },
   ]
   // R-19: an aggregate abstains with the valid and missing day counts its own payload object carries,
-  // and the parameter is the Table A input of that aggregate. A missing object means the section
-  // could not be read at all, and then the section error is the reason (R-12).
+  // and the parameter is the Table A input of that aggregate. An absent object means the section
+  // carries no aggregate at all: the row then names that input and the section source, with the
+  // section error or gap cause, or the sentence that says the reason was not recorded (R-12, AC-11).
   const abstainAggregate = (key: AggregateName) => {
     const aggregate = climate.aggregates[key]
-    if (!aggregate) return t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })
+    if (!aggregate) {
+      return t('numbers.abstain.aggregate_absent', {
+        parameter: AGGREGATE_INPUTS[key],
+        reason: abstainReason(climate.error, 'climate', gaps),
+        source: climate.source,
+      })
+    }
     return t('numbers.abstain.aggregate', {
       parameter: AGGREGATE_INPUTS[key],
       valid: aggregate.valid_days,
@@ -265,13 +275,23 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
       missing: aggregate.of_days - aggregate.valid_days,
     })
   }
-  // R-12: the normals abstention names the POWER input, its source and its cause. A body that
-  // cannot be parsed but carries no `error` falls back to the sentence that says the reason was
-  // not recorded, never to `No value`.
+  // R-12: the normals abstention names the POWER input, its source and its cause, and Table E makes
+  // `normals` a key of every climate state. A payload from a build before that key existed carries
+  // none, so the access stays optional and the card prints its abstain text instead of throwing.
   const abstainNormal = t('numbers.abstain.normals', {
-    reason: abstainReason(climate.normals.error ?? climate.error, 'climate', gaps),
+    reason: abstainReason(climate.normals?.error ?? climate.error, 'climate', gaps),
     source: climate.source,
   })
+  // An unavailable climate section sends `series: {}` (and a payload from an older build can omit it):
+  // hand the chart the three families it reads so it prints its empty text instead of throwing.
+  const chartSeries: ClimateSeries = {
+    rain_day: climate.series?.rain_day ?? [],
+    tmax_day: climate.series?.tmax_day ?? [],
+    tmin_day: climate.series?.tmin_day ?? [],
+  }
+  // R-16 asks for the window the aggregates were computed over. An unavailable section resolves
+  // none, and R-48 makes the card print its reason instead of a window line built from nulls.
+  const windowFacts = printedWindow(window)
   return (
     <Card
       id="climate"
@@ -281,15 +301,19 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
       basis={climate.basis}
       resolution={climate.resolution}
     >
-      <p className="numbers-window">
-        {t('numbers.window_line', {
-          start: window.start,
-          end: window.end,
-          valid: window.valid_days,
-          days: window.days,
-          dropped: window.dropped_days,
-        })}
-      </p>
+      {windowFacts ? (
+        <p className="numbers-window">
+          {t('numbers.window_line', {
+            start: windowFacts.start,
+            end: windowFacts.end,
+            valid: windowFacts.valid_days,
+            days: windowFacts.days,
+            dropped: windowFacts.dropped_days,
+          })}
+        </p>
+      ) : (
+        <p className="numbers-abstain">{t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })}</p>
+      )}
       <p className="numbers-cell-statement">{t('numbers.climate.cell')}</p>
       <dl className="numbers-rows">
         {aggregates.map((key) => (
@@ -301,7 +325,7 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
           </div>
         ))}
       </dl>
-      <ClimateChart series={climate.series} />
+      <ClimateChart series={chartSeries} />
       <h4>{t('numbers.climate.normals_heading')}</h4>
       <p className="numbers-cell-statement">{t('numbers.climate.normals_statement')}</p>
       <dl className="numbers-rows">
@@ -311,7 +335,7 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
             <dd>
               <Printed
                 metric={metric}
-                value={climate.normals[key]?.value ?? null}
+                value={climate.normals?.[key]?.value ?? null}
                 abstain={abstainNormal}
               />
             </dd>
@@ -324,6 +348,13 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
 
 function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance'] }) {
   const missing = water.missing
+  // R-22 prints the window the balance was computed over. R-48's unavailable section and the
+  // abstention with no consolidated rain day carry `window: null`, and then the card prints its
+  // reason in place of the window line instead of reading five nulls into it.
+  const windowFacts = printedWindow(water.window)
+  const noWindow = water.error
+    ? t('numbers.abstain.climate', { error: water.error })
+    : t('numbers.no_value')
   // R-23: the balance abstains as a whole. The reason is printed once for the card, and each of
   // the three numbers shows `not computed`, so no partial sum and no zero stands in for it.
   const cell = (value: number | null) => (value === null && missing ? t('numbers.water.not_computed') : t('numbers.no_value'))
@@ -354,7 +385,11 @@ function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance
         </div>
       </dl>
       <p className="numbers-formula">{t('numbers.water.formula')}</p>
-      <p className="numbers-window">{t('numbers.water.window', { start: water.window.start, end: water.window.end, days: water.window.days })}</p>
+      {windowFacts ? (
+        <p className="numbers-window">{t('numbers.water.window', { start: windowFacts.start, end: windowFacts.end, days: windowFacts.days })}</p>
+      ) : (
+        <p className="numbers-abstain">{noWindow}</p>
+      )}
       <p className="numbers-statement">{t('numbers.water.out_statement')}</p>
       <p className="numbers-statement">{t('numbers.water.statement')}</p>
     </Card>
@@ -424,19 +459,24 @@ function SmapCard({ smap, gaps = NO_GAPS }: { smap: NumbersPayload['sections']['
   )
 }
 
-function NdviCard({ ndvi }: { ndvi: NumbersPayload['sections']['ndvi'] }) {
+function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['ndvi']; gaps?: GapRow[] }) {
   const plotted = ndvi.scenes.filter((scene) => scene.ndvi_mean !== null && !scene.partial)
+  // R-12, AC-11: a null count names the input it counts and the Earth Search source, with the
+  // section reason or the NDVI gap cause, or the sentence that says the reason was not recorded.
+  const countReason = abstainReason(ndvi.reason, 'ndvi', gaps)
+  const abstainSceneCount = t('numbers.abstain.ndvi_scene_count', { reason: countReason, source: ndvi.source })
+  const abstainClearCount = t('numbers.abstain.ndvi_clear_count', { reason: countReason, source: ndvi.source })
   return (
     <Card id="ndvi" title={t('numbers.card.ndvi')} source={ndvi.source} asOf={ndvi.as_of} basis="retrieved">
       <p className="numbers-cell-statement">{t('numbers.ndvi.source')}</p>
       <dl className="numbers-rows">
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_scene_count')}</dt>
-          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={abstainSceneCount} /></dd>
         </div>
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_clear_count')}</dt>
-          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={abstainClearCount} /></dd>
         </div>
       </dl>
       {plotted.length === 0 && (
@@ -848,7 +888,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
     : []
   const classText = isPolygon ? (readout.find((row) => row.key === 'class')?.value ?? '') : t('numbers.header.no_class_source')
   const areaText = isPolygon ? (readout.find((row) => row.key === 'area')?.value ?? '') : t('numbers.header.no_area_source')
-  const window = payload?.query.window ?? null
+  const window = printedWindow(payload?.query.window)
 
   let body: ReactNode
   if (fieldId === null) {
@@ -880,7 +920,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
           <ClimateCard climate={s.climate} window={payload.query.window} gaps={payload.gaps} />
           <WaterCard water={s.water_balance} />
           <SmapCard smap={s.smap} gaps={payload.gaps} />
-          <NdviCard ndvi={s.ndvi} />
+          <NdviCard ndvi={s.ndvi} gaps={payload.gaps} />
           <SoilCard soil={s.soil} />
           <RotationCard rotation={s.rotation} />
           <MunicipalCard municipal={s.municipality} gaps={payload.gaps} />
