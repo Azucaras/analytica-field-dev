@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import type { LayerCatalogEntry } from '@/lib/layer-catalog'
 import { COMPARE_DEFAULT_DIVIDER, useMapStore, chosenDateOf, opacityOf, type CompositionPreset } from '@/lib/map-store'
 import { ageLabel } from '@/lib/layer-age'
+import { LATEST_IMAGE_DAYS, scanLatestImage } from '@/lib/latest-image'
 import { AvailabilityTrack } from './AvailabilityTrack'
 import { t } from '@/strings'
 
@@ -43,11 +44,41 @@ function LayerRow({ entry }: { entry: LayerCatalogEntry }) {
   const setPinnedDate = useMapStore((state) => state.setPinnedDate)
   const setCompare = useMapStore((state) => state.setCompare)
   const setCompareDate = useMapStore((state) => state.setCompareDate)
+  const setChosenDate = useMapStore((state) => state.setChosenDate)
+  const setLayerStatus = useMapStore((state) => state.setLayerStatus)
+  // R-44: the scan runs while this is true, and the control's pressed state follows it.
+  const [scanning, setScanning] = useState(false)
 
   const showMarker = entry.status !== 'unavailable' && entry.status !== 'stale'
     && entry.effective_date !== null
     && entry.effective_date.slice(0, 10) !== chosenDate
   const age = ageLabel(entry.age_days)
+
+  /**
+   * R-44: one press scans the chosen date backwards, one day at a time, and moves the chosen
+   * date to the first date that holds imagery. With no such date in the lookback the date
+   * does not move and the row reports `none_in_lookback`; when the upstream stops the scan the
+   * date does not move either and the row reports `unavailable`.
+   *
+   * The pressed state is the scan in flight: R-44 gives this control one action and no
+   * persistent on or off, so `aria-pressed` is true only while the scan runs.
+   */
+  const runLatestImage = async () => {
+    if (scanning) return
+    setScanning(true)
+    try {
+      const result = await scanLatestImage({
+        layerId: entry.id,
+        chosenDate,
+        axisStart,
+        days: LATEST_IMAGE_DAYS,
+      })
+      if (result.status === 'found') setChosenDate(result.date)
+      else setLayerStatus(entry.id, result.status)
+    } finally {
+      setScanning(false)
+    }
+  }
 
   return (
     <li className="layer-entry" data-layer-id={entry.id} data-status={entry.status}>
@@ -176,6 +207,17 @@ function LayerRow({ entry }: { entry: LayerCatalogEntry }) {
                 value={compare.date ?? ''}
               />
             </label>
+          )}
+          {entry.kind === 'tile' && entry.optical && (
+            <button
+              aria-label={t('layers.latest_image')}
+              aria-pressed={scanning}
+              className="layer-latest"
+              onClick={() => { void runLatestImage() }}
+              type="button"
+            >
+              <span>{t('layers.latest_image')}</span>
+            </button>
           )}
         </div>
       )}

@@ -184,6 +184,8 @@ export const en = {
   'layers.status.none_in_lookback': 'no observation in lookback',
   'layers.status.stale': 'stale',
   'layers.status.unavailable': 'unavailable',
+  // R-44 names this control in the spec, so the name is a catalog key and not a literal (R-42).
+  'layers.latest_image': 'Latest image',
   'layers.last_observation': 'Last observation {date}',
   'layers.offline_sample': 'offline sample, date unknown',
   'layers.no_offline_copy': 'no offline copy',

@@ -1,5 +1,11 @@
 import { create } from 'zustand'
-import { LAYER_AXIS, LAYER_CATALOG, type LayerCatalog, type LayersAxis } from './layer-catalog'
+import {
+  LAYER_AXIS,
+  LAYER_CATALOG,
+  type LayerCatalog,
+  type LayerStatus,
+  type LayersAxis,
+} from './layer-catalog'
 import type { TileDecision } from './tile-guard'
 
 export type FieldSummary = {
@@ -55,6 +61,8 @@ type MapState = {
   setCompareDate: (layerId: string, date: string | null) => void
   setCompareDivider: (layerId: string, divider: number) => void
   setTileDecision: (layerId: string, decision: TileDecision) => void
+  /** R-44: the row reports the scan's outcome until the next `/layers` response replaces it. */
+  setLayerStatus: (layerId: string, status: LayerStatus) => void
 }
 
 const DEFAULT_ORDER = LAYER_CATALOG.map((entry) => entry.id)
@@ -149,6 +157,19 @@ export const useMapStore = create<MapState>((set) => ({
 
   setTileDecision: (layerId, decision) => set((state) => ({
     tileDecisions: { ...state.tileDecisions, [layerId]: decision },
+  })),
+
+  // R-44: `none_in_lookback` and `unavailable` carry no date and no age (Data contracts), so
+  // the row prints the status alone. The next `/layers` response replaces the whole catalog.
+  setLayerStatus: (layerId, status) => set((state) => ({
+    catalog: state.catalog.map((entry) => (entry.id === layerId
+      ? {
+          ...entry,
+          status,
+          effective_date: status === 'none_in_lookback' || status === 'unavailable' ? null : entry.effective_date,
+          age_days: status === 'none_in_lookback' || status === 'unavailable' ? null : entry.age_days,
+        }
+      : entry)),
   })),
 }))
 
