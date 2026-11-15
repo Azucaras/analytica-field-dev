@@ -1,0 +1,14 @@
+# AC-34 network log of the test run
+# recorded: 2026-11-14
+# command: npx vitest run src/lib/basemap-adapters.test.ts
+VITE_GOOGLE_MAPS_API_KEY: absent
+active adapter: eox-s2cloudless-2024
+active tiles: https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg
+attribution (111 characters): EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)
+licence: CC BY-NC-SA 4.0 for 2018 to 2025
+requests issued by the basemap registry: 0
+requests to a Google host: 0
+modules under src/ that name a Google host: src/lib/basemap-adapters.ts
+# the two Google URL templates exist in the registry as specified and are never requested:
+#   https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session={session}&key={key}
+#   https://tile.googleapis.com/v1/createSession?key={key}
