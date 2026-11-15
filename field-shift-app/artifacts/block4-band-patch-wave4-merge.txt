@@ -1,0 +1,16 @@
+Merge check: block4/patch-band-source (this branch, base b0ab039) + block4/wave4-dock-home (6e9b5fe)
+
+git merge --no-commit --no-ff 6e9b5fe
+result: one conflict, field-shift-app/src/components/TimelineDock.tsx
+cause: wave 4 rewrote the dock JSX around the season band; this patch changes one prop on the SeasonBand element inside it.
+
+resolution used for this check: take wave 4's file, then one line:
+  - <SeasonBand axis={axis} crops={crops} location={location} season={season} snapshot={snapshot} />
+  + <SeasonBand axis={axis} crops={crops} date={chosenDate} location={location} snapshot={snapshot} />
+
+merged tree, after that resolution:
+  npx tsc -b --noEmit   exit 0
+  npx vitest run        21 files passed (21), 203 tests passed (203)
+
+The merge was aborted: this branch stays on the wave 3 branch as the card requires.
+Whichever of the two branches merges second needs that one line applied; nothing else in wave 4 is touched.

@@ -181,7 +181,7 @@ export function TimelineDock({
             </svg>
           </button>
           <div className="timeline-range-wrap">
-            <SeasonBand axis={axis} crops={crops} location={location} season={season} snapshot={snapshot} />
+            <SeasonBand axis={axis} crops={crops} date={chosenDate} location={location} snapshot={snapshot} />
             <AvailabilityTrack layerId={primaryId} name={primaryEntry ? t(primaryEntry.labelKey ?? primaryEntry.label) : primaryId} />
             <input
               aria-label={t('timeline.date')}
