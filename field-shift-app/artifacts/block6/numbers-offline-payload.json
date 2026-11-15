@@ -143,14 +143,14 @@
     "rotation": {
       "basis": "modelled",
       "source": "polygon-mapbiomas.sqlite, table polygon_mapbiomas (CO-B6-01)",
-      "sidecar": "/home/carloshnp/.hermes/profiles/developer/cache/scratch/tmp10n06ixx/polygon-mapbiomas.sqlite",
+      "sidecar": "data/polygons/polygon-mapbiomas.sqlite",
       "collection": "MapBiomas Collection 11",
       "collection_year": null,
       "as_of": null,
       "first_crop": null,
       "second_crop": null,
       "state": "unavailable",
-      "error": "sidecar file absent: /home/carloshnp/.hermes/profiles/developer/cache/scratch/tmp10n06ixx/polygon-mapbiomas.sqlite"
+      "error": "sidecar file absent: data/polygons/polygon-mapbiomas.sqlite"
     },
     "municipality": {
       "state": "abstained",
@@ -711,7 +711,7 @@
     },
     {
       "section": "rotation",
-      "cause": "the polygon_mapbiomas sidecar is absent at /home/carloshnp/.hermes/profiles/developer/cache/scratch/tmp10n06ixx/polygon-mapbiomas.sqlite",
+      "cause": "the polygon_mapbiomas sidecar is absent at data/polygons/polygon-mapbiomas.sqlite",
       "source": "polygon-mapbiomas.sqlite, table polygon_mapbiomas (CO-B6-01)",
       "status": "file absent",
       "date": null,
