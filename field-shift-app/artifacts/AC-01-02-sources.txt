@@ -1,0 +1,114 @@
+# AC-01 and AC-02: the region adapter and the polygon sources over the basemap
+
+Measured on 2026-11-14 in the built app (`dist/`, served with HTTP byte-range support on
+http://127.0.0.1:5181), backend on http://127.0.0.1:8021 with `POLYGON_DIR` pointing at
+`field-shift-app/data/polygons`. The products are the build of card t_aa25032c.
+
+## The two adapter entries (AC-01, Table A)
+
+| Field | us | br |
+|---|---|---|
+| label | United States | Brazil |
+| default view | [-97.17, 46.93] zoom 11 | [-55.27, -11.91] zoom 11 |
+| detail file | data/polygons/us-38017-detail.pmtiles | data/polygons/br-mt-detail.pmtiles |
+| overview file | data/polygons/us-38017-overview.pmtiles | data/polygons/br-mt-overview.pmtiles |
+| manifest | data/polygons/us-38017.manifest.json | none (no manifest is read for Brazil) |
+| source layer | trazo | trazo |
+| id property / type / prefix | csbid / string / csb: | Id / number / trazo: |
+| class source | cdl{YYYY}, year clamped 2018 to 2025 | the one tile property mbmode24 |
+| area | csbacres, acres | area_ha, ha (sidecar) |
+| basis | retrieved | modelled |
+| source string | Crop Sequence Boundaries (USDA NASS and ERS), public domain; CDL (USDA NASS), public domain (91) | Trazo3 field boundaries, WRI and ASU (Grupp et al. 2026), CC BY 4.0 (67) |
+| fixture ids | the three CSB ids | mt-santa-carmem-01, -02, -03 |
+
+`?region=` is the only selector: absent or unknown leaves `us` active; `?region=br` activates
+Brazil and writes the parameter. Measured in the browser: `?region=br` load kept
+`?region=br` in the URL, the default load kept an empty query string.
+
+## The sources and layers the map received (AC-02)
+
+Brazil, read back from `map.getStyle()` after the mode read:
+
+```json
+{
+  "trazo": {
+    "type": "vector",
+    "tiles": ["pmtiles:///data/polygons/br-mt-detail.pmtiles/{z}/{x}/{y}"],
+    "minzoom": 8,
+    "maxzoom": 12,
+    "promoteId": "Id"
+  },
+  "trazo-overview": {
+    "type": "vector",
+    "tiles": ["pmtiles:///data/polygons/br-mt-overview.pmtiles/{z}/{x}/{y}"],
+    "minzoom": 5,
+    "maxzoom": 7
+  }
+}
+```
+
+United States, same read:
+
+```json
+{
+  "trazo": {
+    "type": "vector",
+    "tiles": ["pmtiles:///data/polygons/us-38017-detail.pmtiles/{z}/{x}/{y}"],
+    "minzoom": 6,
+    "maxzoom": 14,
+    "promoteId": "csbid"
+  },
+  "trazo-overview": {
+    "type": "vector",
+    "tiles": ["pmtiles:///data/polygons/us-38017-overview.pmtiles/{z}/{x}/{y}"],
+    "minzoom": 3,
+    "maxzoom": 5
+  }
+}
+```
+
+No other vector source carries crop polygons: the only other vector sources are the
+OpenFreeMap style's own (openmaptiles, ne2_shaded), the three fixture boundaries and the one
+raster layer source `smap-l3`.
+
+Layer ids read back from the style, in stack order around the polygon pair (Brazil):
+
+```
+... road_trunk_primary, basemap-raster, polygon-overview-fill, polygon-overview-line,
+polygon-fill, polygon-line, road_one_way_arrow ... place-label ...
+```
+
+## What drew
+
+| Region | Map zoom | Rendered features on polygon-fill | Unique ids |
+|---|---|---|---|
+| br | 11 (default view) | 292 | 154 |
+| br | 12 | 292 | 154 |
+| us | 11 (default view) | 122 | 107 |
+
+The United States unique id count equals the 107 fields the CSB service returns for the pilot
+box (M-20), decoded in the build card as 107 distinct `csbid`.
+
+Class values seen at the Brazil field point: 15 Pasture (65), 39 Soybean (186), 41 Other
+Temporary Crops (41). Class values seen in the United States view (cdl2025): 1 Corn (53),
+5 Soybeans (56), 6 Sunflower (2), 23 Spring Wheat (1), 41 Sugarbeets (8), 42 Dry Beans (1),
+121 Developed/Open Space (1).
+
+## Not verified: the overview tier draws
+
+The overview source mounts with the bounds of Table B and its four layers exist (the style
+lists both overview layers). The United States overview archive carries three tiles, one per
+overview zoom, from the build card's own reader:
+
+```
+z3 x1 y2 length=266 run=0
+z4 x3 y5 length=530 run=266
+z5 x7 y11 length=806 run=796
+```
+
+At map zoom 4.2 the map rendered 12 frames, requested no overview tile and returned zero
+overview features; a probe source and layer added to the running map, with the same archive
+and no zoom bound of its own, also returned zero features and issued no tile request. The
+detail tier of the same session drew normally at zoom 11. The cause was not established in
+this card. AC-04 and AC-06 belong to the gate and to the build card; this card claims only
+that the overview tier is mounted with the contract's bounds and layers.

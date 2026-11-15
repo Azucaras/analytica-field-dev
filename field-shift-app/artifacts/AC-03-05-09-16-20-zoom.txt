@@ -1,0 +1,80 @@
+# AC-03, AC-05, AC-09, AC-16, AC-20: the zoom contract, the floor and the interactive zoom
+
+Measured on 2026-11-14. The unit tests are in `src/lib/regions.test.ts`,
+`src/lib/polygon-source.test.ts` and `src/components/MapCanvas.block5.test.tsx`.
+
+## AC-03: the manifest read (United States)
+
+`GET /polygons/mode?region=us` answered, with the app reading the same manifest file:
+
+```json
+{
+  "region": "us", "mode": "self-hosted", "classProperty": null,
+  "class_property_pattern": "cdl{year}", "class_year_range": [2018, 2025],
+  "detail_minzoom": 6, "detail_maxzoom": 14,
+  "overview_minzoom": 3, "overview_maxzoom": 5, "interactive_minzoom": 8,
+  "detail_file": "/data/polygons/us-38017-detail.pmtiles",
+  "overview_file": "/data/polygons/us-38017-overview.pmtiles"
+}
+```
+
+The manifest as committed by the build card, and the derived bounds the app mounted:
+
+| Key | Value | Rule of Table G |
+|---|---|---|
+| schema_version | "1" | string "1" |
+| region | "us" | "us" |
+| clip_box | -97.20,46.90,-97.14,46.96 | the pilot box |
+| detail_minzoom | 6 | at most 9 |
+| detail_maxzoom | 14 | 14 |
+| overview_minzoom | 3 | detail_minzoom - 3 = 3 |
+| overview_maxzoom | 5 | detail_minzoom - 1 = 5 |
+| interactive_minzoom | 8 | detail_minzoom + 2 = 8 |
+
+Layer bounds the app mounted: detail 6 to 14, overview 3 to 5, interactive 8. The manifest is
+absent from the tree in a fresh checkout and the app then reports the R-11 build line and
+mounts no source (unit test `reports the build missing when the manifest is absent`, and the
+browser run with `POLYGON_DIR` pointing at an empty directory in the backend test suite).
+
+Brazil reads no manifest: the browser log of a Brazil load contains
+`/polygons/mode?region=br` and no `us-38017.manifest.json` request (backed by the unit test
+`never reads a manifest for Brazil`).
+
+## AC-05 and AC-09: the floor and the status lines
+
+Brazil, lowest mounted tier 5 (`polygons from zoom 5`), interactive 10. United States, lowest
+mounted tier 3, interactive 8 (manifest). The status model returns exactly one zoom line and,
+below the interactive zoom only, the select line:
+
+| Region | zoom | zoomLine | selectLine | failure |
+|---|---|---|---|---|
+| us | 2 | { lowest: 3 } | { interactive: 8 } | null |
+| us | 7 | { lowest: 3 } | { interactive: 8 } | null |
+| us | 8 | { lowest: 3 } | null | null |
+| us | 11 | { lowest: 3 } | null | null |
+| br | 4 | { lowest: 5 } | { interactive: 10 } | null |
+| no tier | any | null | null | polygon.build_not_available / polygon.source_unavailable |
+
+Below a healthy floor no failure line is printed and no tier draws: the sources carry
+`minzoom`, so the map issues no request below them. In the browser, Brazil at zoom 9 (one
+below the interactive 10) requested no polygon interaction.
+
+## AC-16: the interactive zoom in the browser (Brazil)
+
+| Check at zoom 9 (below the interactive 10) | Result |
+|---|---|
+| cursor after a pointer move over a polygon | `""` (the map's default) |
+| tooltip mounted | no |
+| selection before and after a press | 4437031, unchanged |
+| URL after the press | `?region=br&polygon=4437031`, unchanged |
+
+At zoom 11 and 12 the same probe gave `cursor: pointer`, the tooltip `Pasture`, and the press
+selected the polygon (see `AC-15-19-selection.txt`).
+
+## AC-20: one selection at a time
+
+Selecting a polygon sets `selectedPolygonId` and clears `selectedFieldId`; selecting a fixture
+field clears `selectedPolygonId` and removes `?polygon=`. The URL carried at most one of the
+two in every measured step (see `AC-15-19-selection.txt`). The fields panel lists only the
+active region's fixture ids: a United States load lists no Brazil chip, which is the honest
+state until CO-B5-01 writes the CSB fixtures.

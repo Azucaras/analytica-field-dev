@@ -58,7 +58,7 @@ const commands: CommandDefinition<string, ZodType>[] = [
     schema: z.object({ field_id: z.string().min(1) }).strict(),
     effect: 'select_field',
     idempotent: false,
-    guard: 'field_id must identify a field in the field list',
+    guard: 'field_id must identify a fixture field, a trazo: polygon id or a csb: field id',
   },
   {
     name: 'set_composition',

@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Map as MapLibre, NavigationControl, setWorkerUrl, type Map as MapLibreMap } from 'maplibre-gl'
+import {
+  AttributionControl,
+  Map as MapLibre,
+  NavigationControl,
+  addProtocol,
+  setWorkerUrl,
+  type Map as MapLibreMap,
+  type MapMouseEvent,
+} from 'maplibre-gl'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { Protocol } from 'pmtiles'
 import { layerTileTemplate, VECTOR_BASEMAP_STYLE, type LayerCatalogEntry } from '@/lib/layer-catalog'
 import {
   chosenDateOf,
@@ -11,7 +20,31 @@ import {
   type CompositionPreset,
   type FieldSummary,
 } from '@/lib/map-store'
+import { activeBasemapAdapter, BASEMAP_ADAPTERS, type BasemapAdapter } from '@/lib/basemap-adapters'
 import { probeLayerTile } from '@/lib/tile-guard'
+import { regionAdapter, regionFromSearch, type RegionAdapter } from '@/lib/regions'
+import {
+  POLYGON_DETAIL_SOURCE_ID,
+  POLYGON_FILL_LAYER_ID,
+  POLYGON_LAYER_IDS,
+  addPolygonLayers,
+  polygonFailureFor,
+  polygonMode,
+  repaintPolygonLayers,
+  type PolygonMap,
+  type PolygonScene,
+} from '@/lib/polygon-source'
+import {
+  POLYGON_INTERACTIVE_MIN_ZOOM,
+  classDisplay,
+  classPropertyFor,
+  paintedClassYear,
+} from '@/lib/polygon-style'
+import { classIdFrom } from '@/lib/polygon-legend'
+import { commandFieldId, featureStateCall } from '@/lib/polygon-selection'
+import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, type Box } from '@/lib/polygon-tooltip'
+import { runCommand } from '@/lib/commands'
+import { PolygonTooltip } from '@/components/PolygonTooltip'
 import { t } from '@/strings'
 
 // maplibre-gl derives its worker URL from import.meta.url. Vite's dev pre-bundle moves that module to
@@ -150,6 +183,93 @@ function applyOrder(map: MapLibreMap, order: string[]) {
   }
 }
 
+/** Table E: the one basemap raster source and layer this block mounts (R-30, R-36). */
+export const BASEMAP_SOURCE_ID = 'basemap'
+export const BASEMAP_LAYER_ID = 'basemap-raster'
+
+/** R-04: the `pmtiles` protocol is registered once per page, not once per source. */
+let pmtilesProtocolRegistered = false
+export function ensurePmtilesProtocol(): void {
+  if (pmtilesProtocolRegistered) return
+  addProtocol('pmtiles', new Protocol().tile)
+  pmtilesProtocolRegistered = true
+}
+
+/** R-33: the exact adapter string and the region's source string, in the control's own text. */
+export function attributionText(adapter: BasemapAdapter, region: RegionAdapter): string {
+  return `${adapter.attributionText} · ${region.sourceString} · ${t('map.attribution')}`
+}
+
+export function firstSymbolId(map: MapLibreMap): string | undefined {
+  return (map.getStyle().layers ?? []).find((layer) => layer.type === 'symbol')?.id
+}
+
+/**
+ * R-36: the basemap sits above the style's own fill and line layers and below its symbols,
+ * and the polygon layers are raised above it, so imagery never hides a polygon.
+ */
+function ensureBasemap(
+  map: MapLibreMap,
+  adapter: BasemapAdapter,
+  composition: CompositionPreset,
+): void {
+  if (!map.getSource(BASEMAP_SOURCE_ID)) {
+    map.addSource(BASEMAP_SOURCE_ID, {
+      type: 'raster',
+      tiles: [adapter.tiles],
+      tileSize: adapter.tileSize,
+      minzoom: adapter.minzoom,
+      maxzoom: adapter.maxzoom,
+    })
+  }
+  if (!map.getLayer(BASEMAP_LAYER_ID)) {
+    map.addLayer({
+      id: BASEMAP_LAYER_ID,
+      type: 'raster',
+      source: BASEMAP_SOURCE_ID,
+      paint: { 'raster-opacity': 1 },
+    }, firstSymbolId(map))
+  }
+  // R-34: `Map` hides the basemap; the two satellite presets show it, and the labels are the
+  // style's own symbol layers, which `applyComposition` owns.
+  map.setLayoutProperty(BASEMAP_LAYER_ID, 'visibility', composition === 'map' ? 'none' : 'visible')
+}
+
+function removeBasemap(map: MapLibreMap): void {
+  if (map.getLayer(BASEMAP_LAYER_ID)) map.removeLayer(BASEMAP_LAYER_ID)
+  if (map.getSource(BASEMAP_SOURCE_ID)) map.removeSource(BASEMAP_SOURCE_ID)
+}
+
+/** R-03: a region change leaves no source or layer of the previous region behind. */
+function removePolygonSurface(map: MapLibreMap): void {
+  for (const layerId of POLYGON_LAYER_IDS) {
+    if (map.getLayer(layerId)) map.removeLayer(layerId)
+  }
+  for (const sourceId of [POLYGON_DETAIL_SOURCE_ID, 'trazo-overview']) {
+    if (map.getSource(sourceId)) map.removeSource(sourceId)
+  }
+}
+
+/** R-36: after any raster insert, the polygon pair is moved back above the imagery. */
+function raisePolygonLayers(map: MapLibreMap): void {
+  const before = firstSymbolId(map)
+  for (const layerId of POLYGON_LAYER_IDS) {
+    if (map.getLayer(layerId)) map.moveLayer(layerId, before)
+  }
+}
+
+/** Layout note 6: the block 3 right edge column, read from the mounted element only. */
+const RIGHT_EDGE_COLUMN_SELECTOR = '.right-column-stack'
+
+function rightEdgeColumnBox(): Box | null {
+  if (typeof document === 'undefined') return null
+  const node = document.querySelector(RIGHT_EDGE_COLUMN_SELECTOR)
+  if (!node) return null
+  const rect = node.getBoundingClientRect()
+  if (rect.width === 0 && rect.height === 0) return null
+  return { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom }
+}
+
 export function MapCanvas({ fields, selectedField, onTileChange, children }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -168,25 +288,54 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   const compare = useMapStore((state) => state.compare)
   const decisions = useMapStore((state) => state.tileDecisions)
   const chosenDate = useMapStore(chosenDateOf)
+  const regionId = useMapStore((state) => state.regionId)
+  const basemapId = useMapStore((state) => state.basemapId)
+  const polygonScene = useMapStore((state) => state.polygonMode)
+  const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const appliedTilesRef = useRef<Record<string, string>>({})
+  const region = regionAdapter(regionId)
+  const basemapAdapter = BASEMAP_ADAPTERS.find((adapter) => adapter.id === basemapId) ?? activeBasemapAdapter()
+  const sceneRef = useRef<PolygonScene | null>(null)
+  const attributionRef = useRef<AttributionControl | null>(null)
+  const attributionKeyRef = useRef('')
+  const hoveredRef = useRef<string | number | null>(null)
+  const selectedRef = useRef<string | number | null>(null)
+  // R-01: the region the page loads with is the `?region=` value, so the map is constructed at
+  // that region's default view and the camera effect only moves it when the region changes.
+  // Reading the URL here rather than the store keeps the first paint independent of the order
+  // in which the child and parent effects run.
+  const initialRegionIdRef = useRef(
+    regionFromSearch(typeof window === 'undefined' ? '' : window.location.search),
+  )
+  const cameraRegionRef = useRef(initialRegionIdRef.current)
+  const paintedPropertyRef = useRef<string | null>(null)
+  const [tooltip, setTooltip] = useState<{ text: string; left: number; top: number } | null>(null)
 
   fieldsRef.current = fields
+  sceneRef.current = polygonScene
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
+    ensurePmtilesProtocol()
+    const initialRegion = regionAdapter(initialRegionIdRef.current)
     const map = new MapLibre({
       container: containerRef.current,
       style: VECTOR_BASEMAP_STYLE,
-      center: fieldsRef.current[0]?.center ?? [-55.27, -11.91],
-      zoom: 11,
-      attributionControl: {
-        compact: false,
-        customAttribution: `${t('map.attribution')} · ${useMapStore.getState().catalog[0]?.resolution ?? ''}`,
-      },
+      // R-01 and R-03: the camera starts at the active region's default view of Table A.
+      center: initialRegion.defaultView.center,
+      zoom: initialRegion.defaultView.zoom,
     })
     mapRef.current = map
     ;(window as unknown as { __fsMap?: unknown }).__fsMap = map
     map.addControl(new NavigationControl(), 'top-right')
+    // R-33: one compact attribution control carrying both exact strings, at every width.
+    const control = new AttributionControl({
+      compact: true,
+      customAttribution: attributionText(activeBasemapAdapter(), initialRegion),
+    })
+    attributionRef.current = control
+    map.addControl(control, 'bottom-right')
+    attributionKeyRef.current = `${useMapStore.getState().basemapId}|${initialRegion.id}`
     // Sources and layers are dropped by every setStyle(), so they are (re)added here, idempotently.
     map.on('style.load', () => {
       if (mapRef.current !== map) return
@@ -194,7 +343,18 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       appliedTilesRef.current = {}
       setMapReady(true)
       ensureFieldBoundaries(map, fieldsRef.current)
+      const styleRegion = regionAdapter(useMapStore.getState().regionId)
+      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition)
       applyComposition(map, useMapStore.getState().composition)
+      const scene = sceneRef.current
+      if (scene?.tiers) {
+        addPolygonLayers(map as unknown as PolygonMap, styleRegion, scene, classPropertyFor(
+          styleRegion,
+          chosenDateOf(useMapStore.getState()),
+          scene.classSource ?? undefined,
+        ))
+        raisePolygonLayers(map)
+      }
     })
     map.on('load', () => {
       emitViewportTile(map, onTileChange)
@@ -204,6 +364,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     return () => {
       map.remove()
       mapRef.current = null
+      attributionRef.current = null
       setMapReady(false)
     }
   }, [])
@@ -215,6 +376,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     const current = useMapStore.getState().selectedFieldId
     if (current && fields.some((field) => field.id === current)) return
+    // R-24: a polygon is the selected field, so the fixture default never overwrites it.
+    if (useMapStore.getState().selectedPolygonId !== null) return
     const first = fields[0]
     if (!first) return
     useMapStore.getState().selectField(first.id)
@@ -235,6 +398,244 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     if (!mapReady || !mapRef.current) return
     applyComposition(mapRef.current, composition)
   }, [composition, mapReady])
+
+  // R-03: the camera of a region is the default view of Table A, and a switch never reloads.
+  // The first placement is the constructor's, so the effect only moves the camera when the
+  // region differs from the one the map was last placed at; a preset change or a layer edit
+  // therefore never moves it (block 1 R-10, block 2 R-10).
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    if (cameraRegionRef.current === regionId) return
+    cameraRegionRef.current = regionId
+    map.flyTo({ center: region.defaultView.center, zoom: region.defaultView.zoom, duration: 500 })
+  }, [regionId, mapReady, region])
+
+  // R-09 and R-03: one mode read per region load, and the previous region's surface goes first
+  // so no tile, class or colour of it survives the switch.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    let cancelled = false
+    removePolygonSurface(map)
+    removeBasemap(map)
+    hoveredRef.current = null
+    selectedRef.current = null
+    setTooltip(null)
+    map.getCanvas().style.cursor = ''
+    const active = regionAdapter(regionId)
+    polygonMode(active)
+      .then((scene) => {
+        if (cancelled || mapRef.current !== map) return
+        const store = useMapStore.getState()
+        store.setPolygonScene(scene)
+        store.setPolygonSourceError(scene.failure)
+        if (!scene.tiers) return
+        const property = classPropertyFor(
+          active,
+          chosenDateOf(useMapStore.getState()),
+          scene.classSource ?? undefined,
+        )
+        addPolygonLayers(map as unknown as PolygonMap, active, scene, property)
+        raisePolygonLayers(map)
+      })
+      .catch(() => {
+        if (cancelled) return
+        useMapStore.getState().setPolygonSourceError(polygonFailureFor(active))
+        useMapStore.getState().setPolygonScene(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [mapReady, regionId])
+
+  // R-13, R-15 and R-18: the paint is rebuilt when the region or the painted class year
+  // changes, and only the year actually painted is stored for the readout. A change of the
+  // painted property drops the resolved class, so the chip re-reads it from the new tile.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map || !polygonScene?.tiers) return
+    const property = classPropertyFor(region, chosenDate, polygonScene.classSource ?? undefined)
+    repaintPolygonLayers(map, region, property)
+    if (paintedPropertyRef.current !== null && paintedPropertyRef.current !== property) {
+      useMapStore.getState().setPolygonClass(null)
+    }
+    paintedPropertyRef.current = property
+    useMapStore.getState().setPolygonClassYear(
+      paintedClassYear(region, chosenDate, polygonScene.classSource ?? undefined),
+    )
+  }, [mapReady, polygonScene, region, chosenDate])
+
+  // R-30, R-34, R-36: the basemap adapter's layer, its preset visibility, and the polygon
+  // layers kept above the imagery.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    ensureBasemap(map, basemapAdapter, composition)
+    raisePolygonLayers(map)
+  }, [mapReady, basemapAdapter, composition, regionId])
+
+  // R-03 and R-48: the control carries the active adapter's string and the active region's
+  // source string, and it is rebuilt when either changes so no old string stays printed.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map || !attributionRef.current) return
+    const key = `${basemapId}|${regionId}`
+    if (attributionKeyRef.current === key) return
+    attributionKeyRef.current = key
+    map.removeControl(attributionRef.current)
+    const control = new AttributionControl({ compact: true, customAttribution: attributionText(basemapAdapter, region) })
+    attributionRef.current = control
+    map.addControl(control, 'bottom-right')
+  }, [mapReady, basemapId, regionId, basemapAdapter, region])
+
+  // R-11 and R-35: a tile or source that fails keeps everything else on screen and sets the
+  // reason line the region prints; no cached or substitute tile is served.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    const handleError = (event: unknown) => {
+      const sourceId = (event as { sourceId?: string } | null)?.sourceId
+      if (sourceId === BASEMAP_SOURCE_ID) {
+        useMapStore.getState().setBasemapFailed(true)
+        return
+      }
+      if (sourceId === POLYGON_DETAIL_SOURCE_ID || sourceId === 'trazo-overview') {
+        useMapStore.getState().setPolygonSourceError(polygonFailureFor(regionAdapter(useMapStore.getState().regionId)))
+      }
+    }
+    map.on('error', handleError)
+    return () => {
+      map.off('error', handleError)
+    }
+  }, [mapReady])
+
+  // R-19: hover and selection are feature state calls on the detail source, never a filter.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    const active = regionAdapter(useMapStore.getState().regionId)
+    const call = (id: string | number, value: Record<string, boolean>) => {
+      map.setFeatureState(featureStateCall(POLYGON_DETAIL_SOURCE_ID, active.sourceLayer, id), value)
+    }
+    const previous = selectedRef.current
+    if (previous !== null && previous !== selectedPolygonId) call(previous, { selected: false })
+    if (selectedPolygonId !== null) call(selectedPolygonId, { selected: true })
+    selectedRef.current = selectedPolygonId
+    if (selectedPolygonId === null) {
+      useMapStore.getState().setPolygonClass(null)
+      return
+    }
+    /**
+     * R-28: the chip and the class year read the selected polygon's own tile properties. A
+     * restored selection resolves here once the tiles of its view are rendered, which is why
+     * this also runs on the map's `idle` until it finds the feature.
+     */
+    const syncSelectedClass = () => {
+      const store = useMapStore.getState()
+      if (store.selectedPolygonId === null || store.polygonClass !== null) return
+      const scene = store.polygonMode
+      if (!scene?.tiers) return
+      const region = regionAdapter(store.regionId)
+      const property = classPropertyFor(region, chosenDateOf(store), scene.classSource ?? undefined)
+      const features = map.queryRenderedFeatures({ layers: [POLYGON_FILL_LAYER_ID] })
+      const match = features.find(
+        (feature) => String(feature.id ?? feature.properties?.[region.idProperty]) === String(store.selectedPolygonId),
+      )
+      if (!match) return
+      store.setPolygonClass(classDisplay(region, classIdFrom(region, match.properties, property)))
+      store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
+    }
+    syncSelectedClass()
+    map.on('idle', syncSelectedClass)
+    return () => {
+      map.off('idle', syncSelectedClass)
+    }
+  }, [mapReady, selectedPolygonId, polygonScene, regionId])
+
+  // R-19, R-20, R-22, R-27: hover, the tooltip, the cursor and the press.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    type PolygonFeature = { id?: string | number; properties?: Record<string, unknown> | null }
+    type PolygonEvent = MapMouseEvent & { features?: PolygonFeature[] }
+
+    const interactiveZoom = () => {
+      const scene = useMapStore.getState().polygonMode
+      // R-20: the named rule, read from the region contract's detail floor.
+      return scene?.tiers ? POLYGON_INTERACTIVE_MIN_ZOOM(scene.tiers.detail.minzoom) : null
+    }
+    const currentFeature = (event: PolygonEvent) => {
+      const store = useMapStore.getState()
+      const active = regionAdapter(store.regionId)
+      const scene = store.polygonMode
+      if (!scene?.tiers) return null
+      const minZoom = interactiveZoom()
+      if (minZoom === null || map.getZoom() < minZoom) return null
+      const feature = event.features?.[0]
+      if (!feature) return null
+      const raw = feature.id ?? feature.properties?.[active.idProperty]
+      if (typeof raw !== 'string' && typeof raw !== 'number') return null
+      return { active, scene, raw, feature }
+    }
+    const clearHover = () => {
+      if (hoveredRef.current !== null) {
+        const active = regionAdapter(useMapStore.getState().regionId)
+        map.setFeatureState(featureStateCall(POLYGON_DETAIL_SOURCE_ID, active.sourceLayer, hoveredRef.current), { hover: false })
+        hoveredRef.current = null
+      }
+      setTooltip(null)
+      map.getCanvas().style.cursor = ''
+    }
+    const handleMove = (event: PolygonEvent) => {
+      const found = currentFeature(event)
+      if (!found) {
+        clearHover()
+        return
+      }
+      const { active, scene, raw, feature } = found
+      if (hoveredRef.current !== raw) {
+        if (hoveredRef.current !== null) {
+          map.setFeatureState(featureStateCall(POLYGON_DETAIL_SOURCE_ID, active.sourceLayer, hoveredRef.current), { hover: false })
+        }
+        hoveredRef.current = raw
+        map.setFeatureState(featureStateCall(POLYGON_DETAIL_SOURCE_ID, active.sourceLayer, raw), { hover: true })
+      }
+      map.getCanvas().style.cursor = 'pointer'
+      const property = classPropertyFor(active, chosenDateOf(useMapStore.getState()), scene.classSource ?? undefined)
+      const display = classDisplay(active, classIdFrom(active, feature.properties, property))
+      const container = containerRef.current?.getBoundingClientRect()
+      if (!container) return
+      const placement = placeTooltip(
+        { x: event.point.x, y: event.point.y },
+        { width: container.width, height: container.height },
+        { width: POLYGON_TOOLTIP_MAX_WIDTH, height: 24 },
+        rightEdgeColumnBox(),
+      )
+      setTooltip(placement.hidden ? null : {
+        text: display.name ?? t('polygon.class_not_mapped'),
+        left: placement.left,
+        top: placement.top,
+      })
+    }
+    const handleLeave = () => clearHover()
+    const handleClick = (event: PolygonEvent) => {
+      const found = currentFeature(event)
+      if (!found) return
+      // R-22: the map handler runs the command and never calls the store action itself.
+      runCommand('select_field', { field_id: commandFieldId(found.active, found.raw) })
+    }
+
+    map.on('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
+    map.on('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
+    map.on('click', POLYGON_FILL_LAYER_ID, handleClick)
+    return () => {
+      map.off('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
+      map.off('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
+      map.off('click', POLYGON_FILL_LAYER_ID, handleClick)
+      clearHover()
+    }
+  }, [mapReady, regionId])
 
   // R-23 and R-25: one probe per layer and *effective* date. `effective_date` comes from
   // the `/layers` response, so a chosen date that resolves every layer to the same date
@@ -381,6 +782,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
 
     // R-18: only the layers still on the map take part in the stack order.
     applyOrder(map, order.filter((id) => visibleIds.has(id)))
+    // R-36: whatever raster was just inserted, the polygon pair stays above the imagery.
+    raisePolygonLayers(map)
   }, [mapReady, catalog, layerOn, opacity, order, pinnedDates, compare, decisions])
 
   return (
@@ -391,6 +794,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         <span>{t('map.satellite_layer')}</span>
       </div>
       {children}
+      {tooltip && <PolygonTooltip left={tooltip.left} text={tooltip.text} top={tooltip.top} />}
       <CompareOverlay chosenDate={chosenDate} />
       <OfflineOverlay />
     </section>
