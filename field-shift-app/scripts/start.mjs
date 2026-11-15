@@ -52,15 +52,15 @@ function findUv() {
   return null
 }
 
-/** A Python 3.11 to 3.13 already on the machine, as [command, ...args], or null. */
+/** A Python 3.11 to 3.15 already on the machine, as [command, ...args], or null. */
 function findPython() {
   const candidates = IS_WINDOWS
-    ? [['py', '-3.13'], ['py', '-3.12'], ['py', '-3.11'], ['python']]
-    : [['python3.13'], ['python3.12'], ['python3.11'], ['python3']]
+    ? [['py', '-3.15'], ['py', '-3.14'], ['py', '-3.13'], ['py', '-3.12'], ['py', '-3.11'], ['python']]
+    : [['python3.15'], ['python3.14'], ['python3.13'], ['python3.12'], ['python3.11'], ['python3']]
   for (const [cmd, ...args] of candidates) {
     const probe = spawnSync(cmd, [...args, '-c', 'import sys; print(sys.version_info[0] * 100 + sys.version_info[1])'], { encoding: 'utf8' })
     const version = Number(probe.stdout?.trim())
-    if (probe.status === 0 && version >= 311 && version <= 313) return [cmd, ...args]
+    if (probe.status === 0 && version >= 311 && version <= 315) return [cmd, ...args]
   }
   return null
 }
@@ -76,11 +76,11 @@ function ensureBackend() {
     if (!run(uv, ['pip', 'install', '--python', VENV_PYTHON, '-r', requirements])) fail('Instalação das dependências do backend falhou.')
     return
   }
-  // Without uv, any Python 3.11 to 3.13 will do. Newer ones can lack prebuilt packages for FastAPI.
+  // Without uv, any Python 3.11 to 3.15 will do (both ends checked on 2026-11-15).
   const python = findPython()
   if (!python) {
     fail(
-      'Não achei o uv nem um Python entre 3.11 e 3.13. O jeito mais simples é instalar o uv ' +
+      'Não achei o uv nem um Python entre 3.11 e 3.15. O jeito mais simples é instalar o uv ' +
         '(Windows: winget install astral-sh.uv; macOS/Linux: veja https://docs.astral.sh/uv/) e rodar de novo.',
     )
   }

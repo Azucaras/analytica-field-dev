@@ -14,19 +14,30 @@ County (Illinois) and Lubbock County (Texas) in the United States.
 
 ## Quick start
 
-On Windows, double-click `iniciar.cmd`. Anywhere else:
+You need [Node.js](https://nodejs.org) 22 or newer, plus either [uv](https://docs.astral.sh/uv/) or Python 3.11
+to 3.15. No key, account or data download is needed: the data the app shows is in the repository.
 
-```sh
-cd field-shift-app
-npm start
-```
+1. Get the code. On Windows, turn on long paths, because some documentation files have very long names:
 
-The first run creates the backend's Python environment and installs the front end. After that it picks free
-ports (8000 and 5173 unless they are taken), starts the backend and the front end, and opens the browser.
-`Ctrl+C` stops both. The app opens in Portuguese; the PT/EN switch is at the end of the top bar.
+   ```sh
+   git clone -c core.longpaths=true https://github.com/Azucaras/analytica-field-dev.git
+   ```
 
-You need Node.js 22 or newer and either [uv](https://docs.astral.sh/uv/) or Python 3.11. The data the demo needs
-is already in the repository, so no key or account is required to run it.
+   The repository is private, so ask the team for access first.
+
+2. Start it. On Windows, double-click `iniciar.cmd`. Anywhere else:
+
+   ```sh
+   cd analytica-field-dev/field-shift-app
+   npm start
+   ```
+
+The first run takes a few minutes: it creates the backend's Python environment and installs the front end. Then it
+picks free ports (8000 and 5173 unless they are taken), starts the backend and the front end, and opens the
+browser. `Ctrl+C` stops both. The app opens in Portuguese; the PT/EN switch is at the end of the top bar.
+
+The only network the app uses while running is for map tiles (OpenFreeMap, OpenStreetMap and NASA GIBS, all open).
+Without internet the map background stays blank; the rest reads local data, though a fully offline run has not been tested.
 
 ## What is in the repository
 
@@ -58,37 +69,27 @@ where the El Nino signal shows up in the US (the cold season) and it keeps the s
 
 ## Refreshing the data
 
-The backend reads two folders of JSON written by the pipeline: `backend/fixtures/climate/` for the map screen and
-`backend/fixtures/fieldphase/data/v1/` for the analysis. To rebuild them:
+This is optional. The app already ships the data recorded on 2026-11-15. To download fresh data:
 
-```sh
-cd field-shift-pipeline
-uv sync --extra planetary
-uv run python -m pipeline.fetch_regions
-uv run python -m pipeline.fetch_enso
-uv run python -m pipeline.fetch_power
-uv run python -m pipeline.fetch_pam
-uv run python -m pipeline.fetch_nass          # needs NASS_API_KEY
-uv run python -m pipeline.fetch_soil
-uv run python -m pipeline.fetch_planetary     # slow: about 20 minutes per place the first time
-uv run python -m pipeline.fetch_meteomatics   # needs METEOMATICS_USERNAME and METEOMATICS_PASSWORD
-uv run python -m pipeline.build_evidence
-uv run python -m pipeline.build_scoring
-uv run python -m pipeline.export_fieldshift
-uv run python -m api.export --out ../field-shift-app/backend/fixtures/fieldphase/data/v1
-```
+1. Copy `field-shift-pipeline/.env.example` to `field-shift-pipeline/.env` and fill in the keys you have. The file
+   stays on your machine; git ignores it.
+   - `NASS_API_KEY`: US yields, free at https://quickstats.nass.usda.gov/api
+   - `METEOMATICS_USERNAME` and `METEOMATICS_PASSWORD`: forecasts, from a Meteomatics account
+2. On Windows, double-click `atualizar-dados.cmd`. Anywhere else:
 
-Every download is cached in `field-shift-pipeline/data/raw/` (not committed) and reused unless you pass
-`--refresh`. Keys go in your own shell, never in a file in the repository:
+   ```sh
+   cd field-shift-pipeline
+   uv sync --extra planetary
+   uv run python -m pipeline.update_all
+   ```
 
-```powershell
-$env:NASS_API_KEY = "..."
-$env:METEOMATICS_USERNAME = "..."
-$env:METEOMATICS_PASSWORD = "..."
-```
+It runs every step in order and ends with the two exports the app reads. A step whose key is missing is skipped and
+the app keeps its old data for it. Every download is cached in `field-shift-pipeline/data/raw/`, so the second run
+only fetches what is new; the satellite step takes about 20 minutes per place the first time. Leave a slow step out
+with `--skip planetary`, for example. Restart the app afterwards to see the new data.
 
-Without the NASS key the US yield and income parts say the data is missing. Without Meteomatics the forecast
-section says it was not downloaded. Nothing is filled in.
+Each step can also run on its own, for example `uv run python -m pipeline.fetch_nass`; the list is in
+`field-shift-pipeline/README.md`.
 
 ## Tests
 
