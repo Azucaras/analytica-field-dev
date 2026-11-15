@@ -1,6 +1,6 @@
 # Spec: Block 6, numbers per polygon
 
-Status: frozen on 2026-11-14 as revision 1. The governing rule is ADR 0005 (`docs/adr/0005-blocos-com-spec-congelada.md`): every block runs on a frozen spec before code. This file produces the spec only. No application code, config, string catalog, test, other spec or block 1 to 5 text changes on the card that writes it. The freeze digest is in the Freeze record near the end of this file.
+Status: frozen on 2026-11-14 as revision 2. Revision 2 states the default region of this block as the United States, the value block 5 R-01 defaults `regionId` to, corrects the fixture fallback of Data contracts Table B and adds the United States worked example that follows from it; revision 1 carried neither the default nor a second region example. The governing rule is ADR 0005 (`docs/adr/0005-blocos-com-spec-congelada.md`): every block runs on a frozen spec before code. This file produces the spec only. No application code, config, string catalog, test, other spec or block 1 to 5 text changes on the card that writes it. The freeze digest is in the Freeze record near the end of this file.
 
 Inherits block 5 revision 5, the frozen text in the tree: `field-shift-app/specs/bloco-5-poligonos-de-cultura.md`, 531 lines, raw sha256 `6823769b59910ac64814d6dddfb5f7a0501f994f9fcab8dd0a8431df4975296d`, freeze digest `ebc94342f57071cfea25d3074e392f73427b51a94286b2372ebc98c8458bea61`, verified on this card by re-running that file's own `sed` recipe. It inherits block 4 revision 8 (`field-shift-app/specs/bloco-4-camadas-e-timeline.md`, 681 lines, raw sha256 `dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c`, freeze digest `f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e`, commit `b3bff60`) and block 1 revision 3 (`field-shift-app/specs/bloco-1-mapa-de-composicao.md`, 177 lines, raw sha256 `70c235ccbc154762df4c6d9e35024da4a2bf501e6e70cc6eb38ee09bf26acab3`, freeze digest `5165dd4df375b74c455296562585bf00b2b2813304153e849d477d8e4735a117`). All three digests were reproduced on 2026-11-14 with the recorded recipes, so this file reads the text the tree actually carries.
 
@@ -135,6 +135,10 @@ Types follow blocks 2, 3 and 5: ubiquitous, state-driven, event-driven, unwanted
 - R-49 (state-driven): While the selected field is a polygon with no fixture scenario, the numbers surface SHALL print the sections of R-16 to R-38 that its sources support, the provenance table and the gap register, SHALL print the counter evidence empty text naming that a polygon has no rotation scenario, and SHALL NOT print a scenario name, a falsifier, a fixture evidence row or a fixture coverage number. On the map screen the rotation cards and the evidence panel SHALL keep block 5 R-26 exactly as frozen: the existing empty text, no `/fields/{id}/scenarios` request for the polygon, no fixture value, and no coverage pill. Block 6 SHALL NOT change `ScenarioCards.tsx`, `EvidencePanel.tsx`, `CommandToggle.tsx`, `SupportingDataToggle.tsx`, `AgentBar.tsx` or the coverage pill, and its only change to `RotationFlipCard.tsx` SHALL be the sixth field of R-39.
 - R-50 (unwanted behaviour): If the area of the ring the request carries differs from the area the polygon's own source reports by more than 5 percent, every zonal value computed from that ring SHALL be marked `fragment`, the card SHALL print both areas and the percentage, and a gap row SHALL record the clip. The mark SHALL NOT be applied when the two areas agree within 5 percent, and a fragment value SHALL NOT print unmarked as the field's value.
 
+### The default region and the region of a field id
+
+- R-51 (ubiquitous): The default region of this block SHALL be the United States, the value block 5 R-01 defaults `regionId` to, and a field id SHALL resolve by its own naming and never by a fallback to Brazil: the prefix `csb:` selects the United States and the prefix `trazo:` selects Brazil; a fixture id resolves in the `region` its fixture entry carries, which every fixture entry carries, because a fixture field is a demonstration field and its region is part of the demonstration; and an id that carries no prefix and no fixture entry resolves in the United States. The surface SHALL print the area unit and the area basis of the resolved region only, which is acres and `retrieved` from `csbacres` in the United States and hectares and `modelled` from the sidecar row in Brazil (Table A, block 5 Table D), and no requirement, criterion, example or test of this block SHALL treat Brazil as the region a caller receives without naming one.
+
 ## Data contracts
 
 ### Table A: the metric registry
@@ -187,7 +191,7 @@ One route, one request shape, one payload. The per source cache and failure beha
 | Field | Value |
 |---|---|
 | Method and path | `POST /fields/{field_id}/numbers` |
-| `field_id` | a fixture id (`mt-santa-carmem-01`), a Brazil polygon id with its prefix (`trazo:12345`) or a United States polygon id with its prefix (`csb:381825001868504`). The region comes from the prefix, `trazo:` Brazil and `csb:` United States; a fixture id takes the `region` of its fixture entry, and an entry without one resolves to Brazil |
+| `field_id` | a fixture id (`mt-santa-carmem-01`), a Brazil polygon id with its prefix (`trazo:12345`) or a United States polygon id with its prefix (`csb:381825001868504`). The default region is the United States, and a field that names no region resolves there (R-51). The region otherwise comes from the prefix, `csb:` United States and `trazo:` Brazil; a fixture id takes the `region` of its fixture entry, which every entry carries, the three `mt-santa-carmem` entries with `br` and the three CSB entries with `us` (block 5 R-24) |
 | Body | `{"ring": [[lon, lat], ...], "centroid": [lon, lat], "area_ha": 22.4, "date": "2026-11-12"}`; `ring` at least three points, counter clockwise or clockwise, closed or not; `centroid` inside the ring; `area_ha` the area block 5 already prints, or `null` when the feature carries none |
 | Success | 200 with the payload of Table E, every section present, `gaps` possibly empty |
 | Cache | per source, Table B2; the payload is assembled per request and never cached as a whole, so a refreshed section does not force the others to refresh |
@@ -224,6 +228,22 @@ Worked response, the climate and municipality sections of the same request, ever
 ```
 
 The `provenance` array is elided in the example because the full payload carries one row per metric of Table A that the response prints; the criteria read it in full.
+
+Worked example, a field that names no region. The United States is the default of R-51, so the second worked example is a United States fixture, `csb:381825001868504` of block 5 R-24, on the same chosen date 2026-11-12. Only what this repository has measured is pinned here. The rest is a shape with the value left to the gate, because both probe files record one point, `-55.27, -11.91`, and neither carries a United States reading.
+
+| Part | Value for `csb:381825001868504` | Where the value comes from |
+|---|---|---|
+| `field_id` and `region` | `csb:381825001868504`, `us` | block 5 R-24 and M-25; the prefix is the region under R-51 |
+| `area` printed | `153.2 acres` | `csbacres` 153.18667449 of that recorded feature, block 5 M-25 and AC-21, one decimal per Table A |
+| `area` basis and unit | `retrieved`, acres | the `area` row of Table A and block 5 Table D |
+| `area_ha` in the request body | `null` | the feature carries `csbacres` and no hectares, so the `fragment` section of Table E records `is_fragment` `null` and one gap, the branch R-50 names |
+| class name in the header | `Soybeans`, from `cdl2025` 5, basis `retrieved` | block 5 Table D and AC-21 |
+| climate, water balance, SMAP, NDVI, soil | shape, the value left to the gate | no United States reading exists in `data-probe-2026-11-14.json` or `data-probe-2026-11-14-polygons-timeline.json`, and the NDVI assets wait on the reader of OD-01 |
+| rotation | abstains with `no MapBiomas Collection 11 row for this polygon` | R-36; the sidecar of CO-B6-01 is a Mato Grosso extract and a United States one is CO-B6-05 |
+
+The gate records the first United States run with its point, its date, its request and its computed values, and that recorded run becomes the rows a later revision pins, which is the device Table G already uses for `out` and `remaining`. No climate, water balance, SMAP, NDVI or soil value of a United States run is asserted by a criterion of this revision; AC-50 reads the resolved region, the printed area and that area's unit and basis.
+
+The municipal section is outside this example and outside this revision. SIDRA table 1612 is an IBGE product with no United States municipality, and CO-B6-05 would give a United States polygon a municipality code from its own sidecar but names no source for the statistic, so what the municipal card prints for a United States field is not settled by any clause of this file; revision 2 records the hole and does not decide it.
 
 ### Table B2: per source cache, error and fill handling
 
@@ -496,13 +516,15 @@ Every criterion carries a method, a named artifact and an explicit falsifier. A 
 - AC-48 (covers R-49; method: computer use with a Brazil polygon selected, at the three widths, with the surface open and closed, and a network log; artifact: `AC-48-polygon-{width}.png`, `AC-48-requests.txt`, `AC-48-surface.txt`): With the surface open it SHALL print the supported sections, the provenance table and the gap register, the counter evidence empty text, and no scenario name, falsifier, fixture evidence row or fixture coverage number. With the surface closed and the same polygon selected, the rotation cards SHALL show the existing `empty.no_rotation_scenarios` text, the evidence panel its existing empty text, no `/fields/` request naming the polygon SHALL appear in either state, and the coverage pill SHALL be unmounted. False if: a scenario or fixture value appears, a request names the polygon, the pill prints a percentage, a supported section is missing, or the map screen state loses the empty texts of block 5 R-26.
 - AC-49 (covers R-50; method: tests with two ring and area pairs; artifact: `AC-49-fragment.txt` with both pairs, the printed areas, the percentage and the gap): A ring of 20.0 ha against an area of 22.4 ha, a 10.7 percent difference, SHALL mark every zonal value `fragment`, print both areas and the percentage, and record a gap; a ring of 22.0 ha against 22.4 ha, a 1.8 percent difference, SHALL NOT mark. False if: a 10.7 percent case prints unmarked, a 1.8 percent case is marked, or an area or the percentage is missing.
 
-Coverage check. Every active requirement R-01 to R-50 has at least one criterion: R-01 and R-04 (AC-01), R-02 (AC-02), R-03 (AC-03), R-05 (AC-04), R-06 (AC-05), R-07 (AC-06), R-08 (AC-07), R-09 (AC-08), R-10 (AC-09), R-11 (AC-10), R-12 (AC-11), R-13 (AC-12), R-14 (AC-13), R-15 (AC-14), R-16 (AC-15), R-17 (AC-16), R-18 (AC-17), R-19 (AC-18), R-20 (AC-19), R-21 (AC-20), R-22 (AC-21), R-23 (AC-22), R-24 (AC-23), R-25 (AC-24), R-26 (AC-25), R-27 (AC-26), R-28 (AC-27), R-29 (AC-28), R-30 (AC-29), R-31 (AC-30), R-32 (AC-31), R-33 (AC-32), R-34 (AC-33), R-35 (AC-34), R-36 (AC-35), R-37 (AC-36), R-38 (AC-37), R-39 (AC-38), R-40 (AC-39), R-41 (AC-40), R-42 (AC-41), R-43 (AC-42), R-44 (AC-43), R-45 (AC-44), R-46 (AC-45), R-47 (AC-46), R-48 (AC-47), R-49 (AC-48), R-50 (AC-49). Every feature of this block has at least one requirement and one criterion: F-08 (R-16, R-17, R-25, AC-15, AC-16, AC-24), F-09 (R-18, R-19, AC-17, AC-18), F-10 (R-22, R-23, R-24, AC-21, AC-22, AC-23), F-11 (R-43, R-44, R-50, AC-42, AC-43, AC-49), F-12 (R-07 to R-13, AC-06 to AC-12), F-13 (R-39, R-40, AC-38, AC-39), F-14 (R-41, R-42, AC-40, AC-41), F-35 (R-20, AC-19), F-36 (R-27 to R-30, AC-26 to AC-29), F-37 (R-31, R-32, AC-30, AC-31), F-38 (R-33 to R-36, AC-32 to AC-35), F-39 (R-37, R-38, AC-36, AC-37). The surface itself is R-01 to R-06 with AC-01 to AC-05, and the route and the cache are R-45 to R-48 with AC-44 to AC-47.
+- AC-50 (covers R-51; method: tests against the running backend and the surface header at 1440x900, over the fixture file and the three id forms; artifact: `AC-50-default-region.txt` with the id, the resolved region, the area, its unit and its basis for every case): `mt-santa-carmem-01` SHALL resolve in the region its fixture entry names, `br`; `csb:381825001868504` SHALL resolve `us` and the header SHALL print `153.2 acres` with the `retrieved` label; a `trazo:` field SHALL print hectares with the `modelled` label; and an id that carries no prefix and no fixture entry SHALL resolve in the United States, which the artifact shows by the region of the payload it answers with or by a 404 against the United States polygon table. False if: any id resolves in a region R-51 does not name, a United States field prints the Brazil unit or basis, a `trazo:` field prints acres or the `retrieved` label, or an id with no prefix resolves in Brazil.
+
+Coverage check. Every active requirement R-01 to R-51 has at least one criterion: R-01 and R-04 (AC-01), R-02 (AC-02), R-03 (AC-03), R-05 (AC-04), R-06 (AC-05), R-07 (AC-06), R-08 (AC-07), R-09 (AC-08), R-10 (AC-09), R-11 (AC-10), R-12 (AC-11), R-13 (AC-12), R-14 (AC-13), R-15 (AC-14), R-16 (AC-15), R-17 (AC-16), R-18 (AC-17), R-19 (AC-18), R-20 (AC-19), R-21 (AC-20), R-22 (AC-21), R-23 (AC-22), R-24 (AC-23), R-25 (AC-24), R-26 (AC-25), R-27 (AC-26), R-28 (AC-27), R-29 (AC-28), R-30 (AC-29), R-31 (AC-30), R-32 (AC-31), R-33 (AC-32), R-34 (AC-33), R-35 (AC-34), R-36 (AC-35), R-37 (AC-36), R-38 (AC-37), R-39 (AC-38), R-40 (AC-39), R-41 (AC-40), R-42 (AC-41), R-43 (AC-42), R-44 (AC-43), R-45 (AC-44), R-46 (AC-45), R-47 (AC-46), R-48 (AC-47), R-49 (AC-48), R-50 (AC-49), R-51 (AC-50). Every feature of this block has at least one requirement and one criterion: F-08 (R-16, R-17, R-25, AC-15, AC-16, AC-24), F-09 (R-18, R-19, AC-17, AC-18), F-10 (R-22, R-23, R-24, AC-21, AC-22, AC-23), F-11 (R-43, R-44, R-50, AC-42, AC-43, AC-49), F-12 (R-07 to R-13, AC-06 to AC-12), F-13 (R-39, R-40, AC-38, AC-39), F-14 (R-41, R-42, AC-40, AC-41), F-35 (R-20, AC-19), F-36 (R-27 to R-30, AC-26 to AC-29), F-37 (R-31, R-32, AC-30, AC-31), F-38 (R-33 to R-36, AC-32 to AC-35), F-39 (R-37, R-38, AC-36, AC-37). The surface itself is R-01 to R-06 with AC-01 to AC-05, and the route and the cache are R-45 to R-48 with AC-44 to AC-47, and the default region is R-51 with AC-50.
 
 ## Evidence required per AC
 
 | AC | Method | Artifact |
 |---|---|---|
-| AC-04, AC-06, AC-07, AC-08, AC-10, AC-12, AC-13, AC-16, AC-17, AC-18, AC-19, AC-21, AC-22, AC-23, AC-27, AC-28, AC-29, AC-30, AC-31, AC-32, AC-33, AC-34, AC-35, AC-36, AC-37, AC-38, AC-39, AC-40, AC-41, AC-42, AC-43, AC-45, AC-46, AC-49 | vitest | vitest output and the named text file of each criterion |
+| AC-04, AC-06, AC-07, AC-08, AC-10, AC-12, AC-13, AC-16, AC-17, AC-18, AC-19, AC-21, AC-22, AC-23, AC-27, AC-28, AC-29, AC-30, AC-31, AC-32, AC-33, AC-34, AC-35, AC-36, AC-37, AC-38, AC-39, AC-40, AC-41, AC-42, AC-43, AC-45, AC-46, AC-49, AC-50 | vitest | vitest output and the named text file of each criterion |
 | AC-01, AC-02, AC-03, AC-05, AC-09, AC-14, AC-15, AC-20, AC-24, AC-48 | vitest plus computer use at 1440x900, 780x900 and 360x640 | the named text file, the screenshots named in each criterion and the request log for AC-14 |
 | AC-11, AC-25, AC-26 | vitest with a blocked or altered transport | the named text file and the request log |
 | AC-44, AC-47 | curl transcripts and computer use | the curl transcript, the state dump and the screenshot of AC-47 |
@@ -528,20 +550,20 @@ Every other requirement and criterion of blocks 1 to 5 stays in force unchanged.
 
 ## Freeze record
 
-Frozen at revision 1 on 2026-11-14, the first revision of this file. It inherits block 5 revision 5, block 4 revision 8 and block 1 revision 3, and it reproduces all three digests with their own recipes (see the status line). This card wrote one file and no other.
+Frozen at revision 2 on 2026-11-14. Revision 1 was the first revision of this file; revision 2 states the default region as the United States (R-51), so that the fixture fallback of Table B and the worked examples name the default the product decided, and it adds the United States worked example of Table B. It inherits block 5 revision 5, block 4 revision 8 and block 1 revision 3, and it reproduces all three digests with their own recipes (see the status line). Each of the two revisions wrote one file and no other.
 
 | Field | Value |
 |---|---|
-| Revision | 1 |
+| Revision | 2 |
 | Approval | Not yet approved. The card stops at the frozen spec and requests review; the user approves in chat first, as with blocks 1 to 5. |
 | Inherits | block 5 revision 5 (`ebc94342f57071cfea25d3074e392f73427b51a94286b2372ebc98c8458bea61`), block 4 revision 8 (`f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e`), block 1 revision 3 (`5165dd4df375b74c455296562585bf00b2b2813304153e849d477d8e4735a117`) |
-| Requirements | 50 active, R-01 to R-50; none withdrawn |
-| Criteria | 49 active, AC-01 to AC-49 |
+| Requirements | 51 active, R-01 to R-51; none withdrawn |
+| Criteria | 50 active, AC-01 to AC-50 |
 | Amendments | 8, AM-01 to AM-08 (block 1: AM-01, AM-02, AM-03; block 2 and block 3: AM-04; block 3: AM-05, AM-06; block 5: AM-07, AM-08) |
 | Open decisions | 8, OD-01 to OD-08, each with a written default and a consequence |
 | Carry-over | 12, CO-B6-01 to CO-B6-12 |
 | Findings | 20, M-01 to M-20 |
-| sha256 | `5921c7bea89197e84b51bdba4bb415a2c364c0ac3a2e3b2808757ea35ddecc7c` |
+| sha256 | `0d10c71fbe74519f3a801dcdc9eb475a8a53b1fbbfd23c52d8263880fbb7088e` |
 
 A file cannot carry the digest of itself, so the sha256 row holds `PENDING` before hashing. The raw sha256 of the frozen file bytes is reported on the card, because a file cannot record its own raw digest. Reproduce the digest with, from `field-shift-app/`:
 
@@ -553,9 +575,9 @@ The result SHALL equal the value in the sha256 row below. That comparison is the
 
 ## Exit criteria
 
-All active criteria AC-01 to AC-49 pass, each with its named artifact, at the widths the method names. A pass with a missing artifact is not a pass. A regression in any block 1 to 5 criterion that this file does not amend fails the block; the gate applies the gate notes AM-01, AM-06 and AM-07 when it measures those criteria, and the amendment rows AM-02, AM-03, AM-04, AM-05 and AM-08 when it measures the clauses they rewrite.
+All active criteria AC-01 to AC-50 pass, each with its named artifact, at the widths the method names. A pass with a missing artifact is not a pass. A regression in any block 1 to 5 criterion that this file does not amend fails the block; the gate applies the gate notes AM-01, AM-06 and AM-07 when it measures those criteria, and the amendment rows AM-02, AM-03, AM-04, AM-05 and AM-08 when it measures the clauses they rewrite.
 
-Some branches report not verified rather than passed until their prerequisite lands, and that is the honest state of this block: AC-32, AC-34 and AC-35 need the CO-B6-01 sidecar; AC-39's completeness clause needs CO-B6-02; AC-26, AC-27, AC-28 and AC-29 need the COG reader of OD-01; AC-44, AC-45, AC-46 and AC-47 need the route to exist. The polygon paths need block 5's implementation to land first, because block 6 selects a polygon through it: until a polygon can be selected, AC-48, the polygon branch of AC-49 and the `csb:` branch of AC-44 report not verified, and only the fixture field path of the route is measurable. AC-24 and AC-25 need the block 4 SMAP layers to answer for a past date, which the proxy does through its cache and its lookback but which no gate has measured for these two layer ids. Every other criterion is measurable on the implementation card without a new data product.
+Some branches report not verified rather than passed until their prerequisite lands, and that is the honest state of this block: AC-32, AC-34 and AC-35 need the CO-B6-01 sidecar; AC-39's completeness clause needs CO-B6-02; AC-26, AC-27, AC-28 and AC-29 need the COG reader of OD-01; AC-44, AC-45, AC-46, AC-47 and AC-50 need the route to exist; AC-50 also needs a `region` on each fixture entry, which the fixture file does not carry today, the three `mt-santa-carmem` entries taking `br` and the three CSB entries taking `us` (Table B, block 5 R-24). The polygon paths need block 5's implementation to land first, because block 6 selects a polygon through it: until a polygon can be selected, AC-48, the polygon branch of AC-49 and the `csb:` branch of AC-44 report not verified, and only the fixture field path of the route is measurable. AC-24 and AC-25 need the block 4 SMAP layers to answer for a past date, which the proxy does through its cache and its lookback but which no gate has measured for these two layer ids. Every other criterion is measurable on the implementation card without a new data product.
 
 ## Findings from the measurements of this card
 
