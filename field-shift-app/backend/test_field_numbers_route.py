@@ -193,13 +193,15 @@ class RouteSectionTests(RouteCase):
         self.assertEqual(rows["soil.clay.0_5"]["basis"], "modelled")
         self.assertEqual(rows["soil.clay.0_5"]["resolution"], "250 m static model")
 
-    def test_r37_r38_municipal_abstains_with_the_named_reason_and_no_inferred_code(self) -> None:
+    def test_r37_r38_the_municipal_row_abstains_and_the_state_row_prints(self) -> None:
         payload = self.ok_payload()
         municipal = payload["sections"]["municipality"]
         self.assertEqual(municipal["state"], "abstained")
+        self.assertIsNone(municipal["municipality"], "no municipality code is inferred from a name")
+        self.assertEqual(municipal["state_row"]["code"], "51")
         rows = {row["metric"]: row for row in payload["provenance"]}
         self.assertIsNone(rows["municipality_soy_ha"]["value"])
-        self.assertIsNone(rows["state_soy_ha"]["value"])
+        self.assertEqual(rows["state_soy_ha"]["value"], 12788611)
         causes = " ".join(g["cause"] + " " + g["remediation"] for g in payload["gaps"] if g["section"] == "municipality")
         self.assertIn("CO-B6-06", causes)
 
@@ -304,9 +306,11 @@ class RouteSourceHostTests(RouteCase):
         self.ok_payload()
         hosts = self.transport.hosts()
         self.assertFalse(any("google" in host or "mapbiomas" in host for host in hosts), hosts)
+        # The state row of R-37 reads IBGE SIDRA, so its host is part of the documented set now.
         self.assertEqual(
             hosts,
-            {"power.larc.nasa.gov", "rest.isric.org", "earth-search.aws.element84.com"},
+            {"power.larc.nasa.gov", "rest.isric.org", "earth-search.aws.element84.com",
+             "servicodados.ibge.gov.br"},
         )
 
 
@@ -342,10 +346,10 @@ class RoutePartialFailureTests(RouteCase):
         response = self.post()
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        for name in ("climate", "water_balance", "ndvi", "soil"):
+        # R-48: every section whose source is the network answers `unavailable`, SIDRA included.
+        for name in ("climate", "water_balance", "ndvi", "soil", "municipality"):
             self.assertEqual(payload["sections"][name]["state"], "unavailable", name)
-        self.assertEqual(payload["sections"]["municipality"]["state"], "abstained")
-        for name in ("climate", "water_balance", "soil"):
+        for name in ("climate", "water_balance", "soil", "municipality"):
             self.assertTrue(any(g["section"] == name for g in payload["gaps"]), name)
         network_gaps = [g for g in payload["gaps"] if "network" in g["cause"] or "offline" in g["cause"]]
         self.assertGreaterEqual(len(network_gaps), 3)
