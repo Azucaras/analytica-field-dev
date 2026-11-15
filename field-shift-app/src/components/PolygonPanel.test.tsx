@@ -177,18 +177,19 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
     expect(screen.getByText('Basemap unavailable')).toBeTruthy()
   })
 
-  it('orders the five status lines failure, key, basemap, zoom, select (R-39)', () => {
+  it('orders the status lines key, basemap, zoom, select (R-39), and the failure line stands alone (R-12)', () => {
     setStore({
       polygonMode: { ...brScene, failure: null },
       basemapKeyMissing: true,
       basemapFailed: true,
       mapZoom: 9,
       regionId: 'br',
-      polygonSourceError: 'polygon.source_unavailable',
+      polygonSourceError: null,
     })
     render(<PolygonPanel />)
+    // R-12: a failure line means no tier paints, so the zoom and select lines are absent with it.
+    // The four lines below are the ones that can print together.
     const lines = [
-      'Polygon source unavailable',
       'Google basemap needs an API key',
       'Basemap unavailable',
       'Polygons from zoom 8',
@@ -201,6 +202,22 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
       expect(index, line).toBeGreaterThan(cursor)
       cursor = index
     }
+  })
+
+  it('orders the failure line alone, with no zoom or select line beside it (R-12)', () => {
+    setStore({
+      polygonMode: { ...brScene, failure: null },
+      basemapKeyMissing: false,
+      basemapFailed: false,
+      mapZoom: 9,
+      regionId: 'br',
+      polygonSourceError: 'polygon.source_unavailable',
+    })
+    render(<PolygonPanel />)
+    const text = screen.getByRole('region', { name: 'Polygon' }).textContent ?? ''
+    expect(text).toContain('Polygon source unavailable')
+    expect(text).not.toContain('Polygons from zoom')
+    expect(text).not.toContain('Select from zoom')
   })
 })
 
