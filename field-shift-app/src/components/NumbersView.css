@@ -23,6 +23,12 @@
   line-height: 1.4;
 }
 
+/* Scroll anchoring would move the offset when the header grows on a narrow width. R-06 keeps the
+   offset in pixels, so anchoring is off on the surface. */
+.numbers-view {
+  overflow-anchor: none;
+}
+
 .numbers-header {
   position: sticky;
   top: 0;
