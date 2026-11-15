@@ -1,0 +1,7 @@
+npx tsc -b --noEmit
+date: 2026-11-14T20:17:36-03:00
+scope: the main checkout, where node_modules lives. Its seven block 4 source files are byte-identical
+to branch block4/wave4-dock-home (head 16f65f4); see wave4-source-hashes.txt.
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+exit code: 0
