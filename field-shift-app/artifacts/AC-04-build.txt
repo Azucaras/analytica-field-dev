@@ -1,16 +1,21 @@
 AC-04 build recipe and layer names
 
-Commands, literal from R-10 of the frozen spec (the only addition is `rm -f` before a build, because tippecanoe and pmtiles refuse to overwrite an output and R-10 names no --force flag):
+Commands, literal from R-10 of the frozen spec except the Brazil detail line, which
+repair card t_d7457a47 replaced with the tippecanoe command recorded here (the only
+other addition is `rm -f` before a build, because tippecanoe and pmtiles refuse to
+overwrite an output and R-10 names no --force flag):
 
 tippecanoe -l trazo -Z{D} -z14 -y csbid -y csbacres -y cdl2018 -y cdl2019 -y cdl2020 -y cdl2021 -y cdl2022 -y cdl2023 -y cdl2024 -y cdl2025 -o data/polygons/us-38017-detail.pmtiles data/work/us-38017.geojson
 tippecanoe -l trazo -Z{D-3} -z{D-1} -y cdl2018 -y cdl2019 -y cdl2020 -y cdl2021 -y cdl2022 -y cdl2023 -y cdl2024 -y cdl2025 --coalesce --coalesce-smallest-as-needed --maximum-tile-bytes=300000 -o data/polygons/us-38017-overview.pmtiles data/work/us-38017.geojson
 pmtiles extract https://data.source.coop/wri-data-lab/trazofields/trazo3-fields/trazo3.pmtiles data/polygons/br-mt-detail.pmtiles --bbox=-61.633,-18.0416,-50.2248,-7.3487
+(repair card t_d7457a47 replaced that line with:)
+tippecanoe -l trazo -Z8 -z12 -y Id -y mbmode24 --low-detail=10 --full-detail=12 --buffer=12 --clip-bounding-box=-61.633,-18.0416,-50.2248,-7.3487 --drop-densest-as-needed --maximum-tile-bytes=250000 -o data/polygons/br-mt-detail.pmtiles data/work/trazo3_brazil_mato_grosso_2024.fgb
 tippecanoe -l trazo -Z5 -z7 -y mbmode24 --reorder --coalesce --low-detail=10 --full-detail=10 --buffer=2 --simplification=4 --maximum-tile-bytes=300000 --coalesce-smallest-as-needed -o data/polygons/br-mt-overview.pmtiles data/work/trazo3_brazil_mato_grosso_2024.fgb
 
 D = 6, read from us-38017.manifest.json, not retyped: overview 3 to 5, interactive 8.
 
 Layer name per built file, read from the tileset metadata (vector_layers) and from a decoded tile, not assumed from the command:
-  layers-us-detail.json: metadata ['trazo'], decoded tile ['trazo']
-  layers-us-overview.json: metadata ['trazo'], decoded tile ['trazo']
-  layers-br-detail.json: metadata ['trazo'], decoded tile ['trazo']
-  layers-br-overview.json: metadata ['trazo'], decoded tile ['trazo']
+  layers-us-detail.json: metadata ['trazo'], decoded tile ['trazo'] (z12 x942 y1441, 90 features)
+  layers-us-overview.json: metadata ['trazo'], decoded tile ['trazo'] (z3 x1 y2, 13 features)
+  layers-br-detail.json: metadata ['trazo'], decoded tile ['trazo'] (z10 x337 y544, 6131 features)
+  layers-br-overview.json: metadata ['trazo'], decoded tile ['trazo'] (z5 x11 y17, 21572 features)

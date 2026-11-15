@@ -72,6 +72,66 @@ DETAIL_BUDGET_BYTES = 250 * 1000
 OVERVIEW_BUDGET_BYTES = 300 * 1000
 MAX_TILE_BUDGET_BYTES = 1000 * 1000
 
+# The Brazil detail command. R-10 names `pmtiles extract --bbox` for this tier,
+# and that command copied the published file's z0 to z12 range and its per tile
+# bytes, which failed AC-06 (repair card t_d7457a47). The tier is tiled from the
+# same published GeoParquet the overview uses instead. The command is kept here,
+# in one place, so the artifact records what actually ran rather than a retyped
+# copy of it.
+BR_DETAIL_BUILD = (
+    "tippecanoe -l trazo -Z8 -z12 -y Id -y mbmode24 --low-detail=10 "
+    "--full-detail=12 --buffer=12 "
+    "--clip-bounding-box=-61.633,-18.0416,-50.2248,-7.3487 "
+    "--drop-densest-as-needed --maximum-tile-bytes=250000 "
+    "-o data/polygons/br-mt-detail.pmtiles "
+    "data/work/trazo3_brazil_mato_grosso_2024.fgb"
+)
+BR_DETAIL_BUILD_NOTES = [
+    "The Brazil detail tier is tiled with tippecanoe instead of copied out of the source",
+    "archive with `pmtiles extract`, which is the one deviation from R-10 on this card:",
+    "the extract carried the source file's z0 to z12 range and its untrimmed tiles, which",
+    "broke the Table B range of 8 to 12 and the 250 KB detail budget of R-08.",
+    "",
+    "Flag choices, each measured rather than assumed:",
+    "  -Z8 -z12        the Table B range, so z0 to z7 and z13 do not exist in the file.",
+    "  -y Id -y mbmode24  the two properties the Brazil detail row of Table B reads, and",
+    "                  nothing else: the published parquet carries eleven more columns.",
+    "  --drop-densest-as-needed  chosen over `--coalesce` because coalescing merges",
+    "                  neighbouring fields into one feature, which destroys the per field",
+    "                  `Id` that Table A's id property and a click need, and because",
+    "                  `--coalesce-smallest-as-needed` would merge fields of different",
+    "                  classes into a shape painted with one class. Dropping keeps every",
+    "                  surviving feature whole and keeps its own `Id` and `mbmode24`.",
+    "  --low-detail=10 --full-detail=12  the geometry detail ramp the published tiles",
+    "                  carry at z8 to z10. At the default constant detail 12 the 250 KB",
+    "                  budget fits 9,653 features over the V1 viewport's 28 tiles (345 per",
+    "                  tile); at constant detail 10 it fits 26,805 (957 per tile). Without",
+    "                  the ramp a z10 tile spends about three times the bytes per parcel",
+    "                  and the budget throws away most of what the source carries.",
+    "  --buffer=12     the tile edge duplication the published tiles carry. With",
+    "                  tippecanoe's default buffer of 5 the same command puts the V1",
+    "                  viewport at 26,645 features over 28 tiles (951.6 per tile),",
+    "                  under the 1,000 per tile floor of AC-06; at 12 the shipped",
+    "                  file holds 29,058 (1,037.8). The margin is 3.8 percent and it",
+    "                  is that thin on purpose: the floor is the published file's own",
+    "                  density, and for the same address the published z10 tile",
+    "                  10/354/545 carries 1,312 polygons where a constant-detail-10",
+    "                  probe build of this parquet carries 1,181.",
+    "  --clip-bounding-box  the geometry equivalent of R-10's `--bbox`, so the file's",
+    "                  extent stays the M-06 box instead of the wider parquet extent.",
+    "",
+    "The published file also carries 27,307 point features in the V1 viewport, which the",
+    "polygon parquet does not have; AC-06's 1,000 per viewport tile floor is met here on",
+    "polygons alone, and the numbers above are the whole distance to it.",
+    "",
+    "What the 250 KB budget costs, stated rather than left out: the file carries 763,474",
+    "distinct Id at z12 and 162,304 at z8 (AC-06-features-br.txt). A 250 KB z8 tile holds",
+    "about 4,000 parcels, so --drop-densest-as-needed keeps the sparsest fifth of them at",
+    "that zoom. z8 and z9 are the transitional band above the overview; AC-06 sets no",
+    "count requirement there, and at z10, the interactive zoom, 676,968 ids are present.",
+    "",
+]
+
 
 def sha256_file(path: str) -> str:
     digest = hashlib.sha256()
@@ -497,6 +557,15 @@ def cmd_measure(args) -> int:
             box,
         )
     id_universe = id_universe or None
+    # AC-06 is written over every tile of the file, not only the ones a viewport
+    # requests, so every tile above the budget is named by its address here
+    # instead of being summarised by a per zoom maximum.
+    tiles_over_budget = []
+    for tile_id, (length, _offset) in index.items():
+        z, x, y = pm.tile_id_to_zxy(tile_id)
+        if budget_min <= z <= budget_max and length > budget:
+            tiles_over_budget.append({"z": z, "x": x, "y": y, "bytes": length, "budget_bytes": budget})
+    tiles_over_budget.sort(key=lambda item: (item["z"], item["x"], item["y"]))
     payload = {
         "pmtiles": args.pmtiles,
         "bytes": os.path.getsize(args.pmtiles),
@@ -513,6 +582,7 @@ def cmd_measure(args) -> int:
         "per_zoom_over_box": box_per_zoom,
         "budget_violations": violations,
         "file_wide_violations": file_wide_violations,
+        "tiles_over_budget": tiles_over_budget,
         "id_universe": id_universe,
         "views": views,
     }
@@ -547,10 +617,15 @@ def cmd_layers(args) -> int:
     vector_layers = [layer["id"] for layer in metadata.get("vector_layers", [])]
     probe_zoom = args.zoom if args.zoom is not None else max(header.min_zoom, header.max_zoom - 2)
     observed = {}
-    for tile_id in sorted(index):
+    # Decode the largest tile at the probe zoom, which carries the most features and
+    # so proves the layer name against real content rather than an empty corner tile.
+    candidates = [
+        (length, tile_id)
+        for tile_id, (length, _offset) in index.items()
+        if pm.tile_id_to_zxy(tile_id)[0] == probe_zoom
+    ]
+    for _length, tile_id in sorted(candidates, reverse=True):
         z, x, y = pm.tile_id_to_zxy(tile_id)
-        if z != probe_zoom:
-            continue
         raw = pm.stored_tile(args.pmtiles, header, index, z, x, y)
         decoded = mapbox_vector_tile.decode(gzip.decompress(raw))
         observed = {
@@ -806,6 +881,7 @@ def cmd_evidence(args) -> int:
 
     budget_lines = [
         "R-08 and AC-06 tile budget readings",
+        f"run {run['label']}, recorded {run['recorded']}",
         f"detail budget {DETAIL_BUDGET_BYTES} bytes gzip per tile, overview budget "
         f"{OVERVIEW_BUDGET_BYTES} bytes, hard cap {MAX_TILE_BUDGET_BYTES} bytes",
         "",
@@ -841,7 +917,24 @@ def cmd_evidence(args) -> int:
                 budget_lines.append(
                     f"    z{violation['zoom']}: {violation['max_bytes']} bytes"
                 )
+        over = reading.get("tiles_over_budget")
+        if over:
+            budget_lines.append(f"  every tile of the file above the budget: {len(over)}")
+            for violation in over[:40]:
+                budget_lines.append(
+                    f"    z{violation['z']} x{violation['x']} y{violation['y']}: "
+                    f"{violation['bytes']} bytes"
+                )
+            if len(over) > 40:
+                budget_lines.append(f"    ... and {len(over) - 40} more")
+        elif over == []:
+            budget_lines.append("  no tile in the file is above the budget")
         budget_lines.append("")
+    budget_lines.append("Brazil detail build command and flag choices:")
+    budget_lines.append("")
+    budget_lines.append("  " + BR_DETAIL_BUILD)
+    budget_lines.append("")
+    budget_lines.extend(BR_DETAIL_BUILD_NOTES)
     with open(os.path.join(artifacts, "AC-06-budget.txt"), "w", encoding="utf-8") as handle:
         handle.write("\n".join(budget_lines) + "\n")
 
@@ -875,11 +968,13 @@ def cmd_evidence(args) -> int:
         "views:",
     ]
     for view_id, value in br_detail["views"].items():
+        mean = value["features"] / value["tiles_requested"] if value["tiles_requested"] else 0
         br_lines.append(
             f"  {view_id} z{value['camera']['zoom']} "
             f"{value['camera']['width']}x{value['camera']['height']}: "
             f"{value['features']} features, {value['unique_ids']} unique Id, "
-            f"{value['tiles_requested']} tiles, max {value['max_tile_bytes']} bytes"
+            f"{value['tiles_requested']} tiles, mean {mean:.1f} per viewport tile, "
+            f"max {value['max_tile_bytes']} bytes"
         )
     if br_detail.get("id_universe"):
         for zoom, value in br_detail["id_universe"].items():
@@ -897,9 +992,10 @@ def cmd_evidence(args) -> int:
     build_lines = [
         "AC-04 build recipe and layer names",
         "",
-        "Commands, literal from R-10 of the frozen spec (the only addition is `rm -f` before "
-        "a build, because tippecanoe and pmtiles refuse to overwrite an output and R-10 names "
-        "no --force flag):",
+        "Commands, literal from R-10 of the frozen spec except the Brazil detail line, which",
+        "repair card t_d7457a47 replaced with the tippecanoe command recorded here (the only",
+        "other addition is `rm -f` before a build, because tippecanoe and pmtiles refuse to",
+        "overwrite an output and R-10 names no --force flag):",
         "",
         "tippecanoe -l trazo -Z{D} -z14 -y csbid -y csbacres -y cdl2018 -y cdl2019 -y cdl2020 "
         "-y cdl2021 -y cdl2022 -y cdl2023 -y cdl2024 -y cdl2025 -o "
@@ -911,6 +1007,8 @@ def cmd_evidence(args) -> int:
         "pmtiles extract https://data.source.coop/wri-data-lab/trazofields/trazo3-fields/"
         "trazo3.pmtiles data/polygons/br-mt-detail.pmtiles "
         "--bbox=-61.633,-18.0416,-50.2248,-7.3487",
+        "(repair card t_d7457a47 replaced that line with:)",
+        BR_DETAIL_BUILD,
         "tippecanoe -l trazo -Z5 -z7 -y mbmode24 --reorder --coalesce --low-detail=10 "
         "--full-detail=10 --buffer=2 --simplification=4 --maximum-tile-bytes=300000 "
         "--coalesce-smallest-as-needed -o data/polygons/br-mt-overview.pmtiles "
@@ -924,9 +1022,17 @@ def cmd_evidence(args) -> int:
         "decoded tile, not assumed from the command:",
     ]
     for name, reading in (run.get("layer_names") or {}).items():
+        tile = reading.get("decoded_tile") or {}
+        features = tile.get("features")
+        count = sum(features.values()) if isinstance(features, dict) else (features or 0)
+        address = (
+            f"z{tile['z']} x{tile['x']} y{tile['y']}, {count} features"
+            if tile
+            else "address not recorded"
+        )
         build_lines.append(
             f"  {name}: metadata {reading['metadata_vector_layers']}, "
-            f"decoded tile {reading['decoded_tile_layers']}"
+            f"decoded tile {reading['decoded_tile_layers']} ({address})"
         )
     with open(os.path.join(artifacts, "AC-04-build.txt"), "w", encoding="utf-8") as handle:
         handle.write("\n".join(build_lines) + "\n")
@@ -973,6 +1079,11 @@ def cmd_attach_layers(args) -> int:
             "layer_name": payload["layer_name"],
             "metadata_vector_layers": payload["metadata_vector_layers"],
             "decoded_tile_layers": payload["decoded_tile"]["layers"],
+            "decoded_tile": {
+                key: payload["decoded_tile"][key]
+                for key in ("z", "x", "y", "features")
+                if key in payload["decoded_tile"]
+            },
         }
     _write_json(args.record, record)
     print(json.dumps(record["layer_names"], indent=1))
@@ -1171,6 +1282,180 @@ def cmd_finalize(args) -> int:
     return 0
 
 
+def cmd_update_manifest(args) -> int:
+    """Fold the Brazil detail rebuild into the recorded build manifest.
+
+    The repair card t_d7457a47 rebuilt one product, so the manifest is updated
+    in place from the run records and the measurements instead of regenerated:
+    every other entry keeps the bytes and the hashes it was published with.
+    """
+    with open(args.manifest, encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    with open(args.br_detail_measure, encoding="utf-8") as handle:
+        detail = json.load(handle)
+    with open(args.br_overview_measure, encoding="utf-8") as handle:
+        overview = json.load(handle)
+    runs = []
+    for path in args.run:
+        with open(path, encoding="utf-8") as handle:
+            runs.append(json.load(handle))
+
+    by_path = {}
+    for run in runs:
+        for product in run["products"]:
+            by_path.setdefault(product["path"], []).append((run, product))
+
+    detail_key = "data/polygons/br-mt-detail.pmtiles"
+    if detail_key not in by_path:
+        raise SystemExit(f"{detail_key} is not in the run records")
+    measured = detail["sha256"]
+    for run, product in by_path[detail_key]:
+        if product["sha256"] != measured:
+            raise SystemExit(
+                f"run {run['label']} recorded {product['sha256']} for {detail_key}, "
+                f"but the measurement read {measured}"
+            )
+
+    updated = 0
+    for product in manifest["products"]:
+        recorded = by_path.get(product["path"])
+        if not recorded:
+            continue
+        for run, entry in recorded:
+            product.setdefault("run_sha256", {})[run["label"]] = entry["sha256"]
+        product["bytes"] = recorded[-1][1]["bytes"]
+        product["sha256"] = recorded[-1][1]["sha256"]
+        product["abs_path"] = recorded[-1][1]["abs_path"]
+        if args.durable_copy:
+            os.makedirs(args.durable_copy, exist_ok=True)
+            target = os.path.join(args.durable_copy, os.path.basename(product["path"]))
+            if (
+                not os.path.exists(target)
+                or os.path.getsize(target) != product["bytes"]
+                or sha256_file(target) != product["sha256"]
+            ):
+                import shutil
+
+                shutil.copy2(product["abs_path"], target)
+            product["durable_path"] = target
+        product["reproducible"] = len({entry["sha256"] for _, entry in recorded}) == 1
+        product["bytes_stable"] = len({entry["bytes"] for _, entry in recorded}) == 1
+        updated += 1
+
+    for product in manifest["products"]:
+        if product["path"] != detail_key:
+            continue
+        product["command"] = BR_DETAIL_BUILD
+        product["zoom_range"] = [detail["header"]["min_zoom"], detail["header"]["max_zoom"]]
+        product["tiles_per_zoom"] = {
+            zoom: value["tiles"] for zoom, value in detail["per_zoom_all_tiles"].items()
+        }
+        product["tiles_total"] = sum(
+            value["tiles"] for value in detail["per_zoom_all_tiles"].values()
+        )
+        product["properties"] = ["Id", "mbmode24"]
+        product["layer_name"] = "trazo"
+
+    readings = manifest["tile_budget"]["readings"]
+    for name, reading in (("br_detail", detail), ("br_overview", overview)):
+        readings[name] = {
+            "per_zoom_max_bytes": {
+                zoom: value["max_bytes"] for zoom, value in reading["per_zoom_all_tiles"].items()
+            },
+            "tiles_per_zoom": {
+                zoom: value["tiles"] for zoom, value in reading["per_zoom_all_tiles"].items()
+            },
+            "views": {
+                key: {
+                    "features": value["features"],
+                    "tiles": value["tiles_requested"],
+                    "unique_ids": value["unique_ids"],
+                    "max_tile_bytes": value["max_tile_bytes"],
+                    "mean_features_per_tile": round(
+                        value["features"] / value["tiles_requested"], 1
+                    )
+                    if value["tiles_requested"]
+                    else None,
+                }
+                for key, value in reading["views"].items()
+            },
+            "budget_violations": reading["budget_violations"],
+            "file_wide_violations": reading.get("file_wide_violations") or [],
+            "tiles_over_budget": reading.get("tiles_over_budget") or [],
+            "budget_bytes": reading["budget_bytes"],
+            "sha256": reading["sha256"],
+            "bytes": reading["bytes"],
+        }
+    failures = [
+        {"product": name, **violation}
+        for name, reading in readings.items()
+        for violation in reading["budget_violations"]
+    ]
+    manifest["tile_budget"]["budget_ok"] = not failures
+    manifest["tile_budget"]["failures"] = failures
+    manifest["tile_budget"]["tiles_over_budget_in_br_detail"] = len(
+        readings["br_detail"]["tiles_over_budget"]
+    )
+
+    v1 = detail["views"]["V1"]
+    manifest["feature_counts"]["br_detail_v1_unique_ids"] = v1["unique_ids"]
+    manifest["feature_counts"]["br_detail_v1_features"] = v1["features"]
+    manifest["feature_counts"]["br_detail_v1_mean_per_viewport_tile"] = round(
+        v1["features"] / v1["tiles_requested"], 1
+    )
+    manifest["feature_counts"]["br_detail_distinct_id_per_zoom"] = {
+        zoom: value["distinct_ids"] for zoom, value in (detail.get("id_universe") or {}).items()
+    }
+
+    known_labels = {run["label"] for run in manifest.get("runs") or []}
+    for run in runs:
+        if run["label"] not in known_labels:
+            manifest.setdefault("runs", []).append(
+                {"label": run["label"], "recorded": run["recorded"]}
+            )
+    manifest["repair"] = {
+        "card": "t_d7457a47",
+        "date": args.date,
+        "product": detail_key,
+        "reason": (
+            "AC-06: the `pmtiles extract` copy of the source archive carried z0 to z12 and "
+            "369262, 653050 and 346421 byte tiles at z8, z9 and z10 against the 250000 byte "
+            "detail budget, and 256321 and 345460 byte tiles at the two requested V1 addresses."
+        ),
+        "before": {
+            "sha256": args.before_sha256,
+            "bytes": args.before_bytes,
+            "tiles_per_zoom": json.loads(args.before_tiles),
+        },
+        "after": {
+            "sha256": detail["sha256"],
+            "bytes": detail["bytes"],
+            "tiles_per_zoom": {
+                zoom: value["tiles"] for zoom, value in detail["per_zoom_all_tiles"].items()
+            },
+        },
+        "command": BR_DETAIL_BUILD,
+        "artifact": "artifacts/AC-06-budget.txt",
+    }
+    _write_json(args.out, manifest)
+    print(
+        json.dumps(
+            {
+                "out": args.out,
+                "products_updated": updated,
+                "budget_ok": manifest["tile_budget"]["budget_ok"],
+                "br_detail_sha256": detail["sha256"],
+                "br_detail_bytes": detail["bytes"],
+                "tiles_total": sum(
+                    value["tiles"] for value in detail["per_zoom_all_tiles"].values()
+                ),
+            },
+            indent=1,
+        )
+    )
+    return 0
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1285,6 +1570,19 @@ def main(argv: list[str]) -> int:
     final.add_argument("--durable-copy", default=None)
     final.add_argument("--out", required=True)
     final.set_defaults(func=cmd_finalize)
+
+    update = sub.add_parser("update-manifest")
+    update.add_argument("--manifest", required=True)
+    update.add_argument("--br-detail-measure", required=True)
+    update.add_argument("--br-overview-measure", required=True)
+    update.add_argument("--run", action="append", required=True)
+    update.add_argument("--date", required=True)
+    update.add_argument("--before-sha256", required=True)
+    update.add_argument("--before-bytes", type=int, required=True)
+    update.add_argument("--before-tiles", required=True, help="JSON object, zoom to tile count")
+    update.add_argument("--durable-copy", default=None)
+    update.add_argument("--out", required=True)
+    update.set_defaults(func=cmd_update_manifest)
 
     args = parser.parse_args(argv)
     return args.func(args)

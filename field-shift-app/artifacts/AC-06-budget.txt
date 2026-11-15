@@ -1,4 +1,5 @@
 R-08 and AC-06 tile budget readings
+run br-detail-repair-run2, recorded 2026-11-14T23:06:53-0300
 detail budget 250000 bytes gzip per tile, overview budget 300000 bytes, hard cap 1000000 bytes
 
 us detail: data/polygons/us-38017-detail.pmtiles sha256 ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2
@@ -28,35 +29,22 @@ us overview: data/polygons/us-38017-overview.pmtiles sha256 a3d6a3761589c8649ad8
     z5: 806 bytes over 1 tiles
   PASS at every requested address
 
-br detail: data/polygons/br-mt-detail.pmtiles sha256 9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b
+br detail: data/polygons/br-mt-detail.pmtiles sha256 fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff
   per zoom maximum over every tile of the file:
-    z0: 2690552 bytes over 1 tiles
-    z1: 3808604 bytes over 1 tiles
-    z2: 6243070 bytes over 1 tiles
-    z3: 9911816 bytes over 1 tiles
-    z4: 7451885 bytes over 1 tiles
-    z5: 4456108 bytes over 4 tiles
-    z6: 1525439 bytes over 9 tiles
-    z7: 852644 bytes over 24 tiles
-    z8: 369262 bytes over 79 tiles
-    z9: 653050 bytes over 270 tiles
-    z10: 346421 bytes over 977 tiles
-    z11: 148304 bytes over 3383 tiles
-    z12: 62050 bytes over 12027 tiles
-  V1 z10 viewport 1440x900: 28 tiles, max 68727 bytes
-  V2 z13 viewport 1440x900: 12 tiles, max 11015 bytes
-  V3 z10 viewport 780x900: 16 tiles, max 68727 bytes
-  V4 z10 viewport 360x640: 8 tiles, max 68727 bytes
-  W8 z8 viewport 1440x900: 35 tiles, max 188185 bytes
-  W9 z9 viewport 1440x900: 28 tiles, max 345460 bytes
-  W11 z11 viewport 1440x900: 35 tiles, max 29931 bytes
-  OVER BUDGET at the requested addresses:
-    z9 x176 y271: 256321 bytes
-    z9 x177 y271: 345460 bytes
-  the file carries tiles above the budget outside the pinned views:
-    z8: 369262 bytes
-    z9: 653050 bytes
-    z10: 346421 bytes
+    z8: 217744 bytes over 63 tiles
+    z9: 221192 bytes over 215 tiles
+    z10: 235949 bytes over 752 tiles
+    z11: 145043 bytes over 2661 tiles
+    z12: 105135 bytes over 9443 tiles
+  V1 z10 viewport 1440x900: 28 tiles, max 53102 bytes
+  V2 z13 viewport 1440x900: 12 tiles, max 25838 bytes
+  V3 z10 viewport 780x900: 16 tiles, max 53102 bytes
+  V4 z10 viewport 360x640: 8 tiles, max 51090 bytes
+  W8 z8 viewport 1440x900: 35 tiles, max 195440 bytes
+  W9 z9 viewport 1440x900: 28 tiles, max 131134 bytes
+  W11 z11 viewport 1440x900: 35 tiles, max 28556 bytes
+  PASS at every requested address
+  no tile in the file is above the budget
 
 br overview: data/polygons/br-mt-overview.pmtiles sha256 5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298
   per zoom maximum over every tile of the file:
@@ -64,4 +52,51 @@ br overview: data/polygons/br-mt-overview.pmtiles sha256 5b55384e74ea70d1b63ac44
     z6: 295179 bytes over 10 tiles
     z7: 297416 bytes over 20 tiles
   PASS at every requested address
+
+Brazil detail build command and flag choices:
+
+  tippecanoe -l trazo -Z8 -z12 -y Id -y mbmode24 --low-detail=10 --full-detail=12 --buffer=12 --clip-bounding-box=-61.633,-18.0416,-50.2248,-7.3487 --drop-densest-as-needed --maximum-tile-bytes=250000 -o data/polygons/br-mt-detail.pmtiles data/work/trazo3_brazil_mato_grosso_2024.fgb
+
+The Brazil detail tier is tiled with tippecanoe instead of copied out of the source
+archive with `pmtiles extract`, which is the one deviation from R-10 on this card:
+the extract carried the source file's z0 to z12 range and its untrimmed tiles, which
+broke the Table B range of 8 to 12 and the 250 KB detail budget of R-08.
+
+Flag choices, each measured rather than assumed:
+  -Z8 -z12        the Table B range, so z0 to z7 and z13 do not exist in the file.
+  -y Id -y mbmode24  the two properties the Brazil detail row of Table B reads, and
+                  nothing else: the published parquet carries eleven more columns.
+  --drop-densest-as-needed  chosen over `--coalesce` because coalescing merges
+                  neighbouring fields into one feature, which destroys the per field
+                  `Id` that Table A's id property and a click need, and because
+                  `--coalesce-smallest-as-needed` would merge fields of different
+                  classes into a shape painted with one class. Dropping keeps every
+                  surviving feature whole and keeps its own `Id` and `mbmode24`.
+  --low-detail=10 --full-detail=12  the geometry detail ramp the published tiles
+                  carry at z8 to z10. At the default constant detail 12 the 250 KB
+                  budget fits 9,653 features over the V1 viewport's 28 tiles (345 per
+                  tile); at constant detail 10 it fits 26,805 (957 per tile). Without
+                  the ramp a z10 tile spends about three times the bytes per parcel
+                  and the budget throws away most of what the source carries.
+  --buffer=12     the tile edge duplication the published tiles carry. With
+                  tippecanoe's default buffer of 5 the same command puts the V1
+                  viewport at 26,645 features over 28 tiles (951.6 per tile),
+                  under the 1,000 per tile floor of AC-06; at 12 the shipped
+                  file holds 29,058 (1,037.8). The margin is 3.8 percent and it
+                  is that thin on purpose: the floor is the published file's own
+                  density, and for the same address the published z10 tile
+                  10/354/545 carries 1,312 polygons where a constant-detail-10
+                  probe build of this parquet carries 1,181.
+  --clip-bounding-box  the geometry equivalent of R-10's `--bbox`, so the file's
+                  extent stays the M-06 box instead of the wider parquet extent.
+
+The published file also carries 27,307 point features in the V1 viewport, which the
+polygon parquet does not have; AC-06's 1,000 per viewport tile floor is met here on
+polygons alone, and the numbers above are the whole distance to it.
+
+What the 250 KB budget costs, stated rather than left out: the file carries 763,474
+distinct Id at z12 and 162,304 at z8 (AC-06-features-br.txt). A 250 KB z8 tile holds
+about 4,000 parcels, so --drop-densest-as-needed keeps the sparsest fifth of them at
+that zoom. z8 and z9 are the transitional band above the overview; AC-06 sets no
+count requirement there, and at z10, the interactive zoom, 676,968 ids are present.
 

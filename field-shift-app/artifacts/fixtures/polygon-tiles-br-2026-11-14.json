@@ -4,8 +4,8 @@
  "method": "Every tile the app requests at the pinned views V1 to V4 and on the named zoom walk, read from the built PMTiles archive. `status` is `present` because the product is a local archive; a browser run records the HTTP status instead. Byte counts are the stored gzip bytes of the tile.",
  "detail": {
   "path": "data/polygons/br-mt-detail.pmtiles",
-  "bytes": 374433523,
-  "sha256": "9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b"
+  "bytes": 280033310,
+  "sha256": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff"
  },
  "overview": {
   "path": "data/polygons/br-mt-overview.pmtiles",
@@ -26,205 +26,205 @@
    },
    "source_zoom": 10,
    "overzoom": false,
-   "features": 55918,
-   "unique_ids": 25563,
-   "max_tile_bytes": 68727,
+   "features": 29058,
+   "unique_ids": 23890,
+   "max_tile_bytes": 53102,
    "tiles": [
     {
      "z": 10,
      "x": 351,
      "y": 544,
      "status": "present",
-     "bytes": 49348
+     "bytes": 32538
     },
     {
      "z": 10,
      "x": 351,
      "y": 545,
      "status": "present",
-     "bytes": 22808
+     "bytes": 19717
     },
     {
      "z": 10,
      "x": 351,
      "y": 546,
      "status": "present",
-     "bytes": 40197
+     "bytes": 33098
     },
     {
      "z": 10,
      "x": 351,
      "y": 547,
      "status": "present",
-     "bytes": 51880
+     "bytes": 43600
     },
     {
      "z": 10,
      "x": 352,
      "y": 544,
      "status": "present",
-     "bytes": 45431
+     "bytes": 34588
     },
     {
      "z": 10,
      "x": 352,
      "y": 545,
      "status": "present",
-     "bytes": 32297
+     "bytes": 26108
     },
     {
      "z": 10,
      "x": 352,
      "y": 546,
      "status": "present",
-     "bytes": 51106
+     "bytes": 37924
     },
     {
      "z": 10,
      "x": 352,
      "y": 547,
      "status": "present",
-     "bytes": 56845
+     "bytes": 44410
     },
     {
      "z": 10,
      "x": 353,
      "y": 544,
      "status": "present",
-     "bytes": 66532
+     "bytes": 53102
     },
     {
      "z": 10,
      "x": 353,
      "y": 545,
      "status": "present",
-     "bytes": 48709
+     "bytes": 38822
     },
     {
      "z": 10,
      "x": 353,
      "y": 546,
      "status": "present",
-     "bytes": 48959
+     "bytes": 39533
     },
     {
      "z": 10,
      "x": 353,
      "y": 547,
      "status": "present",
-     "bytes": 64700
+     "bytes": 49029
     },
     {
      "z": 10,
      "x": 354,
      "y": 544,
      "status": "present",
-     "bytes": 55391
+     "bytes": 40230
     },
     {
      "z": 10,
      "x": 354,
      "y": 545,
      "status": "present",
-     "bytes": 50574
+     "bytes": 38641
     },
     {
      "z": 10,
      "x": 354,
      "y": 546,
      "status": "present",
-     "bytes": 68727
+     "bytes": 51090
     },
     {
      "z": 10,
      "x": 354,
      "y": 547,
      "status": "present",
-     "bytes": 62490
+     "bytes": 47811
     },
     {
      "z": 10,
      "x": 355,
      "y": 544,
      "status": "present",
-     "bytes": 67898
+     "bytes": 47057
     },
     {
      "z": 10,
      "x": 355,
      "y": 545,
      "status": "present",
-     "bytes": 36995
+     "bytes": 27316
     },
     {
      "z": 10,
      "x": 355,
      "y": 546,
      "status": "present",
-     "bytes": 25778
+     "bytes": 19112
     },
     {
      "z": 10,
      "x": 355,
      "y": 547,
      "status": "present",
-     "bytes": 36675
+     "bytes": 30057
     },
     {
      "z": 10,
      "x": 356,
      "y": 544,
      "status": "present",
-     "bytes": 26037
+     "bytes": 20547
     },
     {
      "z": 10,
      "x": 356,
      "y": 545,
      "status": "present",
-     "bytes": 31658
+     "bytes": 23991
     },
     {
      "z": 10,
      "x": 356,
      "y": 546,
      "status": "present",
-     "bytes": 13357
+     "bytes": 10071
     },
     {
      "z": 10,
      "x": 356,
      "y": 547,
      "status": "present",
-     "bytes": 38045
+     "bytes": 29290
     },
     {
      "z": 10,
      "x": 357,
      "y": 544,
      "status": "present",
-     "bytes": 60823
+     "bytes": 40998
     },
     {
      "z": 10,
      "x": 357,
      "y": 545,
      "status": "present",
-     "bytes": 30216
+     "bytes": 20847
     },
     {
      "z": 10,
      "x": 357,
      "y": 546,
      "status": "present",
-     "bytes": 26110
+     "bytes": 19359
     },
     {
      "z": 10,
      "x": 357,
      "y": 547,
      "status": "present",
-     "bytes": 46793
+     "bytes": 33872
     }
    ]
   },
@@ -241,93 +241,93 @@
    },
    "source_zoom": 12,
    "overzoom": true,
-   "features": 2490,
-   "unique_ids": 1135,
-   "max_tile_bytes": 11015,
+   "features": 1503,
+   "unique_ids": 1172,
+   "max_tile_bytes": 25838,
    "tiles": [
     {
      "z": 12,
      "x": 1417,
      "y": 2183,
      "status": "present",
-     "bytes": 9588
+     "bytes": 20648
     },
     {
      "z": 12,
      "x": 1417,
      "y": 2184,
      "status": "present",
-     "bytes": 11015
+     "bytes": 25838
     },
     {
      "z": 12,
      "x": 1417,
      "y": 2185,
      "status": "present",
-     "bytes": 6283
+     "bytes": 16477
     },
     {
      "z": 12,
      "x": 1418,
      "y": 2183,
      "status": "present",
-     "bytes": 5940
+     "bytes": 14851
     },
     {
      "z": 12,
      "x": 1418,
      "y": 2184,
      "status": "present",
-     "bytes": 9079
+     "bytes": 21726
     },
     {
      "z": 12,
      "x": 1418,
      "y": 2185,
      "status": "present",
-     "bytes": 9532
+     "bytes": 22331
     },
     {
      "z": 12,
      "x": 1419,
      "y": 2183,
      "status": "present",
-     "bytes": 6175
+     "bytes": 15622
     },
     {
      "z": 12,
      "x": 1419,
      "y": 2184,
      "status": "present",
-     "bytes": 8236
+     "bytes": 19777
     },
     {
      "z": 12,
      "x": 1419,
      "y": 2185,
      "status": "present",
-     "bytes": 8182
+     "bytes": 21305
     },
     {
      "z": 12,
      "x": 1420,
      "y": 2183,
      "status": "present",
-     "bytes": 4613
+     "bytes": 11841
     },
     {
      "z": 12,
      "x": 1420,
      "y": 2184,
      "status": "present",
-     "bytes": 3723
+     "bytes": 10344
     },
     {
      "z": 12,
      "x": 1420,
      "y": 2185,
      "status": "present",
-     "bytes": 2273
+     "bytes": 6857
     }
    ]
   },
@@ -344,121 +344,121 @@
    },
    "source_zoom": 10,
    "overzoom": false,
-   "features": 35021,
-   "unique_ids": 16130,
-   "max_tile_bytes": 68727,
+   "features": 17826,
+   "unique_ids": 14865,
+   "max_tile_bytes": 53102,
    "tiles": [
     {
      "z": 10,
      "x": 353,
      "y": 544,
      "status": "present",
-     "bytes": 66532
+     "bytes": 53102
     },
     {
      "z": 10,
      "x": 353,
      "y": 545,
      "status": "present",
-     "bytes": 48709
+     "bytes": 38822
     },
     {
      "z": 10,
      "x": 353,
      "y": 546,
      "status": "present",
-     "bytes": 48959
+     "bytes": 39533
     },
     {
      "z": 10,
      "x": 353,
      "y": 547,
      "status": "present",
-     "bytes": 64700
+     "bytes": 49029
     },
     {
      "z": 10,
      "x": 354,
      "y": 544,
      "status": "present",
-     "bytes": 55391
+     "bytes": 40230
     },
     {
      "z": 10,
      "x": 354,
      "y": 545,
      "status": "present",
-     "bytes": 50574
+     "bytes": 38641
     },
     {
      "z": 10,
      "x": 354,
      "y": 546,
      "status": "present",
-     "bytes": 68727
+     "bytes": 51090
     },
     {
      "z": 10,
      "x": 354,
      "y": 547,
      "status": "present",
-     "bytes": 62490
+     "bytes": 47811
     },
     {
      "z": 10,
      "x": 355,
      "y": 544,
      "status": "present",
-     "bytes": 67898
+     "bytes": 47057
     },
     {
      "z": 10,
      "x": 355,
      "y": 545,
      "status": "present",
-     "bytes": 36995
+     "bytes": 27316
     },
     {
      "z": 10,
      "x": 355,
      "y": 546,
      "status": "present",
-     "bytes": 25778
+     "bytes": 19112
     },
     {
      "z": 10,
      "x": 355,
      "y": 547,
      "status": "present",
-     "bytes": 36675
+     "bytes": 30057
     },
     {
      "z": 10,
      "x": 356,
      "y": 544,
      "status": "present",
-     "bytes": 26037
+     "bytes": 20547
     },
     {
      "z": 10,
      "x": 356,
      "y": 545,
      "status": "present",
-     "bytes": 31658
+     "bytes": 23991
     },
     {
      "z": 10,
      "x": 356,
      "y": 546,
      "status": "present",
-     "bytes": 13357
+     "bytes": 10071
     },
     {
      "z": 10,
      "x": 356,
      "y": 547,
      "status": "present",
-     "bytes": 38045
+     "bytes": 29290
     }
    ]
   },
@@ -475,65 +475,65 @@
    },
    "source_zoom": 10,
    "overzoom": false,
-   "features": 19013,
-   "unique_ids": 9000,
-   "max_tile_bytes": 68727,
+   "features": 9560,
+   "unique_ids": 8376,
+   "max_tile_bytes": 51090,
    "tiles": [
     {
      "z": 10,
      "x": 354,
      "y": 544,
      "status": "present",
-     "bytes": 55391
+     "bytes": 40230
     },
     {
      "z": 10,
      "x": 354,
      "y": 545,
      "status": "present",
-     "bytes": 50574
+     "bytes": 38641
     },
     {
      "z": 10,
      "x": 354,
      "y": 546,
      "status": "present",
-     "bytes": 68727
+     "bytes": 51090
     },
     {
      "z": 10,
      "x": 354,
      "y": 547,
      "status": "present",
-     "bytes": 62490
+     "bytes": 47811
     },
     {
      "z": 10,
      "x": 355,
      "y": 544,
      "status": "present",
-     "bytes": 67898
+     "bytes": 47057
     },
     {
      "z": 10,
      "x": 355,
      "y": 545,
      "status": "present",
-     "bytes": 36995
+     "bytes": 27316
     },
     {
      "z": 10,
      "x": 355,
      "y": 546,
      "status": "present",
-     "bytes": 25778
+     "bytes": 19112
     },
     {
      "z": 10,
      "x": 355,
      "y": 547,
      "status": "present",
-     "bytes": 36675
+     "bytes": 30057
     }
    ]
   },
@@ -550,254 +550,254 @@
    },
    "source_zoom": 8,
    "overzoom": false,
-   "features": 595429,
-   "unique_ids": 0,
-   "max_tile_bytes": 188185,
+   "features": 145566,
+   "unique_ids": 122195,
+   "max_tile_bytes": 195440,
    "tiles": [
     {
      "z": 8,
      "x": 85,
      "y": 134,
      "status": "present",
-     "bytes": 40695
+     "bytes": 59747
     },
     {
      "z": 8,
      "x": 85,
      "y": 135,
      "status": "present",
-     "bytes": 37961
+     "bytes": 63658
     },
     {
      "z": 8,
      "x": 85,
      "y": 136,
      "status": "present",
-     "bytes": 11733
+     "bytes": 26020
     },
     {
      "z": 8,
      "x": 85,
      "y": 137,
      "status": "present",
-     "bytes": 45084
+     "bytes": 86756
     },
     {
      "z": 8,
      "x": 85,
      "y": 138,
      "status": "present",
-     "bytes": 72612
+     "bytes": 136118
     },
     {
      "z": 8,
      "x": 86,
      "y": 134,
      "status": "present",
-     "bytes": 38527
+     "bytes": 54152
     },
     {
      "z": 8,
      "x": 86,
      "y": 135,
      "status": "present",
-     "bytes": 130728
+     "bytes": 159997
     },
     {
      "z": 8,
      "x": 86,
      "y": 136,
      "status": "present",
-     "bytes": 72182
+     "bytes": 136578
     },
     {
      "z": 8,
      "x": 86,
      "y": 137,
      "status": "present",
-     "bytes": 34859
+     "bytes": 114503
     },
     {
      "z": 8,
      "x": 86,
      "y": 138,
      "status": "present",
-     "bytes": 75157
+     "bytes": 123085
     },
     {
      "z": 8,
      "x": 87,
      "y": 134,
      "status": "present",
-     "bytes": 59753
+     "bytes": 67149
     },
     {
      "z": 8,
      "x": 87,
      "y": 135,
      "status": "present",
-     "bytes": 88974
+     "bytes": 134607
     },
     {
      "z": 8,
      "x": 87,
      "y": 136,
      "status": "present",
-     "bytes": 71437
+     "bytes": 155066
     },
     {
      "z": 8,
      "x": 87,
      "y": 137,
      "status": "present",
-     "bytes": 54165
+     "bytes": 144649
     },
     {
      "z": 8,
      "x": 87,
      "y": 138,
      "status": "present",
-     "bytes": 139764
+     "bytes": 186596
     },
     {
      "z": 8,
      "x": 88,
      "y": 134,
      "status": "present",
-     "bytes": 37964
+     "bytes": 42753
     },
     {
      "z": 8,
      "x": 88,
      "y": 135,
      "status": "present",
-     "bytes": 188185
+     "bytes": 195440
     },
     {
      "z": 8,
      "x": 88,
      "y": 136,
      "status": "present",
-     "bytes": 74546
+     "bytes": 175301
     },
     {
      "z": 8,
      "x": 88,
      "y": 137,
      "status": "present",
-     "bytes": 64330
+     "bytes": 189796
     },
     {
      "z": 8,
      "x": 88,
      "y": 138,
      "status": "present",
-     "bytes": 105420
+     "bytes": 151182
     },
     {
      "z": 8,
      "x": 89,
      "y": 134,
      "status": "present",
-     "bytes": 21255
+     "bytes": 27284
     },
     {
      "z": 8,
      "x": 89,
      "y": 135,
      "status": "present",
-     "bytes": 87952
+     "bytes": 121129
     },
     {
      "z": 8,
      "x": 89,
      "y": 136,
      "status": "present",
-     "bytes": 25752
+     "bytes": 62349
     },
     {
      "z": 8,
      "x": 89,
      "y": 137,
      "status": "present",
-     "bytes": 34361
+     "bytes": 101886
     },
     {
      "z": 8,
      "x": 89,
      "y": 138,
      "status": "present",
-     "bytes": 93752
+     "bytes": 190599
     },
     {
      "z": 8,
      "x": 90,
      "y": 134,
      "status": "present",
-     "bytes": 1993
+     "bytes": 9515
     },
     {
      "z": 8,
      "x": 90,
      "y": 135,
      "status": "present",
-     "bytes": 40900
+     "bytes": 99010
     },
     {
      "z": 8,
      "x": 90,
      "y": 136,
      "status": "present",
-     "bytes": 23899
+     "bytes": 74909
     },
     {
      "z": 8,
      "x": 90,
      "y": 137,
      "status": "present",
-     "bytes": 70877
+     "bytes": 168559
     },
     {
      "z": 8,
      "x": 90,
      "y": 138,
      "status": "present",
-     "bytes": 102736
+     "bytes": 186421
     },
     {
      "z": 8,
      "x": 91,
      "y": 134,
      "status": "present",
-     "bytes": 87668
+     "bytes": 109197
     },
     {
      "z": 8,
      "x": 91,
      "y": 135,
      "status": "present",
-     "bytes": 95746
+     "bytes": 167340
     },
     {
      "z": 8,
      "x": 91,
      "y": 136,
      "status": "present",
-     "bytes": 65463
+     "bytes": 122349
     },
     {
      "z": 8,
      "x": 91,
      "y": 137,
      "status": "present",
-     "bytes": 44865
+     "bytes": 65993
     },
     {
      "z": 8,
      "x": 91,
      "y": 138,
      "status": "present",
-     "bytes": 71370
+     "bytes": 26270
     }
    ]
   },
@@ -814,205 +814,205 @@
    },
    "source_zoom": 9,
    "overzoom": false,
-   "features": 196448,
-   "unique_ids": 91716,
-   "max_tile_bytes": 345460,
+   "features": 56759,
+   "unique_ids": 48363,
+   "max_tile_bytes": 131134,
    "tiles": [
     {
      "z": 9,
      "x": 174,
      "y": 271,
      "status": "present",
-     "bytes": 143708
+     "bytes": 75841
     },
     {
      "z": 9,
      "x": 174,
      "y": 272,
      "status": "present",
-     "bytes": 243881
+     "bytes": 111706
     },
     {
      "z": 9,
      "x": 174,
      "y": 273,
      "status": "present",
-     "bytes": 68089
+     "bytes": 41094
     },
     {
      "z": 9,
      "x": 174,
      "y": 274,
      "status": "present",
-     "bytes": 70626
+     "bytes": 42796
     },
     {
      "z": 9,
      "x": 175,
      "y": 271,
      "status": "present",
-     "bytes": 101828
+     "bytes": 58478
     },
     {
      "z": 9,
      "x": 175,
      "y": 272,
      "status": "present",
-     "bytes": 121733
+     "bytes": 71232
     },
     {
      "z": 9,
      "x": 175,
      "y": 273,
      "status": "present",
-     "bytes": 149981
+     "bytes": 90913
     },
     {
      "z": 9,
      "x": 175,
      "y": 274,
      "status": "present",
-     "bytes": 125653
+     "bytes": 76346
     },
     {
      "z": 9,
      "x": 176,
      "y": 271,
      "status": "present",
-     "bytes": 256321
+     "bytes": 114108
     },
     {
      "z": 9,
      "x": 176,
      "y": 272,
      "status": "present",
-     "bytes": 137142
+     "bytes": 83157
     },
     {
      "z": 9,
      "x": 176,
      "y": 273,
      "status": "present",
-     "bytes": 159991
+     "bytes": 97414
     },
     {
      "z": 9,
      "x": 176,
      "y": 274,
      "status": "present",
-     "bytes": 160508
+     "bytes": 99274
     },
     {
      "z": 9,
      "x": 177,
      "y": 271,
      "status": "present",
-     "bytes": 345460
+     "bytes": 131134
     },
     {
      "z": 9,
      "x": 177,
      "y": 272,
      "status": "present",
-     "bytes": 144388
+     "bytes": 74887
     },
     {
      "z": 9,
      "x": 177,
      "y": 273,
      "status": "present",
-     "bytes": 139022
+     "bytes": 78134
     },
     {
      "z": 9,
      "x": 177,
      "y": 274,
      "status": "present",
-     "bytes": 124874
+     "bytes": 77292
     },
     {
      "z": 9,
      "x": 178,
      "y": 271,
      "status": "present",
-     "bytes": 187473
+     "bytes": 89905
     },
     {
      "z": 9,
      "x": 178,
      "y": 272,
      "status": "present",
-     "bytes": 96148
+     "bytes": 50617
     },
     {
      "z": 9,
      "x": 178,
      "y": 273,
      "status": "present",
-     "bytes": 83128
+     "bytes": 44502
     },
     {
      "z": 9,
      "x": 178,
      "y": 274,
      "status": "present",
-     "bytes": 68053
+     "bytes": 42646
     },
     {
      "z": 9,
      "x": 179,
      "y": 271,
      "status": "present",
-     "bytes": 57872
+     "bytes": 33744
     },
     {
      "z": 9,
      "x": 179,
      "y": 272,
      "status": "present",
-     "bytes": 20507
+     "bytes": 12952
     },
     {
      "z": 9,
      "x": 179,
      "y": 273,
      "status": "present",
-     "bytes": 8887
+     "bytes": 5794
     },
     {
      "z": 9,
      "x": 179,
      "y": 274,
      "status": "present",
-     "bytes": 52290
+     "bytes": 32987
     },
     {
      "z": 9,
      "x": 180,
      "y": 271,
      "status": "present",
-     "bytes": 34094
+     "bytes": 21810
     },
     {
      "z": 9,
      "x": 180,
      "y": 272,
      "status": "present",
-     "bytes": 11663
+     "bytes": 8607
     },
     {
      "z": 9,
      "x": 180,
      "y": 273,
      "status": "present",
-     "bytes": 13384
+     "bytes": 8313
     },
     {
      "z": 9,
      "x": 180,
      "y": 274,
      "status": "present",
-     "bytes": 55817
+     "bytes": 31497
     }
    ]
   },
@@ -1029,254 +1029,254 @@
    },
    "source_zoom": 11,
    "overzoom": false,
-   "features": 17827,
-   "unique_ids": 8081,
-   "max_tile_bytes": 29931,
+   "features": 10377,
+   "unique_ids": 8259,
+   "max_tile_bytes": 28556,
    "tiles": [
     {
      "z": 11,
      "x": 706,
      "y": 1090,
      "status": "present",
-     "bytes": 11957
+     "bytes": 12353
     },
     {
      "z": 11,
      "x": 706,
      "y": 1091,
      "status": "present",
-     "bytes": 8041
+     "bytes": 7931
     },
     {
      "z": 11,
      "x": 706,
      "y": 1092,
      "status": "present",
-     "bytes": 11926
+     "bytes": 12429
     },
     {
      "z": 11,
      "x": 706,
      "y": 1093,
      "status": "present",
-     "bytes": 13711
+     "bytes": 13657
     },
     {
      "z": 11,
      "x": 706,
      "y": 1094,
      "status": "present",
-     "bytes": 14555
+     "bytes": 13790
     },
     {
      "z": 11,
      "x": 707,
      "y": 1090,
      "status": "present",
-     "bytes": 21172
+     "bytes": 19674
     },
     {
      "z": 11,
      "x": 707,
      "y": 1091,
      "status": "present",
-     "bytes": 19450
+     "bytes": 18098
     },
     {
      "z": 11,
      "x": 707,
      "y": 1092,
      "status": "present",
-     "bytes": 19246
+     "bytes": 19004
     },
     {
      "z": 11,
      "x": 707,
      "y": 1093,
      "status": "present",
-     "bytes": 15744
+     "bytes": 15883
     },
     {
      "z": 11,
      "x": 707,
      "y": 1094,
      "status": "present",
-     "bytes": 15383
+     "bytes": 15828
     },
     {
      "z": 11,
      "x": 708,
      "y": 1090,
      "status": "present",
-     "bytes": 15702
+     "bytes": 14571
     },
     {
      "z": 11,
      "x": 708,
      "y": 1091,
      "status": "present",
-     "bytes": 23637
+     "bytes": 22710
     },
     {
      "z": 11,
      "x": 708,
      "y": 1092,
      "status": "present",
-     "bytes": 29931
+     "bytes": 28556
     },
     {
      "z": 11,
      "x": 708,
      "y": 1093,
      "status": "present",
-     "bytes": 15269
+     "bytes": 14863
     },
     {
      "z": 11,
      "x": 708,
      "y": 1094,
      "status": "present",
-     "bytes": 12356
+     "bytes": 12444
     },
     {
      "z": 11,
      "x": 709,
      "y": 1090,
      "status": "present",
-     "bytes": 8447
+     "bytes": 8296
     },
     {
      "z": 11,
      "x": 709,
      "y": 1091,
      "status": "present",
-     "bytes": 15210
+     "bytes": 15020
     },
     {
      "z": 11,
      "x": 709,
      "y": 1092,
      "status": "present",
-     "bytes": 24451
+     "bytes": 21603
     },
     {
      "z": 11,
      "x": 709,
      "y": 1093,
      "status": "present",
-     "bytes": 16096
+     "bytes": 15121
     },
     {
      "z": 11,
      "x": 709,
      "y": 1094,
      "status": "present",
-     "bytes": 19873
+     "bytes": 19584
     },
     {
      "z": 11,
      "x": 710,
      "y": 1090,
      "status": "present",
-     "bytes": 9809
+     "bytes": 8493
     },
     {
      "z": 11,
      "x": 710,
      "y": 1091,
      "status": "present",
-     "bytes": 10802
+     "bytes": 10042
     },
     {
      "z": 11,
      "x": 710,
      "y": 1092,
      "status": "present",
-     "bytes": 9145
+     "bytes": 8429
     },
     {
      "z": 11,
      "x": 710,
      "y": 1093,
      "status": "present",
-     "bytes": 11065
+     "bytes": 8645
     },
     {
      "z": 11,
      "x": 710,
      "y": 1094,
      "status": "present",
-     "bytes": 9649
+     "bytes": 10067
     },
     {
      "z": 11,
      "x": 711,
      "y": 1090,
      "status": "present",
-     "bytes": 17599
+     "bytes": 16227
     },
     {
      "z": 11,
      "x": 711,
      "y": 1091,
      "status": "present",
-     "bytes": 7960
+     "bytes": 6771
     },
     {
      "z": 11,
      "x": 711,
      "y": 1092,
      "status": "present",
-     "bytes": 6604
+     "bytes": 6716
     },
     {
      "z": 11,
      "x": 711,
      "y": 1093,
      "status": "present",
-     "bytes": 5406
+     "bytes": 5976
     },
     {
      "z": 11,
      "x": 711,
      "y": 1094,
      "status": "present",
-     "bytes": 8175
+     "bytes": 7948
     },
     {
      "z": 11,
      "x": 712,
      "y": 1090,
      "status": "present",
-     "bytes": 10891
+     "bytes": 10129
     },
     {
      "z": 11,
      "x": 712,
      "y": 1091,
      "status": "present",
-     "bytes": 5310
+     "bytes": 5049
     },
     {
      "z": 11,
      "x": 712,
      "y": 1092,
      "status": "present",
-     "bytes": 5878
+     "bytes": 5994
     },
     {
      "z": 11,
      "x": 712,
      "y": 1093,
      "status": "present",
-     "bytes": 4531
+     "bytes": 4024
     },
     {
      "z": 11,
      "x": 712,
      "y": 1094,
      "status": "present",
-     "bytes": 8474
+     "bytes": 8080
     }
    ]
   }
@@ -1287,252 +1287,252 @@
     -55.27,
     -11.91
    ],
-   "max_tile_bytes": 188185,
+   "max_tile_bytes": 195440,
    "tiles": [
     {
      "z": 8,
      "x": 85,
      "y": 134,
      "status": "present",
-     "bytes": 40695
+     "bytes": 59747
     },
     {
      "z": 8,
      "x": 85,
      "y": 135,
      "status": "present",
-     "bytes": 37961
+     "bytes": 63658
     },
     {
      "z": 8,
      "x": 85,
      "y": 136,
      "status": "present",
-     "bytes": 11733
+     "bytes": 26020
     },
     {
      "z": 8,
      "x": 85,
      "y": 137,
      "status": "present",
-     "bytes": 45084
+     "bytes": 86756
     },
     {
      "z": 8,
      "x": 85,
      "y": 138,
      "status": "present",
-     "bytes": 72612
+     "bytes": 136118
     },
     {
      "z": 8,
      "x": 86,
      "y": 134,
      "status": "present",
-     "bytes": 38527
+     "bytes": 54152
     },
     {
      "z": 8,
      "x": 86,
      "y": 135,
      "status": "present",
-     "bytes": 130728
+     "bytes": 159997
     },
     {
      "z": 8,
      "x": 86,
      "y": 136,
      "status": "present",
-     "bytes": 72182
+     "bytes": 136578
     },
     {
      "z": 8,
      "x": 86,
      "y": 137,
      "status": "present",
-     "bytes": 34859
+     "bytes": 114503
     },
     {
      "z": 8,
      "x": 86,
      "y": 138,
      "status": "present",
-     "bytes": 75157
+     "bytes": 123085
     },
     {
      "z": 8,
      "x": 87,
      "y": 134,
      "status": "present",
-     "bytes": 59753
+     "bytes": 67149
     },
     {
      "z": 8,
      "x": 87,
      "y": 135,
      "status": "present",
-     "bytes": 88974
+     "bytes": 134607
     },
     {
      "z": 8,
      "x": 87,
      "y": 136,
      "status": "present",
-     "bytes": 71437
+     "bytes": 155066
     },
     {
      "z": 8,
      "x": 87,
      "y": 137,
      "status": "present",
-     "bytes": 54165
+     "bytes": 144649
     },
     {
      "z": 8,
      "x": 87,
      "y": 138,
      "status": "present",
-     "bytes": 139764
+     "bytes": 186596
     },
     {
      "z": 8,
      "x": 88,
      "y": 134,
      "status": "present",
-     "bytes": 37964
+     "bytes": 42753
     },
     {
      "z": 8,
      "x": 88,
      "y": 135,
      "status": "present",
-     "bytes": 188185
+     "bytes": 195440
     },
     {
      "z": 8,
      "x": 88,
      "y": 136,
      "status": "present",
-     "bytes": 74546
+     "bytes": 175301
     },
     {
      "z": 8,
      "x": 88,
      "y": 137,
      "status": "present",
-     "bytes": 64330
+     "bytes": 189796
     },
     {
      "z": 8,
      "x": 88,
      "y": 138,
      "status": "present",
-     "bytes": 105420
+     "bytes": 151182
     },
     {
      "z": 8,
      "x": 89,
      "y": 134,
      "status": "present",
-     "bytes": 21255
+     "bytes": 27284
     },
     {
      "z": 8,
      "x": 89,
      "y": 135,
      "status": "present",
-     "bytes": 87952
+     "bytes": 121129
     },
     {
      "z": 8,
      "x": 89,
      "y": 136,
      "status": "present",
-     "bytes": 25752
+     "bytes": 62349
     },
     {
      "z": 8,
      "x": 89,
      "y": 137,
      "status": "present",
-     "bytes": 34361
+     "bytes": 101886
     },
     {
      "z": 8,
      "x": 89,
      "y": 138,
      "status": "present",
-     "bytes": 93752
+     "bytes": 190599
     },
     {
      "z": 8,
      "x": 90,
      "y": 134,
      "status": "present",
-     "bytes": 1993
+     "bytes": 9515
     },
     {
      "z": 8,
      "x": 90,
      "y": 135,
      "status": "present",
-     "bytes": 40900
+     "bytes": 99010
     },
     {
      "z": 8,
      "x": 90,
      "y": 136,
      "status": "present",
-     "bytes": 23899
+     "bytes": 74909
     },
     {
      "z": 8,
      "x": 90,
      "y": 137,
      "status": "present",
-     "bytes": 70877
+     "bytes": 168559
     },
     {
      "z": 8,
      "x": 90,
      "y": 138,
      "status": "present",
-     "bytes": 102736
+     "bytes": 186421
     },
     {
      "z": 8,
      "x": 91,
      "y": 134,
      "status": "present",
-     "bytes": 87668
+     "bytes": 109197
     },
     {
      "z": 8,
      "x": 91,
      "y": 135,
      "status": "present",
-     "bytes": 95746
+     "bytes": 167340
     },
     {
      "z": 8,
      "x": 91,
      "y": 136,
      "status": "present",
-     "bytes": 65463
+     "bytes": 122349
     },
     {
      "z": 8,
      "x": 91,
      "y": 137,
      "status": "present",
-     "bytes": 44865
+     "bytes": 65993
     },
     {
      "z": 8,
      "x": 91,
      "y": 138,
      "status": "present",
-     "bytes": 71370
+     "bytes": 26270
     }
    ]
   },
@@ -1541,203 +1541,203 @@
     -55.27,
     -11.91
    ],
-   "max_tile_bytes": 345460,
+   "max_tile_bytes": 131134,
    "tiles": [
     {
      "z": 9,
      "x": 174,
      "y": 271,
      "status": "present",
-     "bytes": 143708
+     "bytes": 75841
     },
     {
      "z": 9,
      "x": 174,
      "y": 272,
      "status": "present",
-     "bytes": 243881
+     "bytes": 111706
     },
     {
      "z": 9,
      "x": 174,
      "y": 273,
      "status": "present",
-     "bytes": 68089
+     "bytes": 41094
     },
     {
      "z": 9,
      "x": 174,
      "y": 274,
      "status": "present",
-     "bytes": 70626
+     "bytes": 42796
     },
     {
      "z": 9,
      "x": 175,
      "y": 271,
      "status": "present",
-     "bytes": 101828
+     "bytes": 58478
     },
     {
      "z": 9,
      "x": 175,
      "y": 272,
      "status": "present",
-     "bytes": 121733
+     "bytes": 71232
     },
     {
      "z": 9,
      "x": 175,
      "y": 273,
      "status": "present",
-     "bytes": 149981
+     "bytes": 90913
     },
     {
      "z": 9,
      "x": 175,
      "y": 274,
      "status": "present",
-     "bytes": 125653
+     "bytes": 76346
     },
     {
      "z": 9,
      "x": 176,
      "y": 271,
      "status": "present",
-     "bytes": 256321
+     "bytes": 114108
     },
     {
      "z": 9,
      "x": 176,
      "y": 272,
      "status": "present",
-     "bytes": 137142
+     "bytes": 83157
     },
     {
      "z": 9,
      "x": 176,
      "y": 273,
      "status": "present",
-     "bytes": 159991
+     "bytes": 97414
     },
     {
      "z": 9,
      "x": 176,
      "y": 274,
      "status": "present",
-     "bytes": 160508
+     "bytes": 99274
     },
     {
      "z": 9,
      "x": 177,
      "y": 271,
      "status": "present",
-     "bytes": 345460
+     "bytes": 131134
     },
     {
      "z": 9,
      "x": 177,
      "y": 272,
      "status": "present",
-     "bytes": 144388
+     "bytes": 74887
     },
     {
      "z": 9,
      "x": 177,
      "y": 273,
      "status": "present",
-     "bytes": 139022
+     "bytes": 78134
     },
     {
      "z": 9,
      "x": 177,
      "y": 274,
      "status": "present",
-     "bytes": 124874
+     "bytes": 77292
     },
     {
      "z": 9,
      "x": 178,
      "y": 271,
      "status": "present",
-     "bytes": 187473
+     "bytes": 89905
     },
     {
      "z": 9,
      "x": 178,
      "y": 272,
      "status": "present",
-     "bytes": 96148
+     "bytes": 50617
     },
     {
      "z": 9,
      "x": 178,
      "y": 273,
      "status": "present",
-     "bytes": 83128
+     "bytes": 44502
     },
     {
      "z": 9,
      "x": 178,
      "y": 274,
      "status": "present",
-     "bytes": 68053
+     "bytes": 42646
     },
     {
      "z": 9,
      "x": 179,
      "y": 271,
      "status": "present",
-     "bytes": 57872
+     "bytes": 33744
     },
     {
      "z": 9,
      "x": 179,
      "y": 272,
      "status": "present",
-     "bytes": 20507
+     "bytes": 12952
     },
     {
      "z": 9,
      "x": 179,
      "y": 273,
      "status": "present",
-     "bytes": 8887
+     "bytes": 5794
     },
     {
      "z": 9,
      "x": 179,
      "y": 274,
      "status": "present",
-     "bytes": 52290
+     "bytes": 32987
     },
     {
      "z": 9,
      "x": 180,
      "y": 271,
      "status": "present",
-     "bytes": 34094
+     "bytes": 21810
     },
     {
      "z": 9,
      "x": 180,
      "y": 272,
      "status": "present",
-     "bytes": 11663
+     "bytes": 8607
     },
     {
      "z": 9,
      "x": 180,
      "y": 273,
      "status": "present",
-     "bytes": 13384
+     "bytes": 8313
     },
     {
      "z": 9,
      "x": 180,
      "y": 274,
      "status": "present",
-     "bytes": 55817
+     "bytes": 31497
     }
    ]
   },
@@ -1746,252 +1746,252 @@
     -55.27,
     -11.91
    ],
-   "max_tile_bytes": 29931,
+   "max_tile_bytes": 28556,
    "tiles": [
     {
      "z": 11,
      "x": 706,
      "y": 1090,
      "status": "present",
-     "bytes": 11957
+     "bytes": 12353
     },
     {
      "z": 11,
      "x": 706,
      "y": 1091,
      "status": "present",
-     "bytes": 8041
+     "bytes": 7931
     },
     {
      "z": 11,
      "x": 706,
      "y": 1092,
      "status": "present",
-     "bytes": 11926
+     "bytes": 12429
     },
     {
      "z": 11,
      "x": 706,
      "y": 1093,
      "status": "present",
-     "bytes": 13711
+     "bytes": 13657
     },
     {
      "z": 11,
      "x": 706,
      "y": 1094,
      "status": "present",
-     "bytes": 14555
+     "bytes": 13790
     },
     {
      "z": 11,
      "x": 707,
      "y": 1090,
      "status": "present",
-     "bytes": 21172
+     "bytes": 19674
     },
     {
      "z": 11,
      "x": 707,
      "y": 1091,
      "status": "present",
-     "bytes": 19450
+     "bytes": 18098
     },
     {
      "z": 11,
      "x": 707,
      "y": 1092,
      "status": "present",
-     "bytes": 19246
+     "bytes": 19004
     },
     {
      "z": 11,
      "x": 707,
      "y": 1093,
      "status": "present",
-     "bytes": 15744
+     "bytes": 15883
     },
     {
      "z": 11,
      "x": 707,
      "y": 1094,
      "status": "present",
-     "bytes": 15383
+     "bytes": 15828
     },
     {
      "z": 11,
      "x": 708,
      "y": 1090,
      "status": "present",
-     "bytes": 15702
+     "bytes": 14571
     },
     {
      "z": 11,
      "x": 708,
      "y": 1091,
      "status": "present",
-     "bytes": 23637
+     "bytes": 22710
     },
     {
      "z": 11,
      "x": 708,
      "y": 1092,
      "status": "present",
-     "bytes": 29931
+     "bytes": 28556
     },
     {
      "z": 11,
      "x": 708,
      "y": 1093,
      "status": "present",
-     "bytes": 15269
+     "bytes": 14863
     },
     {
      "z": 11,
      "x": 708,
      "y": 1094,
      "status": "present",
-     "bytes": 12356
+     "bytes": 12444
     },
     {
      "z": 11,
      "x": 709,
      "y": 1090,
      "status": "present",
-     "bytes": 8447
+     "bytes": 8296
     },
     {
      "z": 11,
      "x": 709,
      "y": 1091,
      "status": "present",
-     "bytes": 15210
+     "bytes": 15020
     },
     {
      "z": 11,
      "x": 709,
      "y": 1092,
      "status": "present",
-     "bytes": 24451
+     "bytes": 21603
     },
     {
      "z": 11,
      "x": 709,
      "y": 1093,
      "status": "present",
-     "bytes": 16096
+     "bytes": 15121
     },
     {
      "z": 11,
      "x": 709,
      "y": 1094,
      "status": "present",
-     "bytes": 19873
+     "bytes": 19584
     },
     {
      "z": 11,
      "x": 710,
      "y": 1090,
      "status": "present",
-     "bytes": 9809
+     "bytes": 8493
     },
     {
      "z": 11,
      "x": 710,
      "y": 1091,
      "status": "present",
-     "bytes": 10802
+     "bytes": 10042
     },
     {
      "z": 11,
      "x": 710,
      "y": 1092,
      "status": "present",
-     "bytes": 9145
+     "bytes": 8429
     },
     {
      "z": 11,
      "x": 710,
      "y": 1093,
      "status": "present",
-     "bytes": 11065
+     "bytes": 8645
     },
     {
      "z": 11,
      "x": 710,
      "y": 1094,
      "status": "present",
-     "bytes": 9649
+     "bytes": 10067
     },
     {
      "z": 11,
      "x": 711,
      "y": 1090,
      "status": "present",
-     "bytes": 17599
+     "bytes": 16227
     },
     {
      "z": 11,
      "x": 711,
      "y": 1091,
      "status": "present",
-     "bytes": 7960
+     "bytes": 6771
     },
     {
      "z": 11,
      "x": 711,
      "y": 1092,
      "status": "present",
-     "bytes": 6604
+     "bytes": 6716
     },
     {
      "z": 11,
      "x": 711,
      "y": 1093,
      "status": "present",
-     "bytes": 5406
+     "bytes": 5976
     },
     {
      "z": 11,
      "x": 711,
      "y": 1094,
      "status": "present",
-     "bytes": 8175
+     "bytes": 7948
     },
     {
      "z": 11,
      "x": 712,
      "y": 1090,
      "status": "present",
-     "bytes": 10891
+     "bytes": 10129
     },
     {
      "z": 11,
      "x": 712,
      "y": 1091,
      "status": "present",
-     "bytes": 5310
+     "bytes": 5049
     },
     {
      "z": 11,
      "x": 712,
      "y": 1092,
      "status": "present",
-     "bytes": 5878
+     "bytes": 5994
     },
     {
      "z": 11,
      "x": 712,
      "y": 1093,
      "status": "present",
-     "bytes": 4531
+     "bytes": 4024
     },
     {
      "z": 11,
      "x": 712,
      "y": 1094,
      "status": "present",
-     "bytes": 8474
+     "bytes": 8080
     }
    ]
   }
