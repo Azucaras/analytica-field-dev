@@ -31,6 +31,44 @@ Table G records and the class tables are versioned. `scripts/polygon_build.py` a
 measures the tiers and writes the artifacts under `artifacts/` that AC-03, AC-04 and
 AC-06 read.
 
+## The class sidecar and the fixture fields (card `t_cf98ed11`)
+
+The two clauses of CO-B5-01 and CO-B5-02 that the tile build does not own:
+
+```sh
+# the Brazil class sidecar: Id -> class, collection, year, area_ha
+python scripts/build_class_sidecar.py \
+  --parquet data/work/trazo3_brazil_mato_grosso_2024.parquet \
+  --out data/polygons/polygon-class-mt-2025.sqlite
+python scripts/record_sidecar.py \
+  --sqlite data/polygons/polygon-class-mt-2025.sqlite \
+  --out data/polygons/polygon-class-mt-2025.build.json
+python scripts/verify_class_sidecar.py --json-out artifacts/AC-B5-02-sidecar-check.json
+
+# the three Cass County fixture fields of R-24
+git show 535bd9d:field-shift-app/artifacts/data-probe-us-first.json \
+  > field-shift-app/artifacts/data-probe-us-first.json
+python scripts/fixture_us_fields.py --write
+python scripts/verify_fixture_us.py
+```
+
+| File | What it is |
+|---|---|
+| `data/polygons/polygon-class-mt-2025.sqlite` | one row per `Id`: `area_ha` from the source geometry, `class_id`, `collection`, `year` |
+| `data/polygons/polygon-class-mt-2025.build.json` | the sidecar's size, sha256, row count, build command and the whole `build_meta` |
+| `backend/fixtures/field-scenarios.json` | six fixture fields, three `br` and three `us`, each carrying its `region` |
+
+**`class_id` is NULL on every row of the sidecar as built here.** The class comes
+from a zonal mode over the MapBiomas Collection 11 2025 raster, and no copy of that
+raster is reachable from this machine: the documented object
+`brazil_coverage-col11_2025.tif` answers 403 for an anonymous caller and for the
+authenticated Google account on this host, the MapBiomas download page says the map
+download is suspended, and no Google Cloud project on this host has the Earth Engine
+API enabled. The area column is complete and verified in both cases. Rerun
+`build_class_sidecar.py` with `--raster <path> --raster-band <n>` once a local copy
+exists; the zonal mode itself is checked against a brute force reference by
+`scripts/test_class_sidecar.py`, which needs no network.
+
 ## Brazil detail tier
 
 R-10 names `pmtiles extract --bbox` for `br-mt-detail.pmtiles`. That command copies

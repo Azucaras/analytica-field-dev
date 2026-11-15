@@ -3,6 +3,7 @@ node_modules/
 
 # python virtualenv and bytecode
 .venv/
+.venv-*/
 __pycache__/
 *.py[cod]
 
@@ -25,6 +26,7 @@ field-shift-app/artifacts/*.png
 # two small Table G records and the class tables under data/polygons stay in the
 # tree, because the app reads the manifest at load and the gate reads the records.
 field-shift-app/data/polygons/*.pmtiles
+field-shift-app/data/polygons/*.sqlite
 field-shift-app/data/work/
 
 # logs and editor or OS noise

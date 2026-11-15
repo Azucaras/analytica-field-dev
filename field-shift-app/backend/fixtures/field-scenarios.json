@@ -1,9 +1,44 @@
 {
   "seasons": ["2023/24", "2024/25", "2025/26"],
   "default_season": "2025/26",
+  "sources": {
+    "note": "Provenance of the three United States fixture fields. The three Brazilian entries are unchanged by this build apart from the region key that block 6 R-51 requires.",
+    "us_geometry": {
+      "service": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query",
+      "box": "-97.20,46.90,-97.14,46.96",
+      "fetched": "2026-11-14",
+      "features_in_pilot_box": 107,
+      "file": "field-shift-app/data/work/us-38017.geojson",
+      "sha256": "30072763f00a3f2efbeb32a916c2f2ad7ee9ff2257c730434a24fe1198b32c70",
+      "note": "Rings are the service's own geometry, WGS84, as returned for the pilot box."
+    },
+    "us_soil": {
+      "service": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit joined to muaggatt)",
+      "prototype": "https://sdmdataaccess.sc.egov.usda.gov/Spatial/SDMWGS84Geographic.wfs?Service=WFS&Version=1.1.0&Request=GetFeature&TypeName=MapunitPoly",
+      "fields_with_a_row": 12,
+      "fields_sampled": 12,
+      "as_of": "2026-11-14",
+      "file": "field-shift-app/artifacts/data-probe-us-first.json",
+      "sha256": "0c4f7c0c91cfd4457287293dcbe4ea1a429dcb3f4a5b4edbccfcf5f2f68f6349",
+      "read_from_commit": "535bd9d (branch block4/wave4-dock)"
+    },
+    "us_climate": {
+      "product": "PRISM 4 km monthly precipitation, September 2026",
+      "file": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/prism_ppt_us_25m_202609.zip",
+      "fields_with_a_row": 12,
+      "note": "One month at a 4 km cell read at the field centroid. It is the cell's reanalysis value, not a gauge at the field.",
+      "as_of": "2026-09-30"
+    },
+    "us_crop_names": {
+      "source": "CDL raster attribute table (R-17), via data/polygons/polygon-classes-us.json",
+      "sha256": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4"
+    },
+    "coverage": "coverage is 100 on each United States entry because 8 of 8 CDL years carry a class. It counts years with a class, not satellite observation coverage like the Brazil entries, and coverage_basis says so on every entry."
+  },
   "fields": [
     {
       "id": "mt-santa-carmem-01",
+      "region": "br",
       "name": "Field 01",
       "location": "Santa Carmem, Mato Grosso",
       "coverage": 86,
@@ -17,6 +52,7 @@
     },
     {
       "id": "mt-santa-carmem-02",
+      "region": "br",
       "name": "Field 02",
       "location": "Santa Carmem, Mato Grosso",
       "coverage": 91,
@@ -30,6 +66,7 @@
     },
     {
       "id": "mt-santa-carmem-03",
+      "region": "br",
       "name": "Field 03",
       "location": "Santa Carmem, Mato Grosso",
       "coverage": 62,
@@ -39,6 +76,711 @@
         {"id": "current-sequence", "name": "Current sequence", "is_current": true, "crops": ["Soybean", "Corn"], "why": "The current farm plan is the reference for comparison.", "evidence": "Three seasons of field history are available.", "benefit": "Known operating fit for this field.", "gap": "Input-cost records are not available.", "risk": "Weather variability can shift planting windows.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.19 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Crop history", "value": "Soybean → Corn", "basis": "entered", "as_of": "2025-06-30", "source": "https://field-shift.local/fixtures/crop-history"}]},
         {"id": "soy-corn-cover", "name": "Soybean → Corn cover", "is_current": false, "crops": ["Soybean", "Corn"], "why": "Alternating crop families maintains the current rotation pattern.", "evidence": "SMAP soil moisture retrieval is available for the reference date.", "benefit": "Familiar sequence with a cover-crop window.", "gap": "Cover-crop establishment is not recorded.", "risk": "A short dry spell may reduce emergence.", "evidence_rows": [{"layer": "SMAP soil moisture", "value": "0.19 m³/m³", "basis": "retrieved", "as_of": "2025-11-10", "source": "https://gibs.earthdata.nasa.gov/"}, {"layer": "Rotation suitability", "value": "0.58", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}]},
         {"id": "soy-cotton", "name": "Soybean → Cotton", "is_current": false, "crops": ["Soybean", "Cotton"], "why": "Introduces a fiber crop after soybean.", "evidence": "Three seasons of crop history support a rotation comparison.", "benefit": "Adds a potential market outlet.", "gap": "Buyer access and credit terms are unknown.", "risk": "Low moisture coverage raises uncertainty.", "evidence_rows": [{"layer": "Rotation suitability", "value": "0.46", "basis": "modelled", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/model-v1"}, {"layer": "Market outlet", "value": "Not entered", "basis": "entered", "as_of": "2025-11-10", "source": "https://field-shift.local/fixtures/producer-inputs"}]}
+      ]
+    },
+    {
+      "id": "381825001868504",
+      "region": "us",
+      "name": "Cass Field 01",
+      "location": "Cass County, North Dakota",
+      "coverage": 100,
+      "coverage_basis": "8 of 8 CDL years (2018 to 2025) carry a non-zero class on this field's Crop Sequence Boundary record. This counts years with a class, not the share of the field's area covered by a satellite observation, which is what the Brazil entries' coverage counts.",
+      "center": [-97.142061, 46.959944],
+      "boundary": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-97.13694339640941, 46.96366038156293],
+            [-97.13909935329859, 46.96366038154198],
+            [-97.13909935376391, 46.963570549676604],
+            [-97.14637570950237, 46.96357054913811],
+            [-97.14637570918201, 46.96348071812618],
+            [-97.14700452944733, 46.96348071768216],
+            [-97.147004530191, 46.96186375018007],
+            [-97.14664520344841, 46.96186375022136],
+            [-97.14664520372938, 46.96024678219183],
+            [-97.14736385522436, 46.96024678194333],
+            [-97.14736385495749, 46.9589891408394],
+            [-97.1473638556963, 46.95827048860893],
+            [-97.14763335041702, 46.95827048871928],
+            [-97.14763335055225, 46.95737217326278],
+            [-97.1476333500611, 46.95701284654785],
+            [-97.14736385496339, 46.95665352109666],
+            [-97.1470045292415, 46.95665352049854],
+            [-97.1470045294966, 46.956384026289655],
+            [-97.13703322666308, 46.95638402677813],
+            [-97.13703322668798, 46.959438299187944],
+            [-97.13694339581153, 46.959438298895414],
+            [-97.13694339557279, 46.96258240304917],
+            [-97.1369433959011, 46.96357054973],
+            [-97.13694339640941, 46.96366038156293]
+          ]
+        ]
+      },
+      "csbid": "381825001868504",
+      "acres": 153.2,
+      "csbacres": 153.18667449,
+      "statefips": "38",
+      "cntyfips": "017",
+      "history": [
+        {
+          "year": 2018,
+          "cdl": 23,
+          "crop": "Spring Wheat"
+        },
+        {
+          "year": 2019,
+          "cdl": 41,
+          "crop": "Sugarbeets"
+        },
+        {
+          "year": 2020,
+          "cdl": 23,
+          "crop": "Spring Wheat"
+        },
+        {
+          "year": 2021,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2022,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2023,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2024,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2025,
+          "cdl": 5,
+          "crop": "Soybeans"
+        }
+      ],
+      "crops_observed": [
+        "Spring Wheat",
+        "Sugarbeets",
+        "Soybeans",
+        "Corn"
+      ],
+      "soil": {
+        "mukey": "2640846",
+        "map_unit": "Kindred-Bearden silty clay loams, 0 to 2 percent slopes",
+        "slope_grad_wta_pct": "1",
+        "hydrologic_group": "C",
+        "drainage_class": "Somewhat poorly drained",
+        "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest",
+        "method": "SDA Tabular post.rest, mapunit joined to muaggatt on mukey, at the field centroid",
+        "as_of": "2026-11-14"
+      },
+      "climate": {
+        "september_2026_ppt_mm": 151.8,
+        "product": "PRISM 4 km monthly precipitation",
+        "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/prism_ppt_us_25m_202609.zip",
+        "as_of": "2026-09-30",
+        "note": "One month at a 4 km cell, read at the field centroid; it is a reanalysis product of the cell, not a gauge at the field."
+      },
+      "scenarios": [
+        {
+          "id": "csb-381825001868504-current",
+          "name": "Current sequence",
+          "is_current": true,
+          "crops": [
+            "Corn",
+            "Soybeans"
+          ],
+          "why": "The 2024 and 2025 Crop Sequence Boundary records for this field are Corn and Soybeans, so the current sequence is the pair of crops the field actually grew in its two most recent years.",
+          "evidence": "Eight CDL years, 2018 to 2025, are carried on this field's Crop Sequence Boundary record: 2018 Spring Wheat 2019 Sugarbeets 2020 Spring Wheat 2021 Soybeans 2022 Corn 2023 Soybeans 2024 Corn 2025 Soybeans.",
+          "benefit": "Repeats the pair the field grew in 2024 and 2025, which is the sequence the record shows rather than a proposed one.",
+          "gap": "The record carries no yield, input cost or planting date for either year.",
+          "risk": "The record holds the crop class only, so a late harvest or a wet spring is not visible in it and cannot be ruled out from this evidence.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Corn → Soybeans",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Kindred-Bearden silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640846, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "151.8 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868504-observed-rotation",
+          "name": "Spring Wheat → Sugarbeets",
+          "is_current": false,
+          "crops": [
+            "Spring Wheat",
+            "Sugarbeets"
+          ],
+          "why": "Spring Wheat in 2018 and Sugarbeets in 2019 are adjacent years of this field's own record, so this rotation has already run here.",
+          "evidence": "CDL 2018 is 23 Spring Wheat and CDL 2019 is 41 Sugarbeets on this field.",
+          "benefit": "Adds Spring Wheat, which the current pair does not carry, and it is taken from the field's own history in 2018 and 2019 rather than from a county average.",
+          "gap": "No yield, price or input record is attached to either year of the pair.",
+          "risk": "Sugarbeets appears in only one of the eight years, and the record holds no yield or cost for it, so half of this pair rests on a single observation.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Spring Wheat → Sugarbeets (2018 to 2019)",
+              "basis": "retrieved",
+              "as_of": "2019",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Kindred-Bearden silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640846, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "151.8 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868504-distinct-crops",
+          "name": "Spring Wheat → Sugarbeets → Soybeans → Corn",
+          "is_current": false,
+          "crops": [
+            "Spring Wheat",
+            "Sugarbeets",
+            "Soybeans",
+            "Corn"
+          ],
+          "why": "Four crops appear in this field's record between 2018 and 2025; this sequence keeps all four in the order the record shows them.",
+          "evidence": "The distinct crop classes of the eight CDL years are Spring Wheat, Sugarbeets, Soybeans, Corn, in the order they first appear.",
+          "benefit": "Keeps four crops in the rotation, which is the diversity this field has actually carried, not a rotation imported from another field.",
+          "gap": "The record is one class per year, so a double-cropped year counts as one crop and a cover crop is not recorded at all.",
+          "risk": "The order above is the order each crop first appears in the record, not a sequence the field has run in one continuous stretch of years.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Spring Wheat, Sugarbeets, Soybeans, Corn (2018 to 2025)",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Kindred-Bearden silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640846, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "151.8 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "381825001868512",
+      "region": "us",
+      "name": "Cass Field 02",
+      "location": "Cass County, North Dakota",
+      "coverage": 100,
+      "coverage_basis": "8 of 8 CDL years (2018 to 2025) carry a non-zero class on this field's Crop Sequence Boundary record. This counts years with a class, not the share of the field's area covered by a satellite observation, which is what the Brazil entries' coverage counts.",
+      "center": [-97.183379, 46.959754],
+      "boundary": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-97.18679990817434, 46.963121388628316],
+            [-97.18742872959787, 46.96312138862027],
+            [-97.18769822337963, 46.96312138813389],
+            [-97.18805754976253, 46.96312138845982],
+            [-97.18841687616182, 46.9631213887508],
+            [-97.1884168757121, 46.962223072584806],
+            [-97.18841687533087, 46.960606104798934],
+            [-97.1885067070897, 46.96060610491984],
+            [-97.18868637060727, 46.960606104985644],
+            [-97.18868637048256, 46.96024677893942],
+            [-97.18868637035781, 46.95988745330944],
+            [-97.18850670568297, 46.95925863172186],
+            [-97.18850670719041, 46.957731495611675],
+            [-97.18868636998674, 46.957641663993634],
+            [-97.1886863692066, 46.95737217019375],
+            [-97.1890456955434, 46.95737216947446],
+            [-97.19003384342743, 46.95737216988205],
+            [-97.19003384240136, 46.95701284391083],
+            [-97.18967451627435, 46.95665351716131],
+            [-97.18904569646098, 46.956653518016054],
+            [-97.18868637011775, 46.95665351786572],
+            [-97.18841687537254, 46.95665351781464],
+            [-97.18805754906204, 46.95665351782872],
+            [-97.18751855962073, 46.95665351744522],
+            [-97.18706940179388, 46.95665351777112],
+            [-97.18706940107941, 46.95638402307882],
+            [-97.18715923358384, 46.956384023119696],
+            [-97.18715923380846, 46.95611452865013],
+            [-97.18679990657357, 46.95611452812344],
+            [-97.18644058067912, 46.956114528453824],
+            [-97.18518293885491, 46.956114528554295],
+            [-97.18356597147883, 46.956114528951595],
+            [-97.18320664442328, 46.95611452897716],
+            [-97.18284731869191, 46.95611452895635],
+            [-97.1828473181535, 46.956653517825266],
+            [-97.17871506701714, 46.956653518552805],
+            [-97.17808624677575, 46.9566535181094],
+            [-97.17799641493717, 46.95683318090657],
+            [-97.17799641456625, 46.95701284436382],
+            [-97.17799641467539, 46.95907897026631],
+            [-97.17799641481399, 46.95988745389522],
+            [-97.17799641543971, 46.96321122088078],
+            [-97.18446428819725, 46.96321122038498],
+            [-97.18446428807421, 46.96312138903403],
+            [-97.18545243424626, 46.9631213887732],
+            [-97.18608125555555, 46.96312138859973],
+            [-97.18679990817434, 46.963121388628316]
+          ]
+        ]
+      },
+      "csbid": "381825001868512",
+      "acres": 150.3,
+      "csbacres": 150.33672071,
+      "statefips": "38",
+      "cntyfips": "017",
+      "history": [
+        {
+          "year": 2018,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2019,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2020,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2021,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2022,
+          "cdl": 6,
+          "crop": "Sunflower"
+        },
+        {
+          "year": 2023,
+          "cdl": 23,
+          "crop": "Spring Wheat"
+        },
+        {
+          "year": 2024,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2025,
+          "cdl": 5,
+          "crop": "Soybeans"
+        }
+      ],
+      "crops_observed": [
+        "Corn",
+        "Soybeans",
+        "Sunflower",
+        "Spring Wheat"
+      ],
+      "soil": {
+        "mukey": "2521612",
+        "map_unit": "Glyndon silt loam, 0 to 2 percent slopes",
+        "slope_grad_wta_pct": "0.9",
+        "hydrologic_group": "C",
+        "drainage_class": "Somewhat poorly drained",
+        "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest",
+        "method": "SDA Tabular post.rest, mapunit joined to muaggatt on mukey, at the field centroid",
+        "as_of": "2026-11-14"
+      },
+      "climate": {
+        "september_2026_ppt_mm": 156.1,
+        "product": "PRISM 4 km monthly precipitation",
+        "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/prism_ppt_us_25m_202609.zip",
+        "as_of": "2026-09-30",
+        "note": "One month at a 4 km cell, read at the field centroid; it is a reanalysis product of the cell, not a gauge at the field."
+      },
+      "scenarios": [
+        {
+          "id": "csb-381825001868512-current",
+          "name": "Current sequence",
+          "is_current": true,
+          "crops": [
+            "Corn",
+            "Soybeans"
+          ],
+          "why": "The 2024 and 2025 Crop Sequence Boundary records for this field are Corn and Soybeans, so the current sequence is the pair of crops the field actually grew in its two most recent years.",
+          "evidence": "Eight CDL years, 2018 to 2025, are carried on this field's Crop Sequence Boundary record: 2018 Corn 2019 Soybeans 2020 Corn 2021 Soybeans 2022 Sunflower 2023 Spring Wheat 2024 Corn 2025 Soybeans.",
+          "benefit": "Repeats the pair the field grew in 2024 and 2025, which is the sequence the record shows rather than a proposed one.",
+          "gap": "The record carries no yield, input cost or planting date for either year.",
+          "risk": "The record holds the crop class only, so a late harvest or a wet spring is not visible in it and cannot be ruled out from this evidence.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Corn → Soybeans",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Glyndon silt loam, 0 to 2 percent slopes (SSURGO map unit 2521612, 0.9% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868512-observed-rotation",
+          "name": "Soybeans → Sunflower",
+          "is_current": false,
+          "crops": [
+            "Soybeans",
+            "Sunflower"
+          ],
+          "why": "Soybeans in 2021 and Sunflower in 2022 are adjacent years of this field's own record, so this rotation has already run here.",
+          "evidence": "CDL 2021 is 5 Soybeans and CDL 2022 is 6 Sunflower on this field.",
+          "benefit": "Adds Sunflower, which the current pair does not carry, and it is taken from the field's own history in 2021 and 2022 rather than from a county average.",
+          "gap": "No yield, price or input record is attached to either year of the pair.",
+          "risk": "Sunflower appears in only one of the eight years, and the record holds no yield or cost for it, so half of this pair rests on a single observation.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Soybeans → Sunflower (2021 to 2022)",
+              "basis": "retrieved",
+              "as_of": "2022",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Glyndon silt loam, 0 to 2 percent slopes (SSURGO map unit 2521612, 0.9% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868512-distinct-crops",
+          "name": "Corn → Soybeans → Sunflower → Spring Wheat",
+          "is_current": false,
+          "crops": [
+            "Corn",
+            "Soybeans",
+            "Sunflower",
+            "Spring Wheat"
+          ],
+          "why": "Four crops appear in this field's record between 2018 and 2025; this sequence keeps all four in the order the record shows them.",
+          "evidence": "The distinct crop classes of the eight CDL years are Corn, Soybeans, Sunflower, Spring Wheat, in the order they first appear.",
+          "benefit": "Keeps four crops in the rotation, which is the diversity this field has actually carried, not a rotation imported from another field.",
+          "gap": "The record is one class per year, so a double-cropped year counts as one crop and a cover crop is not recorded at all.",
+          "risk": "The four crops do appear in this order from 2020 to 2023, which is one continuous stretch of the record, but that stretch also carries the price and weather of those years and no other.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Corn, Soybeans, Sunflower, Spring Wheat (2018 to 2025)",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Glyndon silt loam, 0 to 2 percent slopes (SSURGO map unit 2521612, 0.9% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "381825001868517",
+      "region": "us",
+      "name": "Cass Field 03",
+      "location": "Cass County, North Dakota",
+      "coverage": 100,
+      "coverage_basis": "8 of 8 CDL years (2018 to 2025) carry a non-zero class on this field's Crop Sequence Boundary record. This counts years with a class, not the share of the field's area covered by a satellite observation, which is what the Brazil entries' coverage counts.",
+      "center": [-97.163465, 46.959724],
+      "boundary": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-97.1583233055793, 46.96348071691353],
+            [-97.15841313700857, 46.96348071774501],
+            [-97.15859280110826, 46.96339088628559],
+            [-97.16003010585366, 46.96339088518379],
+            [-97.1619165675299, 46.96339088495901],
+            [-97.16389286233218, 46.96339088502072],
+            [-97.16488100861753, 46.96339088525838],
+            [-97.16676747147874, 46.96339088537535],
+            [-97.16708766689958, 46.96335175914059],
+            [-97.16739629221331, 46.963301053583976],
+            [-97.16748612478467, 46.96330105299747],
+            [-97.16829460762435, 46.96330105420307],
+            [-97.16829460771092, 46.962851894903835],
+            [-97.1682946080028, 46.96150442271685],
+            [-97.16865393378248, 46.96150442304912],
+            [-97.16865393383985, 46.96087560256183],
+            [-97.16865393277874, 46.9563840240712],
+            [-97.16829460647347, 46.956024698358206],
+            [-97.16281488221617, 46.956024698852026],
+            [-97.16155724075897, 46.95602469983708],
+            [-97.16155724029727, 46.956384026055545],
+            [-97.15859279902561, 46.95638402638546],
+            [-97.15859279876149, 46.956114530209035],
+            [-97.15859279869477, 46.95602469940686],
+            [-97.15832330496497, 46.956024699148784],
+            [-97.1582334732911, 46.95602469925033],
+            [-97.15818358958899, 46.95741213163067],
+            [-97.15832330543786, 46.95827048687599],
+            [-97.15832330616618, 46.96186374978767],
+            [-97.15832330523256, 46.96249257054541],
+            [-97.1583233055793, 46.96348071691353]
+          ]
+        ]
+      },
+      "csbid": "381825001868517",
+      "acres": 155.6,
+      "csbacres": 155.59931389,
+      "statefips": "38",
+      "cntyfips": "017",
+      "history": [
+        {
+          "year": 2018,
+          "cdl": 41,
+          "crop": "Sugarbeets"
+        },
+        {
+          "year": 2019,
+          "cdl": 23,
+          "crop": "Spring Wheat"
+        },
+        {
+          "year": 2020,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2021,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2022,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2023,
+          "cdl": 1,
+          "crop": "Corn"
+        },
+        {
+          "year": 2024,
+          "cdl": 5,
+          "crop": "Soybeans"
+        },
+        {
+          "year": 2025,
+          "cdl": 1,
+          "crop": "Corn"
+        }
+      ],
+      "crops_observed": [
+        "Sugarbeets",
+        "Spring Wheat",
+        "Soybeans",
+        "Corn"
+      ],
+      "soil": {
+        "mukey": "2640901",
+        "map_unit": "Bearden-Kindred silty clay loams, 0 to 2 percent slopes",
+        "slope_grad_wta_pct": "1",
+        "hydrologic_group": "C",
+        "drainage_class": "Somewhat poorly drained",
+        "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest",
+        "method": "SDA Tabular post.rest, mapunit joined to muaggatt on mukey, at the field centroid",
+        "as_of": "2026-11-14"
+      },
+      "climate": {
+        "september_2026_ppt_mm": 156.1,
+        "product": "PRISM 4 km monthly precipitation",
+        "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/prism_ppt_us_25m_202609.zip",
+        "as_of": "2026-09-30",
+        "note": "One month at a 4 km cell, read at the field centroid; it is a reanalysis product of the cell, not a gauge at the field."
+      },
+      "scenarios": [
+        {
+          "id": "csb-381825001868517-current",
+          "name": "Current sequence",
+          "is_current": true,
+          "crops": [
+            "Soybeans",
+            "Corn"
+          ],
+          "why": "The 2024 and 2025 Crop Sequence Boundary records for this field are Soybeans and Corn, so the current sequence is the pair of crops the field actually grew in its two most recent years.",
+          "evidence": "Eight CDL years, 2018 to 2025, are carried on this field's Crop Sequence Boundary record: 2018 Sugarbeets 2019 Spring Wheat 2020 Soybeans 2021 Corn 2022 Soybeans 2023 Corn 2024 Soybeans 2025 Corn.",
+          "benefit": "Repeats the pair the field grew in 2024 and 2025, which is the sequence the record shows rather than a proposed one.",
+          "gap": "The record carries no yield, input cost or planting date for either year.",
+          "risk": "The record holds the crop class only, so a late harvest or a wet spring is not visible in it and cannot be ruled out from this evidence.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Soybeans → Corn",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Bearden-Kindred silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640901, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868517-observed-rotation",
+          "name": "Sugarbeets → Spring Wheat",
+          "is_current": false,
+          "crops": [
+            "Sugarbeets",
+            "Spring Wheat"
+          ],
+          "why": "Sugarbeets in 2018 and Spring Wheat in 2019 are adjacent years of this field's own record, so this rotation has already run here.",
+          "evidence": "CDL 2018 is 41 Sugarbeets and CDL 2019 is 23 Spring Wheat on this field.",
+          "benefit": "Adds Sugarbeets, which the current pair does not carry, and it is taken from the field's own history in 2018 and 2019 rather than from a county average.",
+          "gap": "No yield, price or input record is attached to either year of the pair.",
+          "risk": "Sugarbeets appears in only one of the eight years, and the record holds no yield or cost for it, so half of this pair rests on a single observation.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Sugarbeets → Spring Wheat (2018 to 2019)",
+              "basis": "retrieved",
+              "as_of": "2019",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Bearden-Kindred silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640901, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        },
+        {
+          "id": "csb-381825001868517-distinct-crops",
+          "name": "Sugarbeets → Spring Wheat → Soybeans → Corn",
+          "is_current": false,
+          "crops": [
+            "Sugarbeets",
+            "Spring Wheat",
+            "Soybeans",
+            "Corn"
+          ],
+          "why": "Four crops appear in this field's record between 2018 and 2025; this sequence keeps all four in the order the record shows them.",
+          "evidence": "The distinct crop classes of the eight CDL years are Sugarbeets, Spring Wheat, Soybeans, Corn, in the order they first appear.",
+          "benefit": "Keeps four crops in the rotation, which is the diversity this field has actually carried, not a rotation imported from another field.",
+          "gap": "The record is one class per year, so a double-cropped year counts as one crop and a cover crop is not recorded at all.",
+          "risk": "The four crops do appear in this order from 2018 to 2021, which is one continuous stretch of the record, but that stretch also carries the price and weather of those years and no other.",
+          "evidence_rows": [
+            {
+              "layer": "Crop history",
+              "value": "Sugarbeets, Spring Wheat, Soybeans, Corn (2018 to 2025)",
+              "basis": "retrieved",
+              "as_of": "2025",
+              "source": "https://pdi.scinet.usda.gov/hosting/rest/services/Hosted/Crop_Sequence_Boundaries_2025/FeatureServer/0/query"
+            },
+            {
+              "layer": "Soil (SSURGO map unit)",
+              "value": "Bearden-Kindred silty clay loams, 0 to 2 percent slopes (SSURGO map unit 2640901, 1% slope, hydrologic group C, Somewhat poorly drained)",
+              "basis": "retrieved",
+              "as_of": "2026-11-14",
+              "source": "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest (mapunit, muaggatt)"
+            },
+            {
+              "layer": "September 2026 rain (PRISM 4 km)",
+              "value": "156.1 mm",
+              "basis": "retrieved",
+              "as_of": "2026-09-30",
+              "source": "https://data.prism.oregonstate.edu/time_series/us/an/4km/ppt/monthly/2026/ (prism_ppt_us_25m_202609.zip, 4 km monthly)"
+            }
+          ]
+        }
       ]
     }
   ]
