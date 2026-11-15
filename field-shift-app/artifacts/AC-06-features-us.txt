@@ -1,0 +1,19 @@
+AC-06 feature counts, United States (R-08, Table G)
+
+CSB 2025 layer 0 for the box -97.20,46.90,-97.14,46.96: 107 features returned by the service
+detail file distinct csbid at zoom 14: 107
+detail file features at zoom 14 (tile instances): 207
+distinct csbid by zoom (tippecanoe drops the smallest polygons at low zoom, and the R-10 command passes no -r flag):
+  z6: 85 distinct csbid over 1 tiles
+  z9: 107 distinct csbid over 1 tiles
+  z12: 107 distinct csbid over 2 tiles
+  z14: 107 distinct csbid over 20 tiles
+
+recorded and queried view counts (Table G view_feature_counts):
+  V1: 132 features over 28 tiles
+  V2: 217 features over 35 tiles
+  V3: 132 features over 16 tiles
+  V4: 132 features over 12 tiles
+  W6: 85 features over 35 tiles
+  W7: 106 features over 28 tiles
+  W9: 107 features over 28 tiles

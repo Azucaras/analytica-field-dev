@@ -1,0 +1,15 @@
+AC-06 feature counts, Brazil
+
+detail file: data/polygons/br-mt-detail.pmtiles sha256 9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b
+Brazil has no manifest: its zoom bounds are the measured 8 to 12 of Table B.
+
+views:
+  V1 z10 1440x900: 55918 features, 25563 unique Id, 28 tiles, max 68727 bytes
+  V2 z13 1440x900: 2490 features, 1135 unique Id, 12 tiles, max 11015 bytes
+  V3 z10 780x900: 35021 features, 16130 unique Id, 16 tiles, max 68727 bytes
+  V4 z10 360x640: 19013 features, 9000 unique Id, 8 tiles, max 68727 bytes
+  W8 z8 1440x900: 595429 features, 0 unique Id, 35 tiles, max 188185 bytes
+  W9 z9 1440x900: 196448 features, 91716 unique Id, 28 tiles, max 345460 bytes
+  W11 z11 1440x900: 17827 features, 8081 unique Id, 35 tiles, max 29931 bytes
+
+AC-06 asks for at least 1,000 unique Id values at V1 with a mean between 1,000 and 10,000 per viewport tile; the V1 line above is the reading.

@@ -1,0 +1,14 @@
+AC-03 manifest and tile record (Table G keys, types and values)
+
+detail_minzoom rule: lowest zoom D in 6 to 14 at which every detail tile covering the box is at most 250 KB gzip
+
+per zoom over the pilot box at the probe build:
+  z6: 2894 bytes over 1 tiles, meets budget True
+  z7: 3934 bytes over 1 tiles, meets budget True
+  z8: 4655 bytes over 1 tiles, meets budget True
+  z9: 5451 bytes over 1 tiles, meets budget True
+  z10: 6201 bytes over 1 tiles, meets budget True
+  z11: 5443 bytes over 2 tiles, meets budget True
+  z12: 5575 bytes over 2 tiles, meets budget True
+  z13: 3020 bytes over 6 tiles, meets budget True
+  z14: 1745 bytes over 20 tiles, meets budget True
