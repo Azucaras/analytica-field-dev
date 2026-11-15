@@ -728,7 +728,7 @@ function App() {
       {/* Block 6, R-01 and R-02: the numbers surface is a sibling of the map screen. While it is
           open, `.is-numbers-open` hides every other child of the shell (NumbersView.css). */}
       {numbersOpen && (
-        <NumbersView selectedField={selectedField} onClose={closeNumbers} />
+        <NumbersView scenarios={scenarios} selectedField={selectedField} onClose={closeNumbers} />
       )}
 
       {/* Block 7, R-01 and R-02: the two surfaces are siblings of the map screen too, and

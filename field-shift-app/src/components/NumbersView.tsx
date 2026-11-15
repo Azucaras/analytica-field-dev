@@ -32,7 +32,8 @@ import {
   NumbersNetworkError,
   numbersLastReadKey,
 } from '@/lib/numbers-api'
-import { t } from '@/strings'
+import { falsifierCompleteness, falsifierGaps, falsifierOf, falsifierReading, type FalsifiableScenario } from '@/lib/falsifier'
+import { t, translationKeyFor } from '@/strings'
 import './NumbersView.css'
 
 export const NUMBERS_VIEW_ATTR = 'data-numbers-view'
@@ -40,6 +41,8 @@ export const NUMBERS_VIEW_ATTR = 'data-numbers-view'
 type NumbersViewProps = {
   selectedField: FieldSummary | null
   onClose: () => void
+  /** Block 6 F-13: the scenarios of the selected fixture field, for the counter evidence card. */
+  scenarios?: readonly FalsifiableScenario[]
 }
 
 type Load =
@@ -745,6 +748,65 @@ export function ProvenanceTable({ rows }: { rows: ProvenanceRow[] }) {
   )
 }
 
+/**
+ * Block 6, F-13 and R-39/R-40: the counter evidence card.
+ *
+ * One line per scenario with the falsifier that would prove it wrong and the current value of its
+ * metric from the payload, its basis label and its date; or R-40's abstention when the scenario
+ * carries none. The completeness count is measured from the scenarios on screen and reports
+ * `not verified` while any of them lacks one, because the content is CO-B6-02.
+ */
+export function CounterEvidenceCard({
+  scenarios,
+  payload,
+  fieldId,
+}: {
+  scenarios: readonly FalsifiableScenario[]
+  payload: NumbersPayload
+  fieldId: string | null
+}) {
+  const completeness = falsifierCompleteness(scenarios)
+  return (
+    <section className="numbers-card numbers-counter" aria-labelledby="numbers-counter-heading">
+      <h3 id="numbers-counter-heading">{t('numbers.counter.heading')}</h3>
+      {scenarios.length === 0 ? (
+        <p className="numbers-empty">{t('numbers.counter.empty')}</p>
+      ) : (
+        <ul className="numbers-counter-list">
+          {scenarios.map((scenario, index) => {
+            const raw = (scenario as { falsifier?: unknown }).falsifier
+            const reading = falsifierReading(falsifierOf(raw), payload)
+            const id = typeof scenario.id === 'string' && scenario.id !== '' ? scenario.id : `scenario-${index + 1}`
+            return (
+              <li data-counter-scenario={id} key={id}>
+                <span className="numbers-counter-name">{t(translationKeyFor(typeof scenario.name === 'string' ? scenario.name : '') ?? `scenarios.name.${id}`)}</span>
+                <span className="numbers-counter-text">
+                  {reading === null
+                    ? t('scenarios.no_counter_evidence')
+                    : `${t(reading.falsifier.text_key)} ${t('scenarios.falsifier_reading', {
+                      value: String(reading.value),
+                      unit: reading.unit,
+                      basis: t(`evidence.basis_${reading.basis}`),
+                      as_of: reading.asOf ?? t('numbers.as_of_none'),
+                    })}`}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <p className="numbers-counter-count" data-counter-status={completeness.status}>
+        {t('numbers.counter.count', {
+          with_falsifier: String(completeness.withFalsifier),
+          total: String(completeness.total),
+          status: t(completeness.status === 'passed' ? 'numbers.counter.status_passed' : 'numbers.counter.status_not_verified'),
+        })}
+      </p>
+      {fieldId === null ? null : <p className="numbers-counter-field">{fieldId}</p>}
+    </section>
+  )
+}
+
 function GapRegister({ gaps }: { gaps: NumbersPayload['gaps'] }) {
   return (
     <section className="numbers-gaps" aria-labelledby="numbers-gaps-heading">
@@ -783,7 +845,7 @@ function GapRegister({ gaps }: { gaps: NumbersPayload['gaps'] }) {
   )
 }
 
-export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
+export function NumbersView({ selectedField, onClose, scenarios = [] }: NumbersViewProps) {
   const regionId = useMapStore((state) => state.regionId)
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const polygonRaw = useMapStore((state) => state.polygonRaw)
@@ -947,9 +1009,10 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
           <SoilCard soil={s.soil} />
           <RotationCard rotation={s.rotation} />
           <MunicipalCard municipal={s.municipality} gaps={payload.gaps} />
+          <CounterEvidenceCard fieldId={payload.field_id} payload={payload} scenarios={scenarios} />
         </div>
         <ProvenanceTable rows={payload.provenance} />
-        <GapRegister gaps={payload.gaps} />
+        <GapRegister gaps={[...payload.gaps, ...falsifierGaps(scenarios, payload.field_id, payload.query.date)]} />
       </>
     )
   } else {

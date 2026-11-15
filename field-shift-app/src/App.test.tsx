@@ -940,8 +940,9 @@ describe('block 3 wave 2: rotation flip card visuals', () => {
     await user.click(within(card).getByRole('button', { name: 'Charts for Current sequence' }))
 
     expect(within(card).getByRole('button').getAttribute('aria-expanded')).toBe('true')
+    // Block 6 AM-03: the sixth labelled fact, the falsifier, sits after Benefit.
     expect(within(card).getAllByRole('term').map((term) => term.textContent))
-      .toEqual(['Why', 'Evidence', 'Benefit', 'Gap', 'Risk'])
+      .toEqual(['Why', 'Evidence', 'Benefit', 'Falsifier', 'Gap', 'Risk'])
     expect(within(card).queryByRole('group')).toBeNull()
     expect(document.querySelectorAll('.scenario-card .flip-overlay[aria-expanded="true"]')).toHaveLength(1)
 
