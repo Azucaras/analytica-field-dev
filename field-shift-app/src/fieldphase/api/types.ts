@@ -379,7 +379,7 @@ export interface MunicipalityPayload {
   land_cover?: LandCoverBlock | null;
   terrain?: TerrainBlock | null;
   rotations?: RotationsBlock | null;
-  /** Field Shift block 5: why `rotations` is null. */
+  /** Why `rotations` is null. */
   rotations_status?: "ready" | "not_built" | "not_configured";
   climate: {
     seasons: ClimateSeason[];

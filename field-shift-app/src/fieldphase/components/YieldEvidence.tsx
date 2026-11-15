@@ -24,7 +24,7 @@ export function YieldEvidence({ crops, provenance }: { crops: CropEvidence[]; pr
       </div>
       <div className="fp-grid fp-grid-2" role="tabpanel">
         <CompositeBars
-          title={`${name(crop)} — ${t.yield.compositeTitle}`}
+          title={`${name(crop)}: ${t.yield.compositeTitle}`}
           sub={`${seasonLabel} · ${t.units["%"]}`}
           rows={crop.composite}
           unit="%"

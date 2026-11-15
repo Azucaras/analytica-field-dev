@@ -83,7 +83,7 @@ afterEach(() => {
 })
 
 describe('RotationFlipCard', () => {
-  it('shows the front face only at first paint (R-11, R-12, AC-07)', () => {
+  it('shows the front face only at first paint', () => {
     const { cards } = renderCards()
 
     expect(cards).toHaveLength(3)
@@ -96,7 +96,7 @@ describe('RotationFlipCard', () => {
     }
   })
 
-  it('moves one card to the back face with the five facts and no visuals (R-11, R-13, AC-07)', async () => {
+  it('moves one card to the back face with the five facts and no visuals', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
     const currentCard = cards[0]
@@ -119,7 +119,7 @@ describe('RotationFlipCard', () => {
     expect(currentCard.textContent).toContain('CURRENT')
   })
 
-  it('leaves the other cards on their own front face (R-11, AC-07)', async () => {
+  it('leaves the other cards on their own front face', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
 
@@ -132,7 +132,7 @@ describe('RotationFlipCard', () => {
     }
   })
 
-  it('derives every accessible name from the card heading and shows no label text (R-18, AC-11)', async () => {
+  it('derives every accessible name from the card heading and shows no label text', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
 
@@ -155,7 +155,7 @@ describe('RotationFlipCard', () => {
     expect(backTrigger.hasAttribute('aria-pressed')).toBe(false)
   })
 
-  it('points aria-controls at the card body and swaps its content (R-18, R-20)', async () => {
+  it('points aria-controls at the card body and swaps its content', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
     const trigger = within(cards[0]).getByRole('button')
@@ -175,7 +175,7 @@ describe('RotationFlipCard', () => {
     expect(cards[0].querySelectorAll('.flip-face')).toHaveLength(1)
   })
 
-  it('keeps focus on the trigger across both flips (R-19, AC-11)', async () => {
+  it('keeps focus on the trigger across both flips', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
     const trigger = within(cards[0]).getByRole('button')
@@ -190,7 +190,7 @@ describe('RotationFlipCard', () => {
     expect(document.activeElement).toBe(within(cards[0]).getByRole('button'))
   })
 
-  it('flips the card with Enter from the overlay button (R-19)', async () => {
+  it('flips the card with Enter from the overlay button', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
     const trigger = within(cards[0]).getByRole('button')
@@ -206,7 +206,7 @@ describe('RotationFlipCard', () => {
     expect(document.activeElement).toBe(within(cards[0]).getByRole('button'))
   })
 
-  it('flips the card with Space from the overlay button (R-19)', async () => {
+  it('flips the card with Space from the overlay button', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
     const trigger = within(cards[0]).getByRole('button')
@@ -222,7 +222,7 @@ describe('RotationFlipCard', () => {
     expect(document.activeElement).toBe(within(cards[0]).getByRole('button'))
   })
 
-  it('renders no visual at all on the back and no fact on the front (R-12, R-13)', async () => {
+  it('renders no visual at all on the back and no fact on the front', async () => {
     const user = userEvent.setup()
     const { cards } = renderCards()
 
@@ -233,7 +233,7 @@ describe('RotationFlipCard', () => {
     expect(cards[2].querySelectorAll('.smap-track')).toHaveLength(0)
   })
 
-  it('marks a modelled SMAP row at 0 px and keeps the crop date on the same face (R-17, AC-13)', () => {
+  it('marks a modelled SMAP row at 0 px and keeps the crop date on the same face', () => {
     const modelledScenario: RotationScenario = {
       ...scenarios[0],
       evidence_rows: [
@@ -248,11 +248,11 @@ describe('RotationFlipCard', () => {
     expect(smap.textContent).not.toMatch(/\d/)
     expect(smap.textContent).not.toContain('assumes')
     expect((cards[0].querySelector('.smap-fill') as HTMLElement).style.width).toBe('0px')
-    // R-15's crop group still prints its own date on the same face.
+    // The crop group still prints its own date on the same face.
     expect(within(cards[0]).getByRole('group', { name: /^Crop history/ }).textContent).toContain('2025-06-30')
   })
 
-  it('renders the not reported state when the scenario has no SMAP row (R-16)', () => {
+  it('renders the not reported state when the scenario has no SMAP row', () => {
     const { cards } = renderCards()
 
     expect(within(cards[2]).getByText('Not reported for this option')).toBeTruthy()

@@ -1,4 +1,4 @@
-"""Export the climate evidence as dated JSON fixtures for the Field Shift backend (block 4).
+"""Export the climate evidence as dated JSON fixtures for the Field Shift backend.
 
     uv run python -m pipeline.export_fieldshift [--out DIR]
 
@@ -6,13 +6,13 @@ Writes, into field-shift-app/backend/fixtures/climate/ by default:
 
 * enso.json                  current CPC ENSO state and strength outlook;
 * municipality-<code>.json   season-to-date rainfall and the analog-year evidence rows;
-* pilot-fields.json          the two synthetic pilot fields, centred on IBGE centroids.
+* pilot-fields.json          the synthetic pilot fields, centred on the IBGE or Census centroid.
 
 This module is the only writer of that folder. Every number comes from data/processed/ (built by
 the fetch_* and build_evidence scripts); nothing is typed here. Each file carries ``recorded_at``
 so the backend can serve it as a dated fixture.
 
-Basis rules (spec block 4, R-12): RONI, ONI and PAM are ``reported`` (published by an agency);
+Basis rules: RONI, ONI and PAM are ``reported`` (published by an agency);
 NASA POWER is ``modelled`` (MERRA-2 reanalysis). A derived row takes the weakest basis of its
 inputs, ordered observed, retrieved, reported, modelled.
 """

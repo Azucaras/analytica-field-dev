@@ -8,7 +8,7 @@ import { climateFixture } from '@/test/climate-fixtures'
 import { en } from './strings/en'
 import App from './App'
 
-/** Block 4 criteria measured on the whole screen: AC-08 isolation, AC-11 pilot field, AC-12 scan. */
+/** Climate features measured on the whole screen: failure isolation, pilot fields, the string scan. */
 
 const translationTestState = vi.hoisted(() => ({ useKeys: false }))
 
@@ -115,8 +115,8 @@ async function selectField(user: ReturnType<typeof userEvent.setup>, name: RegEx
   await user.click(await within(row).findByRole('button', { name }))
 }
 
-describe('block 4 on the whole screen', () => {
-  it('AC-11: a pilot field prints coverage not measured, the abstention, the empty cards and the synthetic label', async () => {
+describe('climate, pilot fields and the analysis sheet on the whole screen', () => {
+  it('a pilot field prints coverage not measured, the abstention, the empty cards and the synthetic label', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -132,7 +132,7 @@ describe('block 4 on the whole screen', () => {
     expect(await within(panel).findByRole('region', { name: /Climate signal, Tupanciret/ })).toBeTruthy()
   })
 
-  it('AC-08: a failing ENSO endpoint shows the literal and leaves the field list working', async () => {
+  it('a failing ENSO endpoint shows the literal and leaves the field list working', async () => {
     mockApi({ ensoFails: true })
     const user = userEvent.setup()
     render(<App />)
@@ -142,7 +142,7 @@ describe('block 4 on the whole screen', () => {
     expect(await screen.findByText('86% data coverage')).toBeTruthy()
   })
 
-  it('AC-09: a failing climate request prints one literal and nothing else changes', async () => {
+  it('a failing climate request prints one literal and nothing else changes', async () => {
     mockApi({ climateFails: true })
     const user = userEvent.setup()
     render(<App />)
@@ -151,7 +151,7 @@ describe('block 4 on the whole screen', () => {
     expect(screen.queryByRole('alert')).toBeNull()
   })
 
-  it('AC-12: every new visible string and accessible name comes from the catalog', async () => {
+  it('every new visible string and accessible name comes from the catalog', async () => {
     mockApi()
     translationTestState.useKeys = true
     useMapStore.setState({ selectedFieldId: 'mt-santa-carmem-01' })
@@ -189,7 +189,7 @@ describe('block 4 on the whole screen', () => {
     expect(literals).toEqual([])
   })
 
-  it('block 5 AC-04 and AM-04: the selected field opens the analysis sheet for its municipality on this page', async () => {
+  it('the selected field opens the analysis sheet for its municipality on this page', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -204,7 +204,7 @@ describe('block 4 on the whole screen', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Analysis' }))
   })
 
-  it('block 5 AC-05: the HUD opens in Portuguese and the switch turns it to English', async () => {
+  it('the HUD opens in Portuguese and the switch turns it to English', async () => {
     localStorage.removeItem('fs.locale')
     const { useLocaleStore } = await import('@/strings/locale-store')
     useLocaleStore.setState({ locale: 'pt-BR' })

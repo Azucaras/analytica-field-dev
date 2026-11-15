@@ -4,7 +4,7 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { FeatureCollection } from "geojson";
 
-// Field Shift port (block 5): MapLibre 6 named exports and an explicit worker URL, as MapCanvas does.
+// MapLibre 6: named exports and an explicit worker URL, as MapCanvas does.
 setWorkerUrl(maplibreWorkerUrl);
 import type { Municipality } from "../api/types";
 import { useI18n } from "../i18n";

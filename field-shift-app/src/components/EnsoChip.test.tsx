@@ -8,7 +8,7 @@ afterEach(cleanup)
 
 const enso = ensoSchema.parse(climateFixture('enso.json'))
 
-describe('EnsoChip (block 4, AC-08)', () => {
+describe('EnsoChip', () => {
   it('prints phase, strength, index, season, value, basis and issue date from the fixture', () => {
     render(<EnsoChip enso={{ status: 'ready', data: enso }} />)
     const chip = screen.getByRole('group')

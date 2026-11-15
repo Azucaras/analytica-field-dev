@@ -18,9 +18,9 @@ with FIXTURE_PATH.open(encoding="utf-8") as fixture_file:
 
 BACKEND_DIR = Path(__file__).parent
 
-# Block 4: dated climate fixtures written by field-shift-pipeline/pipeline/export_fieldshift.py.
+# Dated climate fixtures written by field-shift-pipeline/pipeline/export_fieldshift.py.
 # The backend only reads them; a missing file answers 503 on the climate endpoints and never
-# takes /fields down (R-10).
+# takes /fields down.
 CLIMATE_DIR = Path(os.getenv("CLIMATE_FIXTURE_DIR", str(BACKEND_DIR / "fixtures" / "climate")))
 
 
@@ -34,7 +34,7 @@ def _load_pilot_fields() -> list[dict[str, Any]]:
 
 
 def all_fields() -> list[dict[str, Any]]:
-    """The three fixture fields, then the two synthetic pilot fields (R-06)."""
+    """The three fixture fields, then the synthetic pilot fields."""
     return [*FIXTURE["fields"], *_load_pilot_fields()]
 
 
@@ -334,7 +334,7 @@ def list_fields() -> dict[str, Any]:
 def get_scenarios(field_id: str) -> dict[str, Any]:
     field = _field_or_404(field_id)
 
-    # R-07: a field with no coverage measurement abstains; abstention is a result, not an error.
+    # A field with no coverage measurement abstains; abstention is a result, not an error.
     if field["coverage"] is None:
         threshold: str | None = "coverage_not_measured"
     else:
@@ -351,13 +351,13 @@ def get_scenarios(field_id: str) -> dict[str, Any]:
 
 @app.get("/climate/enso")
 def get_enso() -> dict[str, Any]:
-    """R-08: current CPC ENSO state and strength outlook, as a dated fixture."""
+    """Current CPC ENSO state and strength outlook, as a dated fixture."""
     return _climate_file("enso.json")
 
 
 @app.get("/fields/{field_id}/climate")
 def get_field_climate(field_id: str) -> dict[str, Any]:
-    """R-09: the municipal climate evidence of the field's municipality."""
+    """The municipal climate evidence of the field's municipality."""
     field = _field_or_404(field_id)
     code = field.get("municipality_code")
     if code is None:
@@ -366,7 +366,7 @@ def get_field_climate(field_id: str) -> dict[str, Any]:
     return {"field_id": field_id, "state": "available", **data}
 
 
-# Block 5, R-05: the Field Phase contract, exported by `field-shift-pipeline` (`python -m api.export`)
+# The Field Phase contract, exported by `field-shift-pipeline` (`python -m api.export`)
 # as static JSON, served read-only for the analysis page.
 FIELDPHASE_DIR = Path(os.getenv("FIELDPHASE_FIXTURE_DIR", str(BACKEND_DIR / "fixtures" / "fieldphase")))
 

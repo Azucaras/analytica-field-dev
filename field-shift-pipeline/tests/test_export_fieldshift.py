@@ -1,4 +1,4 @@
-"""Block 4 exporter: pure helpers, plus a check of the written fixtures when they exist (AC-02)."""
+"""HUD climate exporter: pure helpers, plus a check of the written fixtures when they exist."""
 
 from __future__ import annotations
 

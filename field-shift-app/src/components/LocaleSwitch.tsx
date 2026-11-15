@@ -7,7 +7,7 @@ const LOCALES: ReadonlyArray<{ locale: Locale; key: string }> = [
   { locale: 'en', key: 'locale.en' },
 ]
 
-/** Block 5, R-10: one switch for the HUD and the analysis page, stored under `fs.locale`. */
+/** One switch for the HUD and the analysis page, stored under `fs.locale`. */
 export function LocaleSwitch() {
   const locale = useLocaleStore((state) => state.locale)
   const setLocale = useLocaleStore((state) => state.setLocale)

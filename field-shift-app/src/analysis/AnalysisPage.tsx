@@ -28,7 +28,7 @@ import {
   type MunicipalityPayload,
 } from "@/fieldphase";
 
-// Block 5, R-03 and R-05: the Field Phase contract is exported as static JSON and served by the
+// The Field Phase contract is exported as static JSON and served by the
 // Field Shift backend under /fieldphase, so the page needs no second server.
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 const client = createClient({ mode: "static", baseUrl: `${API_BASE}/fieldphase` });
@@ -64,7 +64,7 @@ type AnalysisProps = {
 };
 
 /**
- * Block 5, AM-04: the Field Phase analysis is a full-screen sheet inside the HUD page, not a
+ * The Field Phase analysis is a full-screen sheet inside the HUD page, not a
  * second address. The HUD opens it for the selected field's municipality.
  */
 export default function AnalysisPage({ code, onSelectCode, onClose }: AnalysisProps) {
@@ -252,7 +252,7 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
     <>
       <section className="fp-section" aria-labelledby="s-preview">
         <h2 id="s-preview">
-          {t.sections.preview} — {name}
+          {t.sections.preview}: {name}
         </h2>
         <SeasonProgressChart progress={d.season_progress} currentYear={d.current_crop_year} />
       </section>
@@ -260,13 +260,13 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
       <section className="fp-section" aria-labelledby="s-forecast">
         <h2 id="s-forecast">{t.forecast.title}</h2>
         <p className="fp-lead">{t.forecast.lead}</p>
-        {/* Block 5, R-04: without a Meteomatics export the section says so instead of vanishing. */}
+        {/* Without a Meteomatics export the section says so instead of vanishing. */}
         {d.forecast ? <ForecastPanel forecast={d.forecast} /> : <div className="fp-card fp-todo">{t.forecast.missing}</div>}
       </section>
 
       <section className="fp-section" aria-labelledby="s-rot">
         <h2 id="s-rot">
-          {t.sections.rotations} — {name}
+          {t.sections.rotations}: {name}
         </h2>
         {d.rotations ? (
           <RotationPanel rotations={d.rotations} regionLabel={d.municipality.region_name} />
@@ -314,7 +314,11 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
       <section className="fp-section" aria-labelledby="s-yield">
         <h2 id="s-yield">{t.sections.yield}</h2>
         <p className="fp-lead">{t.sections.yieldLead}</p>
-        <YieldEvidence crops={d.yield.crops} provenance={d.provenance.yield} />
+        {d.yield.crops.length ? (
+          <YieldEvidence crops={d.yield.crops} provenance={d.provenance.yield} />
+        ) : (
+          <div className="fp-card fp-todo">{t.yield.missing}</div>
+        )}
       </section>
 
       {(d.vegetation || d.terrain || d.land_cover) && (

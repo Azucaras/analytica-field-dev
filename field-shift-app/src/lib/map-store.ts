@@ -4,7 +4,7 @@ export type FieldSummary = {
   id: string
   name: string
   location: string
-  /** Block 4: null for a synthetic pilot field, whose coverage is not measured (R-07). */
+  /** Null for a synthetic pilot field, whose coverage is not measured. */
   coverage: number | null
   municipality_code?: number | null
   synthetic?: boolean

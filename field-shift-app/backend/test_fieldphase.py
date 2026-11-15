@@ -1,4 +1,4 @@
-"""Block 5 AC-02: the static Field Phase export is served read-only under /fieldphase."""
+"""The static Field Phase export is served read-only under /fieldphase."""
 
 from __future__ import annotations
 

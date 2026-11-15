@@ -108,7 +108,7 @@ describe('EvidencePanel', () => {
   })
 })
 
-describe('EvidencePanel climate table (block 4, AC-07, AC-10)', () => {
+describe('EvidencePanel climate table', () => {
   it('renders a reported row with the reported badge', () => {
     render(<EvidencePanel rows={[{ layer: 'Crop history', value: 'Soybean → Corn', basis: 'reported', as_of: '2025-06-30', source: 'https://example.com' }]} />)
     expect(screen.getByText('reported').className).toContain('basis-reported')

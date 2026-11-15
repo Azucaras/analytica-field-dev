@@ -12,7 +12,7 @@ export type Locale = "pt-BR" | "en";
 const ptBR = {
   app: {
     title: "Field Phase",
-    tagline: "Prévia de impacto do El Niño na sua lavoura, com dados da NASA, NOAA e IBGE",
+    tagline: "O que o El Niño deve fazer com a sua lavoura nesta safra, com dados da NASA, NOAA, IBGE e USDA",
     language: "Idioma",
     theme: "Tema",
     themeAuto: "Automático",
@@ -21,7 +21,7 @@ const ptBR = {
     loading: "Carregando dados…",
     loadError: "Não foi possível carregar os dados",
     loadErrorHint:
-      "Rode o pipeline e exporte os dados: `uv run python -m api.export` (ou inicie a API com VITE_DATA_MODE=api).",
+      "Os dados da análise não estão disponíveis agora. Confira se o backend está rodando e tente de novo.",
     mock: "DADOS FICTÍCIOS (mock)",
     footerSources: "Fontes e métodos",
     footerNoMock: "Nenhum dado fictício nesta página.",
@@ -29,18 +29,18 @@ const ptBR = {
   sections: {
     enso: "El Niño agora",
     ensoLead: "O estado oficial do Pacífico, segundo o Climate Prediction Center da NOAA.",
-    place: "Escolha o município",
+    place: "Escolha o município ou condado",
     preview: "Prévia de impacto desta safra",
     evidence: "O que os anos de El Niño forte já mostraram",
     evidenceLead:
       "Comparação de cada tipo de ano com a média de 1991–2020. Cada barra mostra quantos anos (n) entraram na conta.",
-    yield: "Produtividade por cultura (IBGE PAM)",
+    yield: "Produtividade por cultura",
     yieldLead:
       "Desvio da produtividade em relação à tendência de longo prazo, que retira o ganho de tecnologia ao longo dos anos.",
     rotations: "Rotações recomendadas",
-    rotationsTodo: "As rotações aparecem aqui depois de rodar `python -m pipeline.build_scoring` e exportar os dados.",
+    rotationsTodo: "As rotações deste lugar ainda não foram calculadas.",
     rotationsNotConfigured: (region: string) =>
-      `Nenhuma rotação candidata nem calendário de cultivo estão configurados para ${region} em config/rotations.yaml, então este município não é pontuado. Nada é emprestado de outra região.`,
+      `Ainda não há rotações candidatas nem calendário de cultivo para ${region}, então este lugar fica sem notas. Não usamos a lista de outra região.`,
   },
   enso: {
     alert: "Alerta",
@@ -93,13 +93,13 @@ const ptBR = {
     band: "Faixa normal (10%–90%)",
     analog: "Média dos anos de El Niño forte",
     headline: (mm: string, pct: string, normal: string) =>
-      `Desde o início da safra choveram ${mm} mm — ${pct} do normal para a data (${normal} mm).`,
+      `Desde o início da safra choveram ${mm} mm, ${pct} do normal para a data (${normal} mm).`,
     analogLine: (mm: string, n: number, years: string) =>
       `Nos ${n} anos de El Niño forte (${years}), a média até esta data foi ${mm} mm.`,
     forecastClass: (cls: string, p: string, basis: string) =>
       `Esta safra está classificada como "${cls}" por previsão (${p} de chance; ${basis}).`,
     gridNote:
-      "Chuva da NASA POWER: média de uma célula de ~50 km no centro do município, não de uma estação.",
+      "Chuva da NASA POWER: média de uma área de cerca de 50 km no centro do município ou condado, não de uma estação.",
     day: "Dia",
     mm: "mm",
   },
@@ -132,10 +132,10 @@ const ptBR = {
   explain: {
     climate: (metric: string, cls: string, n: number, value: string, years: string) =>
       `${metric}: nos ${n} anos de ${cls} (${years}), ${value} em relação ao normal.`,
-    noYears: (cls: string) => `Nenhum ano de ${cls} no registro deste município.`,
+    noYears: (cls: string) => `Nenhum ano de ${cls} no registro deste lugar.`,
     yield: (crop: string, cls: string, n: number, value: string, years: string) =>
       `${crop}: nos ${n} anos de ${cls} (${years}), a produtividade ficou ${value} da tendência.`,
-    smallSample: (n: number) => `Atenção: só ${n} ano(s) — trate como indício, não como regra.`,
+    smallSample: (n: number) => `Só ${n} ano(s): trate como indício, não como regra.`,
   },
   yield: {
     tabsLabel: "Cultura",
@@ -148,6 +148,7 @@ const ptBR = {
     kgha: "kg/ha",
     sourcePam: (table: number) => `IBGE PAM, tabela ${table}`,
     sourceNass: "USDA NASS Quick Stats, levantamento por condado",
+    missing: "Ainda não há série de produtividade para este lugar. Nos EUA ela vem do USDA NASS e ainda não foi baixada.",
     usSeason: "ano hídrico out–set",
     trend: "tendência",
     anomaly: "desvio",
@@ -170,13 +171,13 @@ const ptBR = {
     probability: "Probabilidade",
   },
   map: {
-    label: "Mapa dos municípios-piloto",
+    label: "Mapa dos lugares analisados",
     pick: "Selecionar",
   },
   provenance: "Fonte",
   forecast: {
     title: "Previsão do tempo (Meteomatics)",
-    lead: "O que os modelos indicam para os próximos dias e meses neste município.",
+    lead: "O que os modelos indicam para os próximos dias e meses aqui.",
     curve: "Previsão: mediana de 51 cenários (ECMWF)",
     curveBand: "Previsão: faixa 10%–90%",
     curveLine: (to: string, med: string, lo: string, hi: string, normal: string) =>
@@ -205,7 +206,7 @@ const ptBR = {
     products: { short_range: "Previsão de 15 dias", extended: "Previsão estendida (46 dias)", seasonal: "Previsão sazonal" } as Record<string, string>,
     issued: (d: string) => `Emitida em ${d}`,
     missing:
-      "Previsão Meteomatics ainda não baixada: rode pipeline.fetch_meteomatics com METEOMATICS_USERNAME e METEOMATICS_PASSWORD definidos e exporte de novo. Nenhum valor é preenchido sem ela.",
+      "A previsão da Meteomatics ainda não foi baixada para este lugar. Sem ela, nenhum valor é mostrado.",
   },
   vegetation: {
     title: "Vegetação, uso do solo e relevo (satélite)",
@@ -220,14 +221,14 @@ const ptBR = {
     peakSub: (base: string) => `% vs. média ${base}`,
     peakTimeline: "NDVI no pico da safra, por ano",
     weakSignal:
-      "Resultado fraco: o NDVI de pico quase não muda com o El Niño aqui. Lavouras densas de soja saturam o NDVI, e perdas no enchimento de grãos nem sempre aparecem como menos verde — a produtividade (IBGE) é o sinal mais claro.",
-    landTitle: "Área agrícola do município",
+      "Resultado fraco: o NDVI de pico quase não muda com o El Niño aqui. Lavouras densas de soja saturam o NDVI, e perdas no enchimento de grãos nem sempre aparecem como menos verde. A produtividade é o sinal mais claro.",
+    landTitle: "Área agrícola",
     landSub: "Mapa anual de uso do solo 10 m (Impact Observatory/Esri), classe Lavoura",
     share: (y: number) => `em ${y}`,
     terrainTitle: "Relevo da área agrícola (risco de erosão)",
     terrainSub: "Declividade do Copernicus DEM 30 m, classes de relevo da Embrapa",
     medianSlope: (v: string) => `declividade mediana: ${v}%`,
-    scope: { municipality: "Município inteiro", cropland: "Só a área agrícola" } as Record<string, string>,
+    scope: { municipality: "Área inteira", cropland: "Só a área agrícola" } as Record<string, string>,
     relief: {
       plano: "Plano (0–3%)",
       suave_ondulado: "Suave ondulado (3–8%)",
@@ -240,7 +241,7 @@ const ptBR = {
   },
   rotations: {
     lead:
-      "Rotações candidatas, pontuadas com os dados deste município para o tipo de ano escolhido. Ajuste o peso de cada prioridade: a ordem muda na hora.",
+      "Rotações possíveis, com notas calculadas a partir dos dados deste lugar para o tipo de ano escolhido. Mude o peso de cada prioridade e a ordem muda na hora.",
     priorities: "Suas prioridades",
     components: { soil: "Proteger o solo", water: "Conservar água", income: "Estabilidade de renda" } as Record<string, string>,
     levels: ["Ignorar", "Baixa", "Média", "Alta"],
@@ -252,10 +253,10 @@ const ptBR = {
     waterValue: (mm: string, days: string) => `${mm} mm de transpiração perdida · ${days} dias de estresse/ano`,
     incomeValue: (pct: string) => `receita ${pct} neste tipo de ano`,
     soilWhy: (months: string, d: string, cls: string) =>
-      `Solo descoberto em ${months}. Nesses meses, anos de ${cls} trazem em média ${d} dias de chuva ≥20 mm — risco de erosão.`,
+      `Solo descoberto em ${months}. Nesses meses, anos de ${cls} trazem em média ${d} dias de chuva ≥20 mm, com risco de erosão.`,
     soilWhyCovered: "Nenhum mês de solo descoberto: cultura ou palhada protege o solo o ano todo.",
     waterWhy: (mm: string, days: string, month: string, demand: string, n: number) =>
-      `Pelo balanço diário de água no solo, as culturas deixam de transpirar ${mm} mm por ano (${days} dias de estresse), sobretudo em ${month} — de ${demand} mm de consumo. Média de ${n} anos.`,
+      `Pelo balanço diário de água no solo, as culturas deixam de transpirar ${mm} mm por ano (${days} dias de estresse), sobretudo em ${month}, de um consumo de ${demand} mm. Média de ${n} anos.`,
     waterWhyNone: (demand: string, n: number) =>
       `O solo guarda água suficiente: praticamente sem estresse hídrico (consumo de ${demand} mm/ano; média de ${n} anos).`,
     soilStore: (parts: string) => `Água disponível na zona de raízes (SoilGrids): ${parts}.`,
@@ -263,7 +264,7 @@ const ptBR = {
     incomePart: (crop: string, pct: string, n: number) => `${crop} ${pct} (n=${n})`,
     coverCrop: "cobertura, sem venda",
     fallow: "pousio",
-    smallSample: (n: number) => `Renda baseada em só ${n} ano(s) deste tipo — indício, não regra.`,
+    smallSample: (n: number) => `A renda se apoia em só ${n} ano(s) deste tipo: é indício, não regra.`,
     unranked: "Sem pontuação total com estes pesos",
     reasonIncome: (crop: string) => `falta histórico de produtividade de ${crop} para este tipo de ano (dê peso zero à renda para comparar só solo e água)`,
     reasonOther: "dado ausente",
@@ -284,10 +285,11 @@ const ptBR = {
       relative: "As notas comparam só estas candidatas: 100 = melhor delas naquela prioridade, 0 = pior.",
       water:
         "Água: balanço hídrico diário do solo (FAO-56): a chuva fica guardada na zona de raízes; quando o solo seca além do limite de cada cultura, ela transpira menos. Capacidade do solo: SoilGrids (modelo, 250 m); profundidade de raízes: FAO-56 Tabela 22.",
-      income: "Renda: receita bruta (IBGE, R$ nominais dos últimos 5 anos) ajustada pela variação de produtividade nesse tipo de ano; custos não entram.",
+      income: "Renda: receita bruta dos últimos 5 anos (IBGE em reais no Brasil, USDA em dólares nos EUA), ajustada pela variação de produtividade nesse tipo de ano. Custos não entram.",
       kc: "Coeficientes de cultura (Kc): FAO-56, Tabela 12.",
     },
     calendarAssumption: (region: string) => `Os calendários de plantio e colheita desta região (${region})`,
+    cropCalendarAssumption: (crop: string, region: string) => `As datas de plantio e colheita de ${crop} em ${region}`,
   },
 };
 
@@ -296,7 +298,7 @@ export type Strings = typeof ptBR;
 const en: Strings = {
   app: {
     title: "Field Phase",
-    tagline: "An El Niño impact preview for your fields, built on NASA, NOAA and IBGE data",
+    tagline: "What El Niño is likely to do to your fields this season, from NASA, NOAA, IBGE and USDA data",
     language: "Language",
     theme: "Theme",
     themeAuto: "Auto",
@@ -305,7 +307,7 @@ const en: Strings = {
     loading: "Loading data…",
     loadError: "Could not load the data",
     loadErrorHint:
-      "Run the pipeline and export the data: `uv run python -m api.export` (or start the API with VITE_DATA_MODE=api).",
+      "The analysis data is not available right now. Check that the backend is running and try again.",
     mock: "MOCK DATA",
     footerSources: "Sources and methods",
     footerNoMock: "No mock data on this page.",
@@ -313,17 +315,17 @@ const en: Strings = {
   sections: {
     enso: "El Niño now",
     ensoLead: "The official state of the Pacific, from NOAA's Climate Prediction Center.",
-    place: "Choose a municipality",
+    place: "Choose a municipality or county",
     preview: "Impact preview for this season",
     evidence: "What past strong El Niño years showed",
     evidenceLead:
       "Each kind of year compared with the 1991–2020 average. Every bar says how many years (n) it rests on.",
-    yield: "Yield by crop (IBGE PAM)",
+    yield: "Yield by crop",
     yieldLead: "Yield deviation from the long-term trend, which removes technology gains over the years.",
     rotations: "Recommended rotations",
-    rotationsTodo: "Rotations appear here after running `python -m pipeline.build_scoring` and exporting the data.",
+    rotationsTodo: "Rotations for this place have not been calculated yet.",
     rotationsNotConfigured: (region) =>
-      `No candidate rotations or crop calendar are configured for ${region} in config/rotations.yaml, so this municipality is not scored. Nothing is borrowed from another region.`,
+      `There are no candidate rotations or crop calendar for ${region} yet, so this place has no scores. We do not borrow another region's list.`,
   },
   enso: {
     alert: "Alert",
@@ -367,10 +369,10 @@ const en: Strings = {
     band: "Normal range (10th–90th pct)",
     analog: "Strong El Niño years, mean",
     headline: (mm, pct, normal) =>
-      `Since the season started, ${mm} mm of rain has fallen — ${pct} of normal for the date (${normal} mm).`,
+      `Since the season started, ${mm} mm of rain has fallen, ${pct} of normal for the date (${normal} mm).`,
     analogLine: (mm, n, years) => `In the ${n} strong El Niño years (${years}), the mean by this date was ${mm} mm.`,
     forecastClass: (cls, p, basis) => `This season is classed as "${cls}" by forecast (${p} chance; ${basis}).`,
-    gridNote: "NASA POWER rainfall is a ~50 km grid-cell average at the municipality centre, not a station.",
+    gridNote: "NASA POWER rainfall is an average over about 50 km around the centre of the municipality or county, not a station.",
     day: "Day",
     mm: "mm",
   },
@@ -395,10 +397,10 @@ const en: Strings = {
   units: { "%": "% vs normal", days: "days vs normal", C: "°C vs normal", "0-1": "vs normal (0–1 index)" },
   explain: {
     climate: (metric, cls, n, value, years) => `${metric}: in the ${n} ${cls} years (${years}), ${value} vs normal.`,
-    noYears: (cls) => `No ${cls} years on record for this municipality.`,
+    noYears: (cls) => `No ${cls} years on record here.`,
     yield: (crop, cls, n, value, years) =>
       `${crop}: in the ${n} ${cls} years (${years}), yield was ${value} from trend.`,
-    smallSample: (n) => `Caution: only ${n} year(s) — treat as a hint, not a rule.`,
+    smallSample: (n) => `Only ${n} year(s): treat it as a hint, not a rule.`,
   },
   yield: {
     tabsLabel: "Crop",
@@ -411,6 +413,7 @@ const en: Strings = {
     kgha: "kg/ha",
     sourcePam: (table) => `IBGE PAM, table ${table}`,
     sourceNass: "USDA NASS Quick Stats, county survey",
+    missing: "There is no yield series for this place yet. In the US it comes from USDA NASS and has not been downloaded.",
     usSeason: "Oct–Sep water year",
     trend: "trend",
     anomaly: "deviation",
@@ -431,11 +434,11 @@ const en: Strings = {
     season: "Season",
     probability: "Probability",
   },
-  map: { label: "Map of pilot municipalities", pick: "Select" },
+  map: { label: "Map of the places covered", pick: "Select" },
   provenance: "Source",
   forecast: {
     title: "Weather forecast (Meteomatics)",
-    lead: "What the models indicate for the coming days and months in this municipality.",
+    lead: "What the models indicate for the coming days and months here.",
     curve: "Forecast: median of 51 scenarios (ECMWF)",
     curveBand: "Forecast: 10th–90th percentile",
     curveLine: (to, med, lo, hi, normal) =>
@@ -464,7 +467,7 @@ const en: Strings = {
     products: { short_range: "15-day forecast", extended: "Extended forecast (46 days)", seasonal: "Seasonal forecast" },
     issued: (d) => `Issued ${d}`,
     missing:
-      "Meteomatics forecast not downloaded yet: run pipeline.fetch_meteomatics with METEOMATICS_USERNAME and METEOMATICS_PASSWORD set, then export again. No value is filled in without it.",
+      "The Meteomatics forecast has not been downloaded for this place yet. Nothing is shown without it.",
   },
   vegetation: {
     title: "Vegetation, land use and terrain (satellite)",
@@ -479,14 +482,14 @@ const en: Strings = {
     peakSub: (base) => `% vs ${base} mean`,
     peakTimeline: "Peak-season NDVI by year",
     weakSignal:
-      "Weak result: peak NDVI barely changes with El Niño here. Dense soybean canopies saturate NDVI, and losses at grain filling do not always show as less green — yield (IBGE) is the clearer signal.",
-    landTitle: "Cropland in the municipality",
+      "Weak result: peak NDVI barely changes with El Niño here. Dense soybean canopies saturate NDVI, and losses at grain filling do not always show as less green. Yield is the clearer signal.",
+    landTitle: "Cropland",
     landSub: "10 m annual land-cover map (Impact Observatory/Esri), Crops class",
     share: (y) => `in ${y}`,
     terrainTitle: "Terrain of the cropland (erosion risk)",
     terrainSub: "Slope from the Copernicus 30 m DEM, Embrapa relief classes",
     medianSlope: (v) => `median slope: ${v}%`,
-    scope: { municipality: "Whole municipality", cropland: "Cropland only" },
+    scope: { municipality: "Whole area", cropland: "Cropland only" },
     relief: {
       plano: "Flat (0–3%)",
       suave_ondulado: "Gently rolling (3–8%)",
@@ -499,7 +502,7 @@ const en: Strings = {
   },
   rotations: {
     lead:
-      "Candidate rotations, scored with this municipality's data for the chosen kind of year. Set the weight of each priority: the order updates instantly.",
+      "Possible rotations, scored with this place's data for the chosen kind of year. Change the weight of each priority and the order updates right away.",
     priorities: "Your priorities",
     components: { soil: "Protect soil", water: "Conserve water", income: "Income stability" },
     levels: ["Ignore", "Low", "Medium", "High"],
@@ -511,17 +514,17 @@ const en: Strings = {
     waterValue: (mm, days) => `${mm} mm of transpiration lost · ${days} stress days/yr`,
     incomeValue: (pct) => `revenue ${pct} in this kind of year`,
     soilWhy: (months, d, cls) =>
-      `Bare soil in ${months}. In those months, ${cls} years bring on average ${d} days of ≥20 mm rain — erosion risk.`,
+      `Bare soil in ${months}. In those months, ${cls} years bring on average ${d} days of ≥20 mm rain, which risks erosion.`,
     soilWhyCovered: "No bare months: a crop or its residue protects the soil all year.",
     waterWhy: (mm, days, month, demand, n) =>
-      `In a daily soil water balance the crops lose ${mm} mm of transpiration a year (${days} stress days), mostly in ${month} — out of ${demand} mm of water use. Mean of ${n} years.`,
+      `In a daily soil water balance the crops lose ${mm} mm of transpiration a year (${days} stress days), mostly in ${month}, out of ${demand} mm of water use. Mean of ${n} years.`,
     waterWhyNone: (demand, n) => `The soil stores enough water: practically no water stress (water use ${demand} mm/yr; mean of ${n} years).`,
     soilStore: (parts) => `Water available in the root zone (SoilGrids): ${parts}.`,
     incomeWhy: (parts, cls) => `In ${cls} years: ${parts}.`,
     incomePart: (crop, pct, n) => `${crop} ${pct} (n=${n})`,
     coverCrop: "cover crop, not sold",
     fallow: "fallow",
-    smallSample: (n) => `Income rests on only ${n} year(s) of this kind — a hint, not a rule.`,
+    smallSample: (n) => `Income rests on only ${n} year(s) of this kind: a hint, not a rule.`,
     unranked: "No total score with these weights",
     reasonIncome: (crop) => `no ${crop} yield history for this kind of year (set income to zero to compare soil and water only)`,
     reasonOther: "missing data",
@@ -542,10 +545,11 @@ const en: Strings = {
       relative: "Scores compare these candidates only: 100 = best of them on that priority, 0 = worst.",
       water:
         "Water: a daily soil water balance (FAO-56): rain is stored in the root zone; when the soil dries past each crop's limit, it transpires less. Soil capacity: SoilGrids (modelled, 250 m); rooting depth: FAO-56 Table 22.",
-      income: "Income: gross revenue (IBGE, nominal R$, last 5 years) adjusted by the yield change in that kind of year; costs are not included.",
+      income: "Income: gross revenue over the last 5 years (IBGE in reais for Brazil, USDA in dollars for the US), adjusted by the yield change in that kind of year. Costs are not included.",
       kc: "Crop coefficients (Kc): FAO-56, Table 12.",
     },
     calendarAssumption: (region) => `The sowing and harvest calendars for this region (${region})`,
+    cropCalendarAssumption: (crop, region) => `The sowing and harvest dates of ${crop} in ${region}`,
   },
 };
 

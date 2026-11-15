@@ -18,7 +18,7 @@ type EvidencePanelProps = {
   rows: EvidenceRow[]
   isLoading?: boolean
   emptyReason?: string | null
-  /** Block 4, R-19: municipal climate rows, rendered as a second table under the scenario rows. */
+  /** Municipal climate rows, rendered as a second table under the scenario rows. */
   climate?: { municipality: string; rows: ClimateRow[] } | null
 }
 

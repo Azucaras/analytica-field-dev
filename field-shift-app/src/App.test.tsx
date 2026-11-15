@@ -194,7 +194,7 @@ describe('field map and rotation scenario selection', () => {
     await waitFor(() => expect(document.querySelectorAll('.scenario-list .scenario-card[role="option"]')).toHaveLength(3))
   })
 
-  it('keeps the block 3 anchors and the fixed layer sequence', async () => {
+  it('keeps the HUD anchors and the fixed layer sequence', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -213,7 +213,7 @@ describe('field map and rotation scenario selection', () => {
     ]
     for (const anchor of anchors) expect(document.querySelector(anchor)).toBeTruthy()
     expect(anchors).toHaveLength(6)
-    // AM-11: the constraints panel is withdrawn, so its anchor must not exist.
+    // The constraints panel is withdrawn, so its anchor must not exist.
     expect(document.querySelector('.anchor-constraints')).toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'Command' }))
@@ -394,7 +394,7 @@ describe('field map and rotation scenario selection', () => {
   })
 })
 
-describe('block 3 wave 1: toggles and the single coverage readout', () => {
+describe('toggles and the single coverage readout', () => {
   async function expandFields(user: ReturnType<typeof userEvent.setup>) {
     await user.click(await screen.findByRole('button', { name: 'Fields' }))
     return await waitFor(() => {
@@ -404,7 +404,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     })
   }
 
-  it('mounts the agent command form only while Command is open (R-01, AC-02)', async () => {
+  it('mounts the agent command form only while Command is open', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -425,7 +425,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(command.getAttribute('aria-controls')).toBeNull()
   })
 
-  it('moves focus into the command form, returns it on close and keeps the draft (AC-03)', async () => {
+  it('moves focus into the command form, returns it on close and keeps the draft', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -447,7 +447,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect((screen.getByRole('textbox', { name: 'JSON arguments' }) as HTMLInputElement).value).toBe('{"preset":"satellite"}')
   })
 
-  it('wraps the field list in the vendored collapsible (AC-04)', async () => {
+  it('wraps the field list in the vendored collapsible', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -473,14 +473,14 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(document.querySelector('[data-slot="collapsible-panel"]')).toBeNull()
   })
 
-  it('shows one collapsed chip for the selected field and no percentage (AC-05)', async () => {
+  it('shows one collapsed chip for the selected field and no percentage', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
     const trigger = await screen.findByRole('button', { name: 'Fields' })
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    // AC-05: the collapsed header shows exactly one chip for the selected field and no
+    // The collapsed header shows exactly one chip for the selected field and no
     // percentage. A fresh load always selects the first field now, so that chip exists
     // before any click instead of depending on when the map happened to load.
     await waitFor(() => expect(document.querySelectorAll('.field-chip')).toHaveLength(1))
@@ -518,7 +518,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(document.querySelector('.field-list-anchor')?.textContent).not.toContain('%')
   })
 
-  it('renders no chip while the field list is loading with nothing selected (AC-05)', () => {
+  it('renders no chip while the field list is loading with nothing selected', () => {
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
     render(<App />)
 
@@ -527,7 +527,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(document.querySelector('.field-list-anchor')?.textContent).not.toContain('%')
   })
 
-  it('keeps the selected field and issues no new scenario request when the panel collapses or expands (AC-06)', async () => {
+  it('keeps the selected field and issues no new scenario request when the panel collapses or expands', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -559,7 +559,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(scenarioRequestCount()).toBe(before)
   })
 
-  it('keeps the four unconditional pairs at first paint and mounts Evidence only while Supporting data is open (AC-14, AC-21)', async () => {
+  it('keeps the four unconditional pairs at first paint and mounts Evidence only while Supporting data is open', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -590,7 +590,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(supportingData.getAttribute('aria-expanded')).toBe('false')
   })
 
-  it('prints coverage only in the rotation pill and drops every other readout (R-25, R-26)', async () => {
+  it('prints coverage only in the rotation pill and drops every other readout', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -611,7 +611,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(screen.getByRole('status').textContent).toBe('Ranking withheld: coverage below 80%.')
   })
 
-  it('stacks the command form above the evidence panel in one right edge column (R-23)', async () => {
+  it('stacks the command form above the evidence panel in one right edge column', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -630,7 +630,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(children[1].querySelector('[role="region"]')?.getAttribute('aria-label')).toBe('Evidence')
   })
 
-  it('keeps every toggle operable and the field error reachable when the backend fails (AC-28, R-09)', async () => {
+  it('keeps every toggle operable and the field error reachable when the backend fails', async () => {
     const fetchMock = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response)
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
@@ -658,7 +658,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
   })
 
-  it('has no second form and no withdrawn constraint control at first paint or after activations (AC-16, R-15)', async () => {
+  it('has no second form and no withdrawn constraint control at first paint or after activations', async () => {
     // Field 01 selected before the first paint, which is the fixture default the map
     // resolves on load; nothing is clicked to reach the measured state.
     useMapStore.setState({ selectedFieldId: 'mt-santa-carmem-01' })
@@ -669,7 +669,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     const list = await screen.findByRole('list', { name: 'Rotation scenarios' })
     await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(3))
 
-    // AM-11 withdrew the four-control form: no form at first paint, and none of its labels.
+    // The four-control form was withdrawn: no form at first paint, and none of its labels.
     expect(document.querySelectorAll('form')).toHaveLength(0)
     for (const name of ['Water', 'Rent', 'Credit', 'Market outlet']) {
       expect(screen.queryByRole('combobox', { name })).toBeNull()
@@ -692,7 +692,7 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
   })
 })
 
-describe('block 3 wave 3: layout, notice and right edge column rules', () => {
+describe('layout, notice and right edge column rules', () => {
   function stubViewport(matches: boolean) {
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches,
@@ -744,7 +744,7 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
     await screen.findByRole('status')
   }
 
-  it('keeps one notice node, first in the left stack, with no duplicate mount (R-23, R-39)', async () => {
+  it('keeps one notice node, first in the left stack, with no duplicate mount', async () => {
     stubViewport(true)
     mockApi()
     const user = userEvent.setup()
@@ -757,14 +757,14 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
     const stack = document.querySelector('.left-stack') as HTMLElement
     expect(stack).toBeTruthy()
     const order = [...stack.children].map((child) => child.className)
-    // R-39 after AM-14: the 360 left flow column holds the notice and the fields panel only.
+    // At 360 the left flow column holds the notice and the fields panel only.
     expect(order).toHaveLength(2)
     expect(order[0]).toContain('anchor-notice')
     expect(order[1]).toContain('field-list-anchor')
     expect(document.querySelector('.anchor-constraints')).toBeNull()
   })
 
-  it('holds at most one right edge panel open at 360 (R-40, AC-30)', async () => {
+  it('holds at most one right edge panel open at 360', async () => {
     stubViewport(true)
     mockApi()
     const user = userEvent.setup()
@@ -788,7 +788,7 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
     expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(1)
   })
 
-  it('keeps both right edge panels open above 640 (R-23)', async () => {
+  it('keeps both right edge panels open above 640', async () => {
     stubViewport(false)
     mockApi()
     const user = userEvent.setup()
@@ -802,7 +802,7 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
     expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(2)
   })
 
-  it('closes the older right edge panel when the viewport enters 360 and keeps focus (R-40, AC-26, AC-30)', async () => {
+  it('closes the older right edge panel when the viewport enters 360 and keeps focus', async () => {
     const viewport = stubViewportWithChange(false)
     mockApi()
     const user = userEvent.setup()
@@ -825,14 +825,14 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
     expect(document.activeElement).toBe(supporting)
     expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(1)
 
-    // Leaving 360 does not reopen the panel that the transition closed (R-40).
+    // Leaving 360 does not reopen the panel that the transition closed.
     act(() => viewport.setMatches(false))
     expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
     expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
     expect(supporting.getAttribute('aria-expanded')).toBe('true')
   })
 
-  it('keeps the panel opened last when the command form is the newer one (R-40)', async () => {
+  it('keeps the panel opened last when the command form is the newer one', async () => {
     const viewport = stubViewportWithChange(false)
     mockApi()
     const user = userEvent.setup()
@@ -854,7 +854,7 @@ describe('block 3 wave 3: layout, notice and right edge column rules', () => {
   })
 })
 
-describe('block 3 wave 2: rotation flip card visuals', () => {
+describe('rotation flip card visuals', () => {
   async function selectNorth(user: ReturnType<typeof userEvent.setup>) {
     await user.click(await screen.findByRole('button', { name: 'Fields' }))
     const row = await waitFor(() => {
@@ -869,7 +869,7 @@ describe('block 3 wave 2: rotation flip card visuals', () => {
     return card as HTMLElement
   }
 
-  it('draws the measured SMAP value and its number at first paint with no interaction (AC-08, AC-09, AC-13)', async () => {
+  it('draws the measured SMAP value and its number at first paint with no interaction', async () => {
     // Field 01 is the field the map selects on load; nothing is activated after paint.
     useMapStore.setState({ selectedFieldId: 'mt-santa-carmem-01' })
     mockApi()
@@ -891,7 +891,7 @@ describe('block 3 wave 2: rotation flip card visuals', () => {
     expect((card.querySelector('.smap-fill') as HTMLElement).style.width).toBe('56%')
   })
 
-  it('flips one card to its facts and back without touching the others (AC-07)', async () => {
+  it('flips one card to its facts and back without touching the others', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
@@ -915,7 +915,7 @@ describe('block 3 wave 2: rotation flip card visuals', () => {
   })
 })
 
-describe('block 3 gate: keyboard contract of the four controls (AC-32)', () => {
+describe('keyboard contract of the four controls', () => {
   function focusLabel(element: Element | null): string {
     if (!element) return 'none'
     const label = element.getAttribute('aria-label') ?? element.textContent?.trim() ?? ''
@@ -959,7 +959,7 @@ describe('block 3 gate: keyboard contract of the four controls (AC-32)', () => {
 
     // Enter toggles, Space toggles back, a second Enter toggles again, and `a` does
     // nothing. The state is the control's own aria-expanded, the region is what it
-    // controls. Command is re-focused before each later press per R-04, because the
+    // controls. Command is re-focused before each later press, because the
     // opening press moves focus into the Command name box.
     async function exercise(
       control: HTMLElement,
@@ -1035,7 +1035,7 @@ describe('block 3 gate: keyboard contract of the four controls (AC-32)', () => {
     const flipRow = await exercise(flip, flipFace, false)
 
     const matrix = [fieldsRow, commandRow, supportingRow, flipRow]
-    console.log('AC-32 keyboard matrix', JSON.stringify(matrix, null, 2))
+    console.log('keyboard matrix', JSON.stringify(matrix, null, 2))
 
     for (const entry of matrix) {
       expect(entry.tagName).toBe('BUTTON')
@@ -1052,7 +1052,7 @@ describe('block 3 gate: keyboard contract of the four controls (AC-32)', () => {
       expect(entry.regionAfterLetter).toBe(true)
     }
 
-    // Focus policy: R-04 governs Command, every other control keeps focus on itself.
+    // Focus policy: Command moves focus into its form; every other control keeps focus on itself.
     expect(fieldsRow.focusAfterEnter).toBe('button:Fields')
     expect(fieldsRow.focusAfterSpace).toBe('button:Fields')
     expect(fieldsRow.focusAfterSecondEnter).toBe('button:Fields')

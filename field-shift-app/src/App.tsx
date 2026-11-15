@@ -19,7 +19,7 @@ import { t, translationKeyFor } from '@/strings'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
-// Block 5, AM-04: the Field Phase analysis is a sheet on this page, loaded on first open so the
+// The Field Phase analysis is a sheet on this page, loaded on first open so the
 // HUD bundle does not carry Recharts. Its state lives in the hash, #analise/<IBGE code>.
 const AnalysisSheet = lazy(() => import('@/analysis/AnalysisPage'))
 const ANALYSIS_HASH = /^#analise(?:\/(\d+))?$/
@@ -74,7 +74,7 @@ export const ZOrder = Object.freeze({
   agentBar: 70,
 })
 
-/** R-40: below 640 px the right edge column holds one panel at a time. */
+/** Below 640 px the right edge column holds one panel at a time. */
 const NARROW_QUERY = '(max-width: 640px)'
 
 function isNarrowViewport() {
@@ -83,7 +83,7 @@ function isNarrowViewport() {
 }
 
 function App() {
-  // Block 5, R-10: subscribing re-renders the whole HUD when the language switch changes.
+  // Subscribing re-renders the whole HUD when the language switch changes.
   useLocaleStore((state) => state.locale)
   const selectedFieldId = useMapStore((state) => state.selectedFieldId)
   const selectField = useMapStore((state) => state.selectField)
@@ -101,29 +101,29 @@ function App() {
   const [fieldsRequest, setFieldsRequest] = useState(0)
   const [isLoadingFields, setIsLoadingFields] = useState(true)
   const [isLoadingScenarios, setIsLoadingScenarios] = useState(false)
-  // Block 4: the ENSO chip and the climate line load on their own; a failure here never sets
-  // `error`, so the rest of the screen behaves exactly as without them (R-16, R-18).
+  // The ENSO chip and the climate line load on their own; a failure here never sets
+  // `error`, so the rest of the screen behaves exactly as without them.
   const [enso, setEnso] = useState<Loadable<EnsoState>>({ status: 'loading' })
   const [climate, setClimate] = useState<Loadable<FieldClimate> | null>(null)
-  // Block 4 AM-01: the top strip has no free room at 360, so below 640 px the ENSO chip
+  // The top strip has no free room at 360, so below 640 px the ENSO chip
   // renders at the top of the rotation panel instead of beside the brand. One mount only.
   const [isNarrow, setIsNarrow] = useState(isNarrowViewport)
   const [analysis, setAnalysis] = useState<AnalysisState>(analysisFromHash)
   const analysisToggleRef = useRef<HTMLButtonElement | null>(null)
   const noticeRef = useRef<HTMLDivElement | null>(null)
   const [noticeHeight, setNoticeHeight] = useState(0)
-  // R-40: which right edge panel was opened last. The transition into 360 keeps it
-  // and closes the other; leaving 360 never reopens anything (R-35).
+  // Which right edge panel was opened last. The transition into 360 keeps it
+  // and closes the other; leaving 360 never reopens anything.
   const lastRightPanelRef = useRef<'command' | 'supporting' | null>(null)
 
-  // R-20: a field whose coverage is not measured has no scenarios, and still shows why.
+  // A field whose coverage is not measured has no scenarios, and still shows why.
   const showsAbstention = Boolean(
     scenarioState === 'abstained' && threshold && (scenarios.length > 0 || threshold === 'coverage_not_measured'),
   )
   const hasNotice = Boolean(error || showsAbstention)
 
   // The status notice and the right edge column are separate fixed overlays, so the
-  // 8 px gap of R-23 is kept by measuring the notice, not by nesting it. The measure
+  // 8 px gap is kept by measuring the notice, not by nesting it. The measure
   // runs after every render, because a viewport change can rewrap the notice without
   // dispatching a resize event.
   useLayoutEffect(() => {
@@ -149,7 +149,7 @@ function App() {
     () => fields.find((field) => field.id === selectedFieldId) ?? null,
     [fields, selectedFieldId],
   )
-  // R-14, R-15: every evidence row is presented from its own fields. The layer name is
+  // Every evidence row is presented from its own fields. The layer name is
   // the fixture string through its catalog key; the basis label comes from the row's
   // own `basis` in EvidencePanel. No state outside the row can relabel it.
   const evidenceRows = useMemo<EvidenceRow[]>(() => {
@@ -265,7 +265,7 @@ function App() {
     setSeason(nextSeason)
   }, [])
 
-  // R-40: at 360 opening one panel closes the other. Above 640 both may stay open (R-23).
+  // At 360 opening one panel closes the other. Above 640 both may stay open.
   // The width is read at press time so a resize cannot leave the rule stale.
   const handleToggleCommand = useCallback(() => {
     const willOpen = !command.isOpen
@@ -281,7 +281,7 @@ function App() {
     supportingData.toggle()
   }, [command, supportingData])
 
-  // R-40: the one resize transition that changes a toggle state. When the viewport
+  // The one resize transition that changes a toggle state. When the viewport
   // becomes 360 while both panels are open, the panel opened last stays and the older
   // one closes. Both closes are programmatic, so neither pulls focus (the command
   // form's close skips its focus restore), and focus stays where it was.
@@ -297,7 +297,7 @@ function App() {
     return () => query.removeEventListener('change', handleChange)
   }, [command.isOpen, supportingData.isOpen, command.close, supportingData.close])
 
-  // AM-04: opening the analysis follows the selected field's municipality; the sheet's own
+  // Opening the analysis follows the selected field's municipality; the sheet's own
   // picker may move to another municipality without changing the selected field.
   const openAnalysis = useCallback((code: number | null) => {
     setAnalysis({ open: true, code })
@@ -362,8 +362,8 @@ function App() {
         </div>
       </div>
 
-      {/* One notice node. At 360 it is the first box of the left stack (R-39); above 640 it
-          sits at right 22, top 60 and the right edge column starts 8 px below it (R-23). */}
+      {/* One notice node. At 360 it is the first box of the left stack; above 640 it
+          sits at right 22, top 60 and the right edge column starts 8 px below it. */}
       <div className="left-stack">
         {hasNotice && (
           <div className="overlay anchor-notice layer-notice" style={{ zIndex: ZOrder.abstentionNotice }}>

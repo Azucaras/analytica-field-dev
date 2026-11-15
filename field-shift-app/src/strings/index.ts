@@ -7,7 +7,7 @@ export type Locale = 'en' | 'pt-BR'
 
 const LOCALE_STORAGE_KEY = 'fs.locale'
 
-/** Block 5, R-10: Portuguese unless the switch stored English. */
+/** Portuguese unless the switch stored English. */
 /** Short month name in the current locale, 1 = January. */
 export function monthName(month: number): string {
   return new Intl.DateTimeFormat(getLocale(), { month: 'short', timeZone: 'UTC' })

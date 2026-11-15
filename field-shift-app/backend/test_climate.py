@@ -1,4 +1,4 @@
-"""Block 4 backend criteria AC-03 to AC-06: pilot fields, coverage abstention and climate fixtures."""
+"""Pilot fields, coverage abstention and the climate fixtures."""
 
 from __future__ import annotations
 
@@ -29,7 +29,6 @@ class ClimateEndpointTests(unittest.TestCase):
     def tearDown(self):
         main.CLIMATE_DIR = self.original_dir
 
-    # AC-03
     def test_fields_lists_fixture_fields_then_pilot_fields(self):
         response = self.client.get("/fields")
         self.assertEqual(response.status_code, 200)
@@ -58,7 +57,6 @@ class ClimateEndpointTests(unittest.TestCase):
         self.assertEqual(self.client.get("/fields/mt-santa-carmem-01/scenarios").json()["state"], "ranked")
         self.assertEqual(self.client.get("/fields/mt-santa-carmem-03/scenarios").json()["threshold"], "coverage_below_80_percent")
 
-    # AC-04
     def test_enso_endpoint_serves_the_fixture_unchanged(self):
         body = self.client.get("/climate/enso").json()
         fixture = _read("enso.json")
@@ -82,7 +80,6 @@ class ClimateEndpointTests(unittest.TestCase):
     def test_unknown_field_climate_is_404(self):
         self.assertEqual(self.client.get("/fields/nope/climate").status_code, 404)
 
-    # AC-05
     def test_missing_enso_file_is_503_and_fields_still_answer(self):
         with TemporaryDirectory() as directory:
             for path in FIXTURE_CLIMATE_DIR.glob("*.json"):
@@ -94,7 +91,6 @@ class ClimateEndpointTests(unittest.TestCase):
             self.assertIn("enso.json", response.json()["detail"])
             self.assertEqual(self.client.get("/fields").status_code, 200)
 
-    # AC-06
     def test_rows_carry_seven_fields_and_basis_rules(self):
         for path in FIXTURE_CLIMATE_DIR.glob("municipality-*.json"):
             for row in json.loads(path.read_text(encoding="utf-8"))["rows"]:

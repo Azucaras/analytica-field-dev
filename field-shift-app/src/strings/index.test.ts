@@ -8,7 +8,7 @@ afterEach(() => {
 })
 
 describe('t', () => {
-  it('uses Portuguese when no locale is stored (block 5, R-10)', () => {
+  it('uses Portuguese when no locale is stored', () => {
     localStorage.removeItem('fs.locale')
     expect(t('map.field_map')).toBe('Mapa de talhões')
   })
@@ -18,7 +18,7 @@ describe('t', () => {
     expect(t('map.field_map')).toBe('Field map')
   })
 
-  it('carries a Portuguese value with the same placeholders for every English key (block 5, R-11)', () => {
+  it('carries a Portuguese value with the same placeholders for every English key', () => {
     const placeholders = (text: string) => [...text.matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]).sort()
     for (const key of Object.keys(en) as Array<keyof typeof en>) {
       expect(typeof ptBR[key], key).toBe('string')
@@ -39,7 +39,7 @@ describe('t', () => {
     expect(t('map.data_coverage', { coverage: 62 })).toBe('62% data coverage')
   })
 
-  it('keeps the modelled marker and drops the withdrawn constraint keys (AM-02, AM-12)', () => {
+  it('keeps the modelled marker and drops the withdrawn constraint keys', () => {
     expect(t('evidence.layer_modelled', { layer: 'SMAP soil moisture' })).toBe('SMAP soil moisture (modelled)')
     expect('evidence.layer_assumes' in en).toBe(false)
     expect('evidence.assumes' in en).toBe(false)

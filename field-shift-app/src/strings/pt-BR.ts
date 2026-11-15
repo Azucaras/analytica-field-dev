@@ -1,7 +1,7 @@
 import type { en } from './en'
 
 /**
- * Block 5, R-11: Portuguese is the default locale (D-07), so every key of `en.ts` carries a
+ * Portuguese is the default locale, so every key of `en.ts` carries a
  * Portuguese value here. `index.test.ts` fails when a key is missing or a placeholder differs.
  * Crop and place names stay as the data spells them; units and index names (RONI, SMAP) stay.
  */
@@ -28,6 +28,10 @@ export const ptBR: Record<keyof typeof en, string> = {
   'map.field.01': 'Talhão 01',
   'map.field.02': 'Talhão 02',
   'map.field.03': 'Talhão 03',
+  'map.field.04': 'Talhão 04',
+  'map.field.05': 'Talhão 05',
+  'map.field.06': 'Talhão 06',
+  'map.field.07': 'Talhão 07',
   'map.field.mock-north': 'Santa Carmem Norte',
   'map.field.mock-south': 'Santa Carmem Sul',
   'map.plan_with_evidence': 'PLANEJE COM EVIDÊNCIA',

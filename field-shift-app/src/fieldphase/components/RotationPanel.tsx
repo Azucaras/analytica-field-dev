@@ -15,7 +15,8 @@ export const cropColor = (id: string) => `var(--fp-crop-${id.replace(/_/g, "-")}
  * calendars, plain-language reasons and the full arithmetic behind each score.
  */
 export function RotationPanel({ rotations, regionLabel }: { rotations: RotationsBlock; regionLabel?: string }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const cropName = (id: string) => (locale === "en" ? rotations.crops[id]?.name_en : rotations.crops[id]?.name_pt) ?? id;
   const available = ENSO_ORDER.filter((c) => rotations.by_class[c]?.length);
   const [cls, setCls] = useState<EnsoClass>(
     rotations.current_class && available.includes(rotations.current_class) ? rotations.current_class : available[0],
@@ -62,7 +63,13 @@ export function RotationPanel({ rotations, regionLabel }: { rotations: Rotations
       </div>
 
       {rotations.assumptions.map((a) => (
-        <AssumptionNotice key={a.scope + a.region}>{t.assumption.text(t.rotations.calendarAssumption(regionLabel ?? a.region))}</AssumptionNotice>
+        <AssumptionNotice key={a.scope + a.region + (a.crop ?? "")}>
+          {t.assumption.text(
+            a.crop
+              ? t.rotations.cropCalendarAssumption(cropName(a.crop), regionLabel ?? a.region)
+              : t.rotations.calendarAssumption(regionLabel ?? a.region),
+          )}
+        </AssumptionNotice>
       ))}
 
       <ol className="fp-rot-list">

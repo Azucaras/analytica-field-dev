@@ -1,6 +1,6 @@
 {
   "contract_version": "fieldshift-climate-1",
-  "recorded_at": "2026-11-15T14:17:44+00:00",
+  "recorded_at": "2026-11-15T14:25:22+00:00",
   "note": "Synthetic fields: a rectangle the size of Field 01 centred on the IBGE municipal centroid.",
   "fields": [
     {

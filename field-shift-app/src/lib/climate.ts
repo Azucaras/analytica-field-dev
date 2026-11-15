@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
 /**
- * Block 4: the climate fixtures the backend serves from `backend/fixtures/climate/`, written by
+ * The climate fixtures the backend serves from `backend/fixtures/climate/`, written by
  * `field-shift-pipeline/pipeline/export_fieldshift.py`. Every payload is parsed here; a payload
- * that does not match is treated as unavailable rather than half rendered (R-16, R-18).
+ * that does not match is treated as unavailable rather than half rendered.
  */
 
 const basis = z.enum(['observed', 'retrieved', 'reported', 'modelled', 'entered'])

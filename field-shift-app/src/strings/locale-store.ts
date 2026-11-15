@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { Locale } from './index'
 
 /**
- * Block 5, R-10: one locale for the HUD and the analysis page, stored under `fs.locale`.
+ * One locale for the HUD and the analysis page, stored under `fs.locale`.
  * Portuguese is the default; `t()` reads the same key, so this store only exists to re-render
  * the tree when the switch changes it.
  */

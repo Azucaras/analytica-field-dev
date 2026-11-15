@@ -5,7 +5,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import { useLocaleStore } from '@/strings/locale-store'
 import AnalysisPage from './AnalysisPage'
 
-/** Block 5, AC-03: the analysis route renders the Field Phase sections from the real export. */
+/** The analysis route renders the Field Phase sections from the real export. */
 
 vi.mock('maplibre-gl', () => ({
   Map: class {
@@ -73,7 +73,7 @@ describe('analysis page', () => {
   it('says why Santa Carmem has no rotations instead of asking to run the scoring', async () => {
     renderAt(5107248)
     const rotations = await screen.findByRole('region', { name: /Rotações recomendadas/ })
-    expect(within(rotations).getByText(/não é pontuado/)).toBeTruthy()
+    expect(within(rotations).getByText(/fica sem notas/)).toBeTruthy()
     expect(within(rotations).queryByText('#1')).toBeNull()
   })
 })

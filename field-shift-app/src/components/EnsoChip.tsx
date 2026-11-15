@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { signedCelsius, type EnsoState, type Loadable } from '@/lib/climate'
 import { t } from '@/strings'
 
-/** R-15, R-16: read-only ENSO state from the CPC fixture, next to the brand chip. */
+/** Read-only ENSO state from the CPC fixture, next to the brand chip. */
 export function EnsoChip({ enso }: { enso: Loadable<EnsoState> }) {
   if (enso.status === 'loading') {
     return (

@@ -25,9 +25,9 @@ export type CommandToggleState = {
 }
 
 /**
- * Owns the command toggle state so the draft survives the form unmounting (R-04),
+ * Owns the command toggle state so the draft survives the form unmounting,
  * and owns the focus policy: into the form on open, back to the button on close.
- * A programmatic close (the 360 exclusivity rule of R-40) does not pull focus
+ * A programmatic close (the 360 exclusivity rule) does not pull focus
  * back to this button, because the press that closed it belongs to another control.
  */
 export function useCommandToggle(): CommandToggleState {

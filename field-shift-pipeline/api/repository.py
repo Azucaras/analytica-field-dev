@@ -284,7 +284,7 @@ def municipality_payload(code: int) -> dict[str, Any]:
         "land_cover": _land_cover_block(code),
         "terrain": _terrain_block(code),
         "rotations": rotations_block(code, current),
-        # Field Shift block 5, R-02: says why `rotations` is null, so the page never tells a
+        # Says why `rotations` is null, so the page never tells a
         # municipality with no configured candidates to "run the scoring".
         "rotations_status": _rotations_status(code),
         "climate": {
@@ -412,6 +412,8 @@ def _forecast_block(code: int) -> dict[str, Any] | None:
     if status is None:
         return None
     st = status[status.code == code]
+    if st.empty:  # this place was never fetched: the page says so instead of drawing empty panels
+        return None
     summ = optional("forecast_summary.parquet")
     days = optional("forecast_days.parquet")
     outlook = optional("season_outlook.parquet")

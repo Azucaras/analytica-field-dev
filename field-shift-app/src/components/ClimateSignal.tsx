@@ -5,9 +5,9 @@ import { monthName, t } from '@/strings'
 type Bar = { key: string; label: string; value: number | null }
 
 /**
- * R-17, R-18: one line under the rotation heading for the selected field's municipality. The
+ * One line under the rotation heading for the selected field's municipality. The
  * three values share one scale whose maximum is the largest of them; every value also prints as
- * text, so the bar never carries a number alone. The line prints its own crop year (OD-03).
+ * text, so the bar never carries a number alone. The line prints its own crop year.
  */
 export function ClimateSignal({ climate }: { climate: Loadable<FieldClimate> | null }) {
   if (climate === null) return null

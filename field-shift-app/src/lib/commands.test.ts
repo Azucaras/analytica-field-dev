@@ -43,7 +43,7 @@ describe('command registry', () => {
     }
   })
 
-  it('accepts only scenarios and evidence for open_panel (AM-08, AC-28)', () => {
+  it('accepts only scenarios and evidence for open_panel', () => {
     runCommand('open_panel', { panel: 'evidence' })
     expect(useMapStore.getState().openPanelName).toBe('evidence')
 
@@ -51,7 +51,7 @@ describe('command registry', () => {
     expect(useMapStore.getState().openPanelName).toBe('scenarios')
   })
 
-  it('rejects the withdrawn constraints panel with a schema failure (AM-08)', () => {
+  it('rejects the withdrawn constraints panel with a schema failure', () => {
     useMapStore.setState({ openPanelName: null })
 
     expect(() => runCommand('open_panel', { panel: 'constraints' })).toThrow()

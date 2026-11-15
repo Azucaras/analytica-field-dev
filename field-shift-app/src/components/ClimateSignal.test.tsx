@@ -6,7 +6,7 @@ import { ClimateSignal } from './ClimateSignal'
 
 afterEach(cleanup)
 
-describe('ClimateSignal (block 4, AC-09)', () => {
+describe('ClimateSignal', () => {
   it('prints the municipality, the three values, modelled, the date and n from the LEM fixture', () => {
     const raw = climateFixture<Record<string, unknown>>('municipality-2919553.json')
     const climate = fieldClimateSchema.parse({ state: 'available', ...raw })

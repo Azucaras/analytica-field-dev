@@ -5,7 +5,7 @@ type Props = { children: ReactNode; onClose: () => void }
 type State = { failed: boolean }
 
 /**
- * Block 5, AM-04: the analysis sheet shares the HUD page, so a rendering failure inside it must
+ * The analysis sheet shares the HUD page, so a rendering failure inside it must
  * close only the sheet, never the field map underneath.
  */
 export class SheetBoundary extends Component<Props, State> {

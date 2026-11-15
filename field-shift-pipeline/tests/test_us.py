@@ -1,4 +1,4 @@
-"""Block 6: the US calendar and the USDA NASS reader."""
+"""The US calendar and the USDA NASS reader."""
 
 from __future__ import annotations
 

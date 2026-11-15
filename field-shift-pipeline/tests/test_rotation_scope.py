@@ -1,4 +1,4 @@
-"""Field Shift block 5, AC-01: only regions with configured rotations are scored."""
+"""Only regions with configured rotations are scored."""
 
 from __future__ import annotations
 

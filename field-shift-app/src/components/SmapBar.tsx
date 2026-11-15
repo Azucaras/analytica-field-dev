@@ -4,7 +4,7 @@ import type { EvidenceRow } from './ScenarioCards'
 
 export const SMAP_SCALE_MAX = 0.5
 
-/** R-14: observed, retrieved and entered are the measured bases. */
+/** Observed, retrieved and entered are the measured bases. */
 const MEASURED_BASES: ReadonlyArray<EvidenceRow['basis']> = ['observed', 'retrieved', 'entered']
 
 type SmapBarProps = {
@@ -22,7 +22,7 @@ type SmapState = {
 }
 
 /**
- * R-17: the drawn or empty state is a pure function of the row's own basis and of
+ * The drawn or empty state is a pure function of the row's own basis and of
  * whether its value parses to a finite number. No prop carries an assumption.
  */
 function resolveState(value: string | null | undefined, basis: EvidenceRow['basis'] | undefined): SmapState {
@@ -62,7 +62,7 @@ export function SmapBar({ value, basis, asOf, scaleMax }: SmapBarProps) {
       ? t('visual.smap_group_label', { layer, value: value as string, basis: basisLabel })
       : t('visual.smap_group_label_plain', { layer, value: value as string })
   } else if (state.marked) {
-    // AC-13: the accessible name carries the same literal as the visible label.
+    // The accessible name carries the same literal as the visible label.
     groupLabel = state.label as string
   } else {
     groupLabel = t('visual.smap_group_label_empty', { layer, label: state.label as string })

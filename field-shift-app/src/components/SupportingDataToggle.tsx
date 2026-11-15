@@ -9,7 +9,7 @@ export type SupportingDataToggleState = {
   close: () => void
 }
 
-/** Owns the supporting data toggle state; the panel mounts only while open (R-21). */
+/** Owns the supporting data toggle state; the panel mounts only while open. */
 export function useSupportingDataToggle(): SupportingDataToggleState {
   const [isOpen, setIsOpen] = useState(false)
   const toggle = useCallback(() => setIsOpen((open) => !open), [])
