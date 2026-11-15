@@ -321,6 +321,10 @@ export const en = {
   'numbers.ndvi.not_plotted': 'not plotted',
   'numbers.ndvi.best_fraction': 'not read',
   'numbers.abstain.ndvi': 'NDVI not plotted: {scenes} scenes below 20 percent cloud, best valid fraction {fraction}. At least two scenes at or above 0.5 are needed.',
+  // The card-level sentence repeats the count, so a null count cannot reuse the sentence above: it
+  // names the count and the Earth Search source, with the section reason or the NDVI gap cause, the
+  // way the two count rows do, and never the placeholder `No value` (R-12, AC-11).
+  'numbers.abstain.ndvi_uncounted': 'NDVI not plotted, because the scene count was not read: {reason}. Best valid fraction {fraction}. Source: {source}. At least two scenes at or above 0.5 are needed.',
   'numbers.soil.model': 'Static 250 m model, not a map. Sampled at the centroid, with the decimals of the metric table.',
   'numbers.soil.depth': 'Depth {depth} cm',
   'numbers.soil.clay': 'Clay, g/kg',

@@ -466,6 +466,20 @@ function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['
   const countReason = abstainReason(ndvi.reason, 'ndvi', gaps)
   const abstainSceneCount = t('numbers.abstain.ndvi_scene_count', { reason: countReason, source: ndvi.source })
   const abstainClearCount = t('numbers.abstain.ndvi_clear_count', { reason: countReason, source: ndvi.source })
+  // The card-level sentence below repeats the count, so a null count cannot reuse the counted
+  // sentence: it names the count and the Earth Search source with the same cause as the count rows,
+  // and never the placeholder `No value` (R-12, AC-11). A state that carries a count keeps the
+  // sentence that states it, and both keep the two-scene rule.
+  const sentence = ndvi.scene_count === null
+    ? t('numbers.abstain.ndvi_uncounted', {
+      reason: countReason,
+      fraction: ndvi.best_valid_fraction ?? t('numbers.ndvi.best_fraction'),
+      source: ndvi.source,
+    })
+    : t('numbers.abstain.ndvi', {
+      scenes: ndvi.scene_count,
+      fraction: ndvi.best_valid_fraction ?? t('numbers.ndvi.best_fraction'),
+    })
   return (
     <Card id="ndvi" title={t('numbers.card.ndvi')} source={ndvi.source} asOf={ndvi.as_of} basis="retrieved">
       <p className="numbers-cell-statement">{t('numbers.ndvi.source')}</p>
@@ -496,12 +510,7 @@ function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['
         </>
       )}
       {ndvi.state !== 'ok' && (
-        <p className="numbers-abstain">
-          {t('numbers.abstain.ndvi', {
-            scenes: ndvi.scene_count ?? t('numbers.no_value'),
-            fraction: ndvi.best_valid_fraction ?? t('numbers.ndvi.best_fraction'),
-          })}
-        </p>
+        <p className="numbers-abstain" data-abstain-sentence="ndvi">{sentence}</p>
       )}
       {plotted.length > 0 && (
         <table className="numbers-table">

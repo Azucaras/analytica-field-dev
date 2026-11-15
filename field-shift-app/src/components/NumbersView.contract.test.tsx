@@ -322,11 +322,15 @@ describe('the offline surface the route sends when POWER is unreachable (R-48, A
     expect(smapText).toContain('palette ramp')
     expect(smapText).toContain(payload.sections.smap.source)
     expect(smapText).not.toContain('No value')
-    expect(
-      within(card('ndvi')).getByText(
-        'NDVI not plotted: No value scenes below 20 percent cloud, best valid fraction not read. At least two scenes at or above 0.5 are needed.',
-      ),
-    ).toBeTruthy()
+    const ndviText = card('ndvi').textContent ?? ''
+    expect(ndviText).toContain('NDVI not plotted')
+    // The card-level sentence names the count it could not read and the Earth Search source, carries
+    // the NDVI gap cause, and keeps the two-scene rule instead of printing the placeholder value.
+    expect(ndviText).toContain('the scene count was not read')
+    expect(ndviText).toContain(payload.sections.ndvi.source)
+    expect(ndviText).toContain(payload.gaps.find((gap) => gap.section === 'ndvi')?.cause ?? 'no ndvi gap')
+    expect(ndviText).toContain('At least two scenes at or above 0.5 are needed.')
+    expect(ndviText).not.toContain('No value')
     expect(within(card('rotation')).getByText('no MapBiomas Collection 11 row for this polygon')).toBeTruthy()
     const municipalText = card('municipal').textContent ?? ''
     expect(municipalText).toContain('Municipal value not read')
