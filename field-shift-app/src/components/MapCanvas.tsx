@@ -206,13 +206,42 @@ export function firstSymbolId(map: MapLibreMap): string | undefined {
 }
 
 /**
- * R-36: the basemap sits above the style's own fill and line layers and below its symbols,
- * and the polygon layers are raised above it, so imagery never hides a polygon.
+ * R-36, AC-28: where the basemap goes and which of the style's own symbols it must not cover.
+ *
+ * The imagery sits above every fill and line of the style's own layers (its land, water, road
+ * and boundary geometry) and below its symbols, so the labels stay readable. The style's own order
+ * can put a symbol under one of those fills and lines: in OpenFreeMap Liberty the road-arrow
+ * symbols sit under the bridge, building and boundary lines. The basemap goes directly before the
+ * first symbol that follows the last such fill or line, and each own symbol that sits under that
+ * point is raised to just above the imagery in its own order. Nothing else of the style moves.
+ *
+ * `ownIds` is the style's layer ids at `style.load`, before the app adds a layer, so the app's
+ * boundary, class and raster layers are never read as the style's own.
+ */
+export function basemapStackPlan(
+  layers: ReadonlyArray<{ id: string; type: string }>,
+  ownIds: ReadonlySet<string>,
+): { before: string | undefined; raise: string[] } {
+  let lastOwnGeometry = -1
+  layers.forEach((layer, index) => {
+    if (ownIds.has(layer.id) && (layer.type === 'fill' || layer.type === 'line')) lastOwnGeometry = index
+  })
+  const anchor = layers.findIndex((layer, index) => index > lastOwnGeometry && layer.type === 'symbol')
+  const raise = layers
+    .filter((layer, index) => index < lastOwnGeometry && ownIds.has(layer.id) && layer.type === 'symbol')
+    .map((layer) => layer.id)
+  return { before: anchor >= 0 ? layers[anchor].id : undefined, raise }
+}
+
+/**
+ * R-36: the basemap sits above the style's own fill and line layers and below its symbols, and
+ * the polygon layers are raised above it, so imagery never hides a polygon.
  */
 function ensureBasemap(
   map: MapLibreMap,
   adapter: BasemapAdapter,
   composition: CompositionPreset,
+  ownIds: ReadonlySet<string>,
 ): void {
   if (!map.getSource(BASEMAP_SOURCE_ID)) {
     map.addSource(BASEMAP_SOURCE_ID, {
@@ -224,12 +253,14 @@ function ensureBasemap(
     })
   }
   if (!map.getLayer(BASEMAP_LAYER_ID)) {
+    const plan = basemapStackPlan(map.getStyle().layers ?? [], ownIds)
     map.addLayer({
       id: BASEMAP_LAYER_ID,
       type: 'raster',
       source: BASEMAP_SOURCE_ID,
       paint: { 'raster-opacity': 1 },
-    }, firstSymbolId(map))
+    }, plan.before)
+    for (const layerId of plan.raise) map.moveLayer(layerId, plan.before)
   }
   // R-34: `Map` hides the basemap; the two satellite presets show it, and the labels are the
   // style's own symbol layers, which `applyComposition` owns.
@@ -297,6 +328,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   const region = regionAdapter(regionId)
   const basemapAdapter = BASEMAP_ADAPTERS.find((adapter) => adapter.id === basemapId) ?? activeBasemapAdapter()
   const sceneRef = useRef<PolygonScene | null>(null)
+  // AC-28: the style's own layer ids, read at `style.load` before the app adds any layer.
+  const styleOwnLayerIdsRef = useRef<ReadonlySet<string>>(new Set())
   const attributionRef = useRef<AttributionControl | null>(null)
   const attributionKeyRef = useRef('')
   const hoveredRef = useRef<string | number | null>(null)
@@ -349,9 +382,11 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       // A new style drops every source, so the applied tile cache no longer describes the map.
       appliedTilesRef.current = {}
       setMapReady(true)
+      // AC-28: snapshot the style's own layers before the app adds its boundary, basemap or polygon layers.
+      styleOwnLayerIdsRef.current = new Set((map.getStyle().layers ?? []).map((layer) => layer.id))
       ensureFieldBoundaries(map, fieldsRef.current)
       const styleRegion = regionAdapter(useMapStore.getState().regionId)
-      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition)
+      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition, styleOwnLayerIdsRef.current)
       applyComposition(map, useMapStore.getState().composition)
       const scene = sceneRef.current
       if (scene?.tiers) {
@@ -478,7 +513,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map) return
-    ensureBasemap(map, basemapAdapter, composition)
+    ensureBasemap(map, basemapAdapter, composition, styleOwnLayerIdsRef.current)
     raisePolygonLayers(map)
   }, [mapReady, basemapAdapter, composition, regionId])
 
