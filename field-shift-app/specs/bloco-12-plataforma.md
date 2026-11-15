@@ -51,6 +51,10 @@ problems were present on the team's `main` before the Field Phase work was merge
   the registry. The map draws the basemap's water polygons above them, so a kilometre pixel on the coast no
   longer spills over the sea; rain and reflectance stay above the mask.
 - MODIS NDVI monthly is MOD13A3, a 1 km product (GIBS layer metadata); the registry said 250 m.
+- SMAP L3 soil moisture (a swath product) and the two HLS reflectance layers (single scenes) covered only
+  patches of the map on any one date. They stay in the registry with `shown: False`, so their tiles and the
+  block 4 evidence still resolve, but `/layers` and the offline catalog leave them out. The layer on at load
+  is now SMAP L4 surface soil moisture, the gap-free modelled version.
 
 ## What this replaces
 

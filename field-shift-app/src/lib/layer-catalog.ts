@@ -72,12 +72,20 @@ export function buildLayerCatalog(payload: LayersResponse): LayerCatalog {
 }
 
 /**
+ * Layers the backend no longer lists (its registry marks them `shown: False`): SMAP L3 is a
+ * swath product and HLS shows single scenes, so on any date each covers only patches of the
+ * map. The recorded response below predates that, so the offline catalog drops them too.
+ */
+export const RETIRED_LAYER_IDS: ReadonlySet<string> = new Set(['smap-l3', 'hls-l30', 'hls-s30'])
+
+/**
  * The catalog while `/layers` has not answered, generated from the recorded response of
  * `artifacts/fixtures/layers-response-2026-11-12.json`. Every row is marked `unavailable`
  * with no date and no age, which is exactly what R-24 requires a row to print when the
  * `/layers` request fails: the row stays, the status shows, and no date is invented.
  */
 export const LAYER_CATALOG: LayerCatalog = buildLayerCatalog(RECORDED_LAYERS_RESPONSE)
+  .filter((entry) => !RETIRED_LAYER_IDS.has(entry.id))
   .map((entry) => ({
     ...entry,
     status: 'unavailable' as const,

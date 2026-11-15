@@ -116,9 +116,9 @@ type MapState = {
 }
 
 const DEFAULT_ORDER = LAYER_CATALOG.map((entry) => entry.id)
-// Only the block 1 layer starts visible, so R-19 holds at first paint: a layer that is
-// off issues no tile request, and the transport sees `smap-l3` alone (AC-15).
-const DEFAULT_ON = { 'smap-l3': true }
+// One layer starts visible, so R-19 holds at first paint: a layer that is off issues no tile
+// request (AC-15). It is SMAP L4 surface moisture, the gap-free version of block 1's SMAP layer.
+const DEFAULT_ON = { 'smap-l4-surface': true }
 
 export const useMapStore = create<MapState>((set, get) => ({
   selectedFieldId: null,

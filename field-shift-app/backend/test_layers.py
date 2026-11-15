@@ -36,6 +36,9 @@ TABLE_A = {
     "grace-mascon": ("GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI", "GoogleMapsCompatible_Level6", 6, "retrieved", "about 300 km, mascon", False),
 }
 
+# Listed in the registry, left out of /layers (block 12): patchy coverage on any one date.
+HIDDEN = {"smap-l3", "hls-l30", "hls-s30"}
+
 TABLE_B = {
     "smap-l3": ("tile", "P1D", "2015-03-31", "2026-11-11", 1),
     "smap-l4-surface": ("tile", "P1D", "2015-03-31", "2026-11-10", 1),
@@ -132,7 +135,7 @@ class RegistryTests(RegistryTestCase):
         required = {
             "id", "gibs_id", "matrix", "max_zoom", "label", "basis", "resolution", "cadence",
             "lookback_days", "time_format", "time_start", "declared_end", "kind", "optical",
-            "blank_threshold_bytes", "reserve", "window_days", "surface",
+            "blank_threshold_bytes", "reserve", "window_days", "surface", "shown",
         }
         for layer_id, entry in main.LAYER_REGISTRY.items():
             self.assertEqual(set(entry), required, layer_id)
@@ -352,8 +355,10 @@ class TileContractTests(RegistryTestCase):
         self.assertEqual(set(payload), {"chosen_date", "axis", "layers"})
         self.assertEqual(payload["chosen_date"], "2026-11-12")
         self.assertEqual(payload["axis"], {"start": "2015-04-01", "end": "2026-11-14", "default": "2026-11-14"})
-        self.assertEqual(len(payload["layers"]), 13)
-        self.assertEqual([row["id"] for row in payload["layers"]], list(TABLE_A))
+        # Block 12: SMAP L3 and the two HLS layers stay in the registry but are not listed.
+        shown = [layer_id for layer_id in TABLE_A if layer_id not in HIDDEN]
+        self.assertEqual(len(payload["layers"]), 10)
+        self.assertEqual([row["id"] for row in payload["layers"]], shown)
         expected_keys = {
             "id", "label", "kind", "basis", "resolution", "matrix", "max_zoom", "cadence",
             "lookback_days", "time_format", "optical", "window_days", "surface", "status",
@@ -370,7 +375,7 @@ class TileContractTests(RegistryTestCase):
 
         with patch.object(main, "upstream_fetch", not_found):
             payload = self.client.get("/layers?date=2026-11-12").json()
-        smap = next(row for row in payload["layers"] if row["id"] == "smap-l3")
+        smap = next(row for row in payload["layers"] if row["id"] == "smap-l4-surface")
         self.assertEqual(smap["status"], "none_in_lookback")
         self.assertIsNone(smap["effective_date"])
         self.assertIsNone(smap["age_days"])
@@ -396,12 +401,15 @@ class TileContractTests(RegistryTestCase):
         with patch.object(main, "upstream_fetch", ok_transport):
             payload = self.client.get("/layers?date=2026-11-12").json()
         by_id = {row["id"]: row for row in payload["layers"]}
-        smap = by_id["smap-l3"]
-        self.assertEqual(smap["label"], "SMAP soil moisture")
-        self.assertEqual(smap["basis"], "retrieved")
+        smap = by_id["smap-l4-surface"]
+        self.assertEqual(smap["label"], "SMAP L4 surface soil moisture")
+        self.assertEqual(smap["basis"], "modelled")
         self.assertEqual(smap["resolution"], "9 km")
-        self.assertEqual(smap["effective_date"], "2026-11-11")
-        self.assertEqual(smap["age_days"], 1)
+        self.assertEqual(smap["effective_date"], "2026-11-10")
+        self.assertEqual(smap["age_days"], 2)
+        for layer_id in HIDDEN:
+            self.assertNotIn(layer_id, by_id)
+            self.assertFalse(main.LAYER_REGISTRY[layer_id]["shown"])
         grace = by_id["grace-mascon"]
         self.assertEqual(grace["status"], "stale")
         self.assertEqual(grace["last_observation"], "2022-07-01")

@@ -115,8 +115,8 @@ export function parseFieldLocation(location: string | null | undefined): { munic
   return { municipality: parts[0], uf }
 }
 
-/** R-33: the primary layer is the first layer that is on in stack order, else smap-l3. */
-export const DEFAULT_PRIMARY_LAYER = 'smap-l3'
+/** R-33: the primary layer is the first layer that is on in stack order, else SMAP L4 surface. */
+export const DEFAULT_PRIMARY_LAYER = 'smap-l4-surface'
 
 export function primaryLayerId(order: readonly string[], on: Record<string, boolean>): string {
   return order.find((id) => on[id]) ?? DEFAULT_PRIMARY_LAYER

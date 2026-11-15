@@ -83,12 +83,12 @@ describe('the field location text maps to the snapshot municipality and UF', () 
   })
 })
 
-describe('R-33: the primary layer is the first one on in stack order, else smap-l3', () => {
+describe('R-33: the primary layer is the first one on in stack order, else SMAP L4 surface', () => {
   it('takes the first on layer of the stack', () => {
     expect(primaryLayerId(['ndvi-8day', 'smap-l3'], { 'ndvi-8day': true, 'smap-l3': true })).toBe('ndvi-8day')
   })
 
-  it('falls back to smap-l3 when no layer is on', () => {
-    expect(primaryLayerId(['ndvi-8day', 'smap-l3'], {})).toBe('smap-l3')
+  it('falls back to SMAP L4 surface when no layer is on', () => {
+    expect(primaryLayerId(['ndvi-8day', 'smap-l3'], {})).toBe('smap-l4-surface')
   })
 })

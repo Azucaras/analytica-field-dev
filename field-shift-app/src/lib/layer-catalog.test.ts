@@ -1,14 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import {
-  buildLayerCatalog,
-  layerTileTemplate,
-  markCatalogUnavailable,
-  LAYER_CATALOG,
-  VECTOR_BASEMAP_STYLE,
-  type LayersResponse,
-} from './layer-catalog'
+import { buildLayerCatalog, layerTileTemplate, markCatalogUnavailable, LAYER_CATALOG, VECTOR_BASEMAP_STYLE, type LayersResponse, RETIRED_LAYER_IDS } from './layer-catalog'
 import { RECORDED_LAYERS_RESPONSE } from './recorded-layers-response'
 import { en } from '@/strings/en'
 
@@ -21,6 +14,12 @@ describe('layer catalog', () => {
   it('uses the keyless OpenFreeMap Liberty vector basemap, not the zoom-capped MapLibre demo tiles', () => {
     expect(VECTOR_BASEMAP_STYLE).toBe('https://tiles.openfreemap.org/styles/liberty')
     expect(VECTOR_BASEMAP_STYLE).not.toContain('demotiles')
+  })
+
+  it('leaves SMAP L3 and the two HLS layers out of the offline catalog (block 12)', () => {
+    expect([...RETIRED_LAYER_IDS].sort()).toEqual(['hls-l30', 'hls-s30', 'smap-l3'])
+    expect(LAYER_CATALOG.map((entry) => entry.id).filter((id) => RETIRED_LAYER_IDS.has(id))).toEqual([])
+    expect(LAYER_CATALOG).toHaveLength(10)
   })
 
   it('reads the same bytes as the recorded /layers evidence', () => {

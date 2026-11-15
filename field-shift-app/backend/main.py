@@ -101,6 +101,7 @@ def _layer(
     reserve: str | None = None,
     window_days: float | int | None = None,
     surface: str = "any",
+    shown: bool = True,
 ) -> dict[str, Any]:
     """One registry entry, with the fields fixed by the Data contracts section."""
     return {
@@ -124,6 +125,9 @@ def _layer(
         # "land" for products with no values over water (soil moisture, vegetation, land surface
         # temperature); the map hides the sea above them. "any" for rain and reflectance.
         "surface": surface,
+        # False keeps the entry (its tiles and the block 4 evidence still resolve) but leaves it
+        # out of /layers, so the app does not offer it.
+        "shown": shown,
     }
 
 
@@ -134,7 +138,9 @@ LAYER_REGISTRY: dict[str, dict[str, Any]] = {
     for entry in (
         _layer("smap-l3", "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
                "SMAP soil moisture", "retrieved", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-11", "tile", False,
-               reserve="backend/reserve/smap-soil-moisture.png", window_days=1, surface="land"),
+               reserve="backend/reserve/smap-soil-moisture.png", window_days=1, surface="land",
+               # Swath product: each day covers strips of the globe only. L4 surface is the gap-free version.
+               shown=False),
         _layer("smap-l4-surface", "SMAP_L4_Analyzed_Surface_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
                "SMAP L4 surface soil moisture", "modelled", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-10", "tile", False,
                window_days=1, surface="land"),
@@ -164,10 +170,11 @@ LAYER_REGISTRY: dict[str, dict[str, Any]] = {
                window_days=1, surface="land"),
         _layer("hls-l30", "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", "GoogleMapsCompatible_Level12", 12,
                "HLS Landsat reflectance, 30 m", "retrieved", "30 m", "P1D", 30, "date", "2013-03-22", "2026-11-06", "tile", True,
-               window_days=1),
+               # Scene-based: a date shows only the scenes acquired that day, patches of the map.
+               window_days=1, shown=False),
         _layer("hls-s30", "HLS_S30_Nadir_BRDF_Adjusted_Reflectance", "GoogleMapsCompatible_Level12", 12,
                "HLS Sentinel-2 reflectance, 30 m", "retrieved", "30 m", "P1D", 30, "date", "2015-11-28", "2026-11-06", "tile", True,
-               window_days=1),
+               window_days=1, shown=False),
         _layer("grace-mascon", "GRACE_Tellus_Liquid_Water_Equivalent_Thickness_Mascon_CRI", "GoogleMapsCompatible_Level6", 6,
                "GRACE water storage, stale", "retrieved", "about 300 km, mascon", "mixed P28D, P17D, P1M", None, "date",
                "2002-04-04", "2022-07-01", "stale", False),
@@ -628,7 +635,7 @@ def list_layers(
     chosen_day = _parse_chosen(chosen)
     # Each layer walks its own dates against GIBS; done one after another a cold date took about
     # 10 s, so the layers are resolved side by side. The response keeps the registry order.
-    entries = list(LAYER_REGISTRY.values())
+    entries = [entry for entry in LAYER_REGISTRY.values() if entry["shown"]]
     with ThreadPoolExecutor(max_workers=len(entries)) as pool:
         rows = list(pool.map(lambda entry: _layer_row(entry, chosen_day, z, x, y), entries))
     return {
