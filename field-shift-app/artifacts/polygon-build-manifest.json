@@ -1,0 +1,683 @@
+{
+ "schema_version": "1",
+ "card": "t_aa25032c",
+ "spec": {
+  "file": "field-shift-app/specs/bloco-5-poligonos-de-cultura.md",
+  "revision": 5,
+  "commit": "0129f0b",
+  "freeze_digest": "ebc94342f57071cfea25d3074e392f73427b51a94286b2372ebc98c8458bea61"
+ },
+ "requirement": "R-05, R-08, R-10 (CO-B5-01 and CO-B5-02)",
+ "manifest_fields": [
+  {
+   "key": "schema_version",
+   "file": "us-38017.manifest.json",
+   "type": "string",
+   "value": "1",
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "region",
+   "file": "us-38017.manifest.json",
+   "type": "string",
+   "value": "us",
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "clip_box",
+   "file": "us-38017.manifest.json",
+   "type": "string",
+   "value": "-97.20,46.90,-97.14,46.96",
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "detail_minzoom",
+   "file": "us-38017.manifest.json",
+   "type": "integer",
+   "value": 6,
+   "producer": "CO-B5-01 build, measured by choose-floor"
+  },
+  {
+   "key": "detail_maxzoom",
+   "file": "us-38017.manifest.json",
+   "type": "integer",
+   "value": 14,
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "overview_minzoom",
+   "file": "us-38017.manifest.json",
+   "type": "integer",
+   "value": 3,
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "overview_maxzoom",
+   "file": "us-38017.manifest.json",
+   "type": "integer",
+   "value": 5,
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "interactive_minzoom",
+   "file": "us-38017.manifest.json",
+   "type": "integer",
+   "value": 8,
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "max_tile_bytes",
+   "file": "us-38017.tiles.json",
+   "type": "object, zoom as decimal string to integer",
+   "value": {
+    "3": 266,
+    "4": 530,
+    "5": 806,
+    "6": 2894,
+    "7": 3934,
+    "8": 4655,
+    "9": 5451,
+    "10": 6201,
+    "11": 5443,
+    "12": 5575,
+    "13": 3020,
+    "14": 1745
+   },
+   "producer": "CO-B5-01 build, measured by measure"
+  },
+  {
+   "key": "views",
+   "file": "us-38017.tiles.json",
+   "type": "object, view id to {center, zoom, width, height}",
+   "value": {
+    "V1": {
+     "id": "V1",
+     "center": [
+      -97.17,
+      46.93
+     ],
+     "zoom": 12,
+     "width": 1440,
+     "height": 900
+    },
+    "V2": {
+     "id": "V2",
+     "center": [
+      -97.17,
+      46.93
+     ],
+     "zoom": 14,
+     "width": 1440,
+     "height": 900
+    }
+   },
+   "producer": "CO-B5-01 build"
+  },
+  {
+   "key": "view_feature_counts",
+   "file": "us-38017.tiles.json",
+   "type": "object, view id to integer",
+   "value": {
+    "V1": 132,
+    "V2": 217
+   },
+   "producer": "CO-B5-01 build, measured by measure"
+  }
+ ],
+ "extent": {
+  "us_clip_box": "-97.20,46.90,-97.14,46.96",
+  "br_bbox": "-61.633,-18.0416,-50.2248,-7.3487"
+ },
+ "feature_counts": {
+  "us_service_for_box": 107,
+  "us_detail_file_distinct_csbid": 107,
+  "us_detail_file_features": 207,
+  "us_detail_file_distinct_csbid_by_zoom": {
+   "6": 85,
+   "9": 107,
+   "12": 107,
+   "14": 107
+  },
+  "us_v1": 132,
+  "us_v2": 217,
+  "br_detail_v1_unique_ids": 23890,
+  "br_detail_v1_features": 29058,
+  "br_detail_v1_mean_per_viewport_tile": 1037.8,
+  "br_detail_distinct_id_per_zoom": {
+   "8": 162304,
+   "10": 676968,
+   "12": 763474
+  }
+ },
+ "feature_count_matches_service": true,
+ "zoom_floor": {
+  "detail_minzoom": 6,
+  "detail_maxzoom": 14,
+  "overview_minzoom": 3,
+  "overview_maxzoom": 5,
+  "interactive_minzoom": 8,
+  "rule": "lowest zoom D in 6 to 14 at which every detail tile covering the box is at most 250 KB gzip",
+  "per_zoom_over_box": {
+   "6": {
+    "tiles": 1,
+    "covered_tiles": 1,
+    "max_bytes": 2894,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "7": {
+    "tiles": 1,
+    "covered_tiles": 1,
+    "max_bytes": 3934,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "8": {
+    "tiles": 1,
+    "covered_tiles": 1,
+    "max_bytes": 4655,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "9": {
+    "tiles": 1,
+    "covered_tiles": 1,
+    "max_bytes": 5451,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "10": {
+    "tiles": 1,
+    "covered_tiles": 1,
+    "max_bytes": 6201,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "11": {
+    "tiles": 2,
+    "covered_tiles": 2,
+    "max_bytes": 5443,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "12": {
+    "tiles": 2,
+    "covered_tiles": 2,
+    "max_bytes": 5575,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "13": {
+    "tiles": 6,
+    "covered_tiles": 6,
+    "max_bytes": 3020,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   },
+   "14": {
+    "tiles": 20,
+    "covered_tiles": 20,
+    "max_bytes": 1745,
+    "budget_bytes": 250000,
+    "meets_budget": true
+   }
+  }
+ },
+ "layer_names": {
+  "verified_by": "tileset metadata (vector_layers) and a decoded tile, not the build command",
+  "us_detail": {
+   "pmtiles": "data/polygons/us-38017-detail.pmtiles",
+   "metadata_vector_layers": [
+    "trazo"
+   ],
+   "metadata_generator": "tippecanoe v2.82.0",
+   "decoded_tile": {
+    "z": 12,
+    "x": 942,
+    "y": 1442,
+    "layers": [
+     "trazo"
+    ],
+    "features": {
+     "trazo": 33
+    }
+   },
+   "layer_name": "trazo"
+  },
+  "us_overview": {
+   "pmtiles": "data/polygons/us-38017-overview.pmtiles",
+   "metadata_vector_layers": [
+    "trazo"
+   ],
+   "metadata_generator": "tippecanoe v2.82.0",
+   "decoded_tile": {
+    "z": 3,
+    "x": 1,
+    "y": 2,
+    "layers": [
+     "trazo"
+    ],
+    "features": {
+     "trazo": 13
+    }
+   },
+   "layer_name": "trazo"
+  },
+  "br_detail": {
+   "pmtiles": "data/polygons/br-mt-detail.pmtiles",
+   "metadata_vector_layers": [
+    "trazo"
+   ],
+   "metadata_generator": "tile-join v2.80.0",
+   "decoded_tile": {
+    "z": 10,
+    "x": 348,
+    "y": 532,
+    "layers": [
+     "trazo"
+    ],
+    "features": {
+     "trazo": 4
+    }
+   },
+   "layer_name": "trazo"
+  },
+  "br_overview": {
+   "pmtiles": "data/polygons/br-mt-overview.pmtiles",
+   "metadata_vector_layers": [
+    "trazo"
+   ],
+   "metadata_generator": "tippecanoe v2.82.0",
+   "decoded_tile": {
+    "z": 5,
+    "x": 10,
+    "y": 16,
+    "layers": [
+     "trazo"
+    ],
+    "features": {
+     "trazo": 6014
+    }
+   },
+   "layer_name": "trazo"
+  }
+ },
+ "class_tables": {
+  "us": {
+   "rows": 255,
+   "source_sha256": "8b5cec2ff965a2d1f7f1205111b3a0fbe3cce5ed82cb0ef6a446ae304fe0b699"
+  },
+  "br": {
+   "rows": 14,
+   "source_sha256": "603239c5de7cca95799c788ab553a73ec3fc16477f681f63bb5af191d2f54dbe"
+  }
+ },
+ "tile_budget": {
+  "detail_bytes": 250000,
+  "overview_bytes": 300000,
+  "max_tile_bytes": 1000000,
+  "budget_ok": true,
+  "failures": [],
+  "readings": {
+   "us_detail": {
+    "per_zoom_max_bytes": {
+     "6": 2894,
+     "7": 3934,
+     "8": 4655,
+     "9": 5451,
+     "10": 6201,
+     "11": 5443,
+     "12": 5575,
+     "13": 3020,
+     "14": 1745
+    },
+    "views": {
+     "V1": {
+      "features": 132,
+      "tiles": 28,
+      "unique_ids": 107,
+      "max_tile_bytes": 5575
+     },
+     "V2": {
+      "features": 217,
+      "tiles": 35,
+      "unique_ids": 107,
+      "max_tile_bytes": 1745
+     },
+     "V3": {
+      "features": 132,
+      "tiles": 16,
+      "unique_ids": 107,
+      "max_tile_bytes": 5575
+     },
+     "V4": {
+      "features": 132,
+      "tiles": 12,
+      "unique_ids": 107,
+      "max_tile_bytes": 5575
+     },
+     "W6": {
+      "features": 85,
+      "tiles": 35,
+      "unique_ids": 85,
+      "max_tile_bytes": 2894
+     },
+     "W7": {
+      "features": 106,
+      "tiles": 28,
+      "unique_ids": 106,
+      "max_tile_bytes": 3934
+     },
+     "W9": {
+      "features": 107,
+      "tiles": 28,
+      "unique_ids": 107,
+      "max_tile_bytes": 5451
+     }
+    },
+    "budget_violations": [],
+    "file_wide_violations": []
+   },
+   "us_overview": {
+    "per_zoom_max_bytes": {
+     "3": 266,
+     "4": 530,
+     "5": 806
+    },
+    "views": {},
+    "budget_violations": [],
+    "file_wide_violations": []
+   },
+   "br_detail": {
+    "per_zoom_max_bytes": {
+     "8": 217744,
+     "9": 221192,
+     "10": 235949,
+     "11": 145043,
+     "12": 105135
+    },
+    "tiles_per_zoom": {
+     "8": 63,
+     "9": 215,
+     "10": 752,
+     "11": 2661,
+     "12": 9443
+    },
+    "views": {
+     "V1": {
+      "features": 29058,
+      "tiles": 28,
+      "unique_ids": 23890,
+      "max_tile_bytes": 53102,
+      "mean_features_per_tile": 1037.8
+     },
+     "V2": {
+      "features": 1503,
+      "tiles": 12,
+      "unique_ids": 1172,
+      "max_tile_bytes": 25838,
+      "mean_features_per_tile": 125.2
+     },
+     "V3": {
+      "features": 17826,
+      "tiles": 16,
+      "unique_ids": 14865,
+      "max_tile_bytes": 53102,
+      "mean_features_per_tile": 1114.1
+     },
+     "V4": {
+      "features": 9560,
+      "tiles": 8,
+      "unique_ids": 8376,
+      "max_tile_bytes": 51090,
+      "mean_features_per_tile": 1195.0
+     },
+     "W8": {
+      "features": 145566,
+      "tiles": 35,
+      "unique_ids": 122195,
+      "max_tile_bytes": 195440,
+      "mean_features_per_tile": 4159.0
+     },
+     "W9": {
+      "features": 56759,
+      "tiles": 28,
+      "unique_ids": 48363,
+      "max_tile_bytes": 131134,
+      "mean_features_per_tile": 2027.1
+     },
+     "W11": {
+      "features": 10377,
+      "tiles": 35,
+      "unique_ids": 8259,
+      "max_tile_bytes": 28556,
+      "mean_features_per_tile": 296.5
+     }
+    },
+    "budget_violations": [],
+    "file_wide_violations": [],
+    "tiles_over_budget": [],
+    "budget_bytes": 250000,
+    "sha256": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff",
+    "bytes": 280033310
+   },
+   "br_overview": {
+    "per_zoom_max_bytes": {
+     "5": 129821,
+     "6": 295179,
+     "7": 297416
+    },
+    "tiles_per_zoom": {
+     "5": 4,
+     "6": 10,
+     "7": 20
+    },
+    "views": {},
+    "budget_violations": [],
+    "file_wide_violations": [],
+    "tiles_over_budget": [],
+    "budget_bytes": 300000,
+    "sha256": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298",
+    "bytes": 3526612
+   }
+  },
+  "tiles_over_budget_in_br_detail": 0
+ },
+ "products": [
+  {
+   "path": "data/polygons/us-38017-detail.pmtiles",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/us-38017-detail.pmtiles",
+   "bytes": 69557,
+   "sha256": "ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2",
+   "run_sha256": {
+    "run-1": "ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2",
+    "run-2": "ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2",
+    "br-detail-repair-run1": "ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2",
+    "br-detail-repair-run2": "ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/us-38017-detail.pmtiles"
+  },
+  {
+   "path": "data/polygons/us-38017-overview.pmtiles",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/us-38017-overview.pmtiles",
+   "bytes": 2369,
+   "sha256": "a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e",
+   "run_sha256": {
+    "run-1": "a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e",
+    "run-2": "a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e",
+    "br-detail-repair-run1": "a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e",
+    "br-detail-repair-run2": "a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/us-38017-overview.pmtiles"
+  },
+  {
+   "path": "data/polygons/us-38017.manifest.json",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/us-38017.manifest.json",
+   "bytes": 206,
+   "sha256": "b591bb11bbe69d025e70d49ea93b6dc573e7215d72e8dffdede1a05f1142f4aa",
+   "run_sha256": {
+    "run-1": "b591bb11bbe69d025e70d49ea93b6dc573e7215d72e8dffdede1a05f1142f4aa",
+    "run-2": "b591bb11bbe69d025e70d49ea93b6dc573e7215d72e8dffdede1a05f1142f4aa",
+    "br-detail-repair-run1": "b591bb11bbe69d025e70d49ea93b6dc573e7215d72e8dffdede1a05f1142f4aa",
+    "br-detail-repair-run2": "b591bb11bbe69d025e70d49ea93b6dc573e7215d72e8dffdede1a05f1142f4aa"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/us-38017.manifest.json"
+  },
+  {
+   "path": "data/polygons/us-38017.tiles.json",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/us-38017.tiles.json",
+   "bytes": 471,
+   "sha256": "a211ac7d8a48f9cc9295cfd97e7f4bf687b19df48057f29c8d859d2f40ad0521",
+   "run_sha256": {
+    "run-1": "a211ac7d8a48f9cc9295cfd97e7f4bf687b19df48057f29c8d859d2f40ad0521",
+    "run-2": "a211ac7d8a48f9cc9295cfd97e7f4bf687b19df48057f29c8d859d2f40ad0521",
+    "br-detail-repair-run1": "a211ac7d8a48f9cc9295cfd97e7f4bf687b19df48057f29c8d859d2f40ad0521",
+    "br-detail-repair-run2": "a211ac7d8a48f9cc9295cfd97e7f4bf687b19df48057f29c8d859d2f40ad0521"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/us-38017.tiles.json"
+  },
+  {
+   "path": "data/polygons/polygon-classes-us.json",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/polygon-classes-us.json",
+   "bytes": 18068,
+   "sha256": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4",
+   "run_sha256": {
+    "run-1": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4",
+    "run-2": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4",
+    "br-detail-repair-run1": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4",
+    "br-detail-repair-run2": "4fde8299b58abbcfc8b77a1a2993aeba5f1b4d44e2b7e8590ac4b9a108152aa4"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/polygon-classes-us.json"
+  },
+  {
+   "path": "data/polygons/br-mt-detail.pmtiles",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/br-mt-detail.pmtiles",
+   "bytes": 280033310,
+   "sha256": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff",
+   "run_sha256": {
+    "run-1": "9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b",
+    "run-2": "9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b",
+    "br-detail-repair-run1": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff",
+    "br-detail-repair-run2": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/br-mt-detail.pmtiles",
+   "command": "tippecanoe -l trazo -Z8 -z12 -y Id -y mbmode24 --low-detail=10 --full-detail=12 --buffer=12 --clip-bounding-box=-61.633,-18.0416,-50.2248,-7.3487 --drop-densest-as-needed --maximum-tile-bytes=250000 -o data/polygons/br-mt-detail.pmtiles data/work/trazo3_brazil_mato_grosso_2024.fgb",
+   "zoom_range": [
+    8,
+    12
+   ],
+   "tiles_per_zoom": {
+    "8": 63,
+    "9": 215,
+    "10": 752,
+    "11": 2661,
+    "12": 9443
+   },
+   "tiles_total": 13134,
+   "properties": [
+    "Id",
+    "mbmode24"
+   ],
+   "layer_name": "trazo"
+  },
+  {
+   "path": "data/polygons/br-mt-overview.pmtiles",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/br-mt-overview.pmtiles",
+   "bytes": 3526612,
+   "sha256": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298",
+   "run_sha256": {
+    "run-1": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298",
+    "run-2": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298",
+    "br-detail-repair-run1": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298",
+    "br-detail-repair-run2": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/br-mt-overview.pmtiles"
+  },
+  {
+   "path": "data/polygons/polygon-classes-br.json",
+   "abs_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_d7457a47/field-shift-repo/field-shift-app/data/polygons/polygon-classes-br.json",
+   "bytes": 1965,
+   "sha256": "3093cefdde513834618e4258d2a51885c0b4a9f6877dcf0747329cd454095a25",
+   "run_sha256": {
+    "run-1": "3093cefdde513834618e4258d2a51885c0b4a9f6877dcf0747329cd454095a25",
+    "run-2": "3093cefdde513834618e4258d2a51885c0b4a9f6877dcf0747329cd454095a25",
+    "br-detail-repair-run1": "3093cefdde513834618e4258d2a51885c0b4a9f6877dcf0747329cd454095a25",
+    "br-detail-repair-run2": "3093cefdde513834618e4258d2a51885c0b4a9f6877dcf0747329cd454095a25"
+   },
+   "reproducible": true,
+   "bytes_stable": true,
+   "durable_path": "/home/carloshnp/.hermes/kanban/boards/field-shift/attachments/t_d7457a47/polygons/polygon-classes-br.json"
+  }
+ ],
+ "runs": [
+  {
+   "label": "run-1",
+   "recorded": "2026-11-14T22:25:04-0300"
+  },
+  {
+   "label": "run-2",
+   "recorded": "2026-11-14T22:31:01-0300"
+  },
+  {
+   "label": "br-detail-repair-run1",
+   "recorded": "2026-11-14T23:02:47-0300"
+  },
+  {
+   "label": "br-detail-repair-run2",
+   "recorded": "2026-11-14T23:06:53-0300"
+  }
+ ],
+ "reproducible": true,
+ "repair": {
+  "card": "t_d7457a47",
+  "date": "2026-11-14",
+  "product": "data/polygons/br-mt-detail.pmtiles",
+  "reason": "AC-06: the `pmtiles extract` copy of the source archive carried z0 to z12 and 369262, 653050 and 346421 byte tiles at z8, z9 and z10 against the 250000 byte detail budget, and 256321 and 345460 byte tiles at the two requested V1 addresses.",
+  "before": {
+   "sha256": "9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b",
+   "bytes": 374433523,
+   "tiles_per_zoom": {
+    "0": 1,
+    "1": 1,
+    "2": 1,
+    "3": 1,
+    "4": 1,
+    "5": 4,
+    "6": 9,
+    "7": 24,
+    "8": 79,
+    "9": 270,
+    "10": 977,
+    "11": 3383,
+    "12": 12027
+   }
+  },
+  "after": {
+   "sha256": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff",
+   "bytes": 280033310,
+   "tiles_per_zoom": {
+    "8": 63,
+    "9": 215,
+    "10": 752,
+    "11": 2661,
+    "12": 9443
+   }
+  },
+  "command": "tippecanoe -l trazo -Z8 -z12 -y Id -y mbmode24 --low-detail=10 --full-detail=12 --buffer=12 --clip-bounding-box=-61.633,-18.0416,-50.2248,-7.3487 --drop-densest-as-needed --maximum-tile-bytes=250000 -o data/polygons/br-mt-detail.pmtiles data/work/trazo3_brazil_mato_grosso_2024.fgb",
+  "artifact": "artifacts/AC-06-budget.txt"
+ }
+}

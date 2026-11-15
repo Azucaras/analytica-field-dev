@@ -1,0 +1,67 @@
+R-08 and AC-06 tile budget readings
+detail budget 250000 bytes gzip per tile, overview budget 300000 bytes, hard cap 1000000 bytes
+
+us detail: data/polygons/us-38017-detail.pmtiles sha256 ca97c31cb765a8c2735c39a1a2cd1b5a283475519d6b88ef9ef18c62e31768a2
+  per zoom maximum over every tile of the file:
+    z6: 2894 bytes over 1 tiles
+    z7: 3934 bytes over 1 tiles
+    z8: 4655 bytes over 1 tiles
+    z9: 5451 bytes over 1 tiles
+    z10: 6201 bytes over 1 tiles
+    z11: 5443 bytes over 4 tiles
+    z12: 5575 bytes over 4 tiles
+    z13: 3020 bytes over 9 tiles
+    z14: 1745 bytes over 24 tiles
+  V1 z12 viewport 1440x900: 28 tiles, max 5575 bytes
+  V2 z14 viewport 1440x900: 35 tiles, max 1745 bytes
+  V3 z12 viewport 780x900: 16 tiles, max 5575 bytes
+  V4 z12 viewport 360x640: 12 tiles, max 5575 bytes
+  W6 z6 viewport 1440x900: 35 tiles, max 2894 bytes
+  W7 z7 viewport 1440x900: 28 tiles, max 3934 bytes
+  W9 z9 viewport 1440x900: 28 tiles, max 5451 bytes
+  PASS at every requested address
+
+us overview: data/polygons/us-38017-overview.pmtiles sha256 a3d6a3761589c8649ad8cda010cb8e06149974871b32db1849f41629ab7ca29e
+  per zoom maximum over every tile of the file:
+    z3: 266 bytes over 1 tiles
+    z4: 530 bytes over 1 tiles
+    z5: 806 bytes over 1 tiles
+  PASS at every requested address
+
+br detail: data/polygons/br-mt-detail.pmtiles sha256 9ae7041375ffa1ebbdfaa124f68fa7daa468d351319c2a592cafdc88d314b11b
+  per zoom maximum over every tile of the file:
+    z0: 2690552 bytes over 1 tiles
+    z1: 3808604 bytes over 1 tiles
+    z2: 6243070 bytes over 1 tiles
+    z3: 9911816 bytes over 1 tiles
+    z4: 7451885 bytes over 1 tiles
+    z5: 4456108 bytes over 4 tiles
+    z6: 1525439 bytes over 9 tiles
+    z7: 852644 bytes over 24 tiles
+    z8: 369262 bytes over 79 tiles
+    z9: 653050 bytes over 270 tiles
+    z10: 346421 bytes over 977 tiles
+    z11: 148304 bytes over 3383 tiles
+    z12: 62050 bytes over 12027 tiles
+  V1 z10 viewport 1440x900: 28 tiles, max 68727 bytes
+  V2 z13 viewport 1440x900: 12 tiles, max 11015 bytes
+  V3 z10 viewport 780x900: 16 tiles, max 68727 bytes
+  V4 z10 viewport 360x640: 8 tiles, max 68727 bytes
+  W8 z8 viewport 1440x900: 35 tiles, max 188185 bytes
+  W9 z9 viewport 1440x900: 28 tiles, max 345460 bytes
+  W11 z11 viewport 1440x900: 35 tiles, max 29931 bytes
+  OVER BUDGET at the requested addresses:
+    z9 x176 y271: 256321 bytes
+    z9 x177 y271: 345460 bytes
+  the file carries tiles above the budget outside the pinned views:
+    z8: 369262 bytes
+    z9: 653050 bytes
+    z10: 346421 bytes
+
+br overview: data/polygons/br-mt-overview.pmtiles sha256 5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298
+  per zoom maximum over every tile of the file:
+    z5: 129821 bytes over 4 tiles
+    z6: 295179 bytes over 10 tiles
+    z7: 297416 bytes over 20 tiles
+  PASS at every requested address
+

@@ -1,0 +1,1999 @@
+{
+ "region": "br",
+ "recorded": "2026-11-14",
+ "method": "Every tile the app requests at the pinned views V1 to V4 and on the named zoom walk, read from the built PMTiles archive. `status` is `present` because the product is a local archive; a browser run records the HTTP status instead. Byte counts are the stored gzip bytes of the tile.",
+ "detail": {
+  "path": "data/polygons/br-mt-detail.pmtiles",
+  "bytes": 280033310,
+  "sha256": "fdb5f73d1cda57389813a2769970b357dea74c89a08e91c0e8f9b301903260ff"
+ },
+ "overview": {
+  "path": "data/polygons/br-mt-overview.pmtiles",
+  "bytes": 3526612,
+  "sha256": "5b55384e74ea70d1b63ac448c96ad0c012db5b4d38807b9796485b163f29f298"
+ },
+ "views": {
+  "V1": {
+   "camera": {
+    "id": "V1",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 10,
+    "width": 1440,
+    "height": 900
+   },
+   "source_zoom": 10,
+   "overzoom": false,
+   "features": 29058,
+   "unique_ids": 23890,
+   "max_tile_bytes": 53102,
+   "tiles": [
+    {
+     "z": 10,
+     "x": 351,
+     "y": 544,
+     "status": "present",
+     "bytes": 32538
+    },
+    {
+     "z": 10,
+     "x": 351,
+     "y": 545,
+     "status": "present",
+     "bytes": 19717
+    },
+    {
+     "z": 10,
+     "x": 351,
+     "y": 546,
+     "status": "present",
+     "bytes": 33098
+    },
+    {
+     "z": 10,
+     "x": 351,
+     "y": 547,
+     "status": "present",
+     "bytes": 43600
+    },
+    {
+     "z": 10,
+     "x": 352,
+     "y": 544,
+     "status": "present",
+     "bytes": 34588
+    },
+    {
+     "z": 10,
+     "x": 352,
+     "y": 545,
+     "status": "present",
+     "bytes": 26108
+    },
+    {
+     "z": 10,
+     "x": 352,
+     "y": 546,
+     "status": "present",
+     "bytes": 37924
+    },
+    {
+     "z": 10,
+     "x": 352,
+     "y": 547,
+     "status": "present",
+     "bytes": 44410
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 544,
+     "status": "present",
+     "bytes": 53102
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 545,
+     "status": "present",
+     "bytes": 38822
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 546,
+     "status": "present",
+     "bytes": 39533
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 547,
+     "status": "present",
+     "bytes": 49029
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 544,
+     "status": "present",
+     "bytes": 40230
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 545,
+     "status": "present",
+     "bytes": 38641
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 546,
+     "status": "present",
+     "bytes": 51090
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 547,
+     "status": "present",
+     "bytes": 47811
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 544,
+     "status": "present",
+     "bytes": 47057
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 545,
+     "status": "present",
+     "bytes": 27316
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 546,
+     "status": "present",
+     "bytes": 19112
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 547,
+     "status": "present",
+     "bytes": 30057
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 544,
+     "status": "present",
+     "bytes": 20547
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 545,
+     "status": "present",
+     "bytes": 23991
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 546,
+     "status": "present",
+     "bytes": 10071
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 547,
+     "status": "present",
+     "bytes": 29290
+    },
+    {
+     "z": 10,
+     "x": 357,
+     "y": 544,
+     "status": "present",
+     "bytes": 40998
+    },
+    {
+     "z": 10,
+     "x": 357,
+     "y": 545,
+     "status": "present",
+     "bytes": 20847
+    },
+    {
+     "z": 10,
+     "x": 357,
+     "y": 546,
+     "status": "present",
+     "bytes": 19359
+    },
+    {
+     "z": 10,
+     "x": 357,
+     "y": 547,
+     "status": "present",
+     "bytes": 33872
+    }
+   ]
+  },
+  "V2": {
+   "camera": {
+    "id": "V2",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 13,
+    "width": 1440,
+    "height": 900
+   },
+   "source_zoom": 12,
+   "overzoom": true,
+   "features": 1503,
+   "unique_ids": 1172,
+   "max_tile_bytes": 25838,
+   "tiles": [
+    {
+     "z": 12,
+     "x": 1417,
+     "y": 2183,
+     "status": "present",
+     "bytes": 20648
+    },
+    {
+     "z": 12,
+     "x": 1417,
+     "y": 2184,
+     "status": "present",
+     "bytes": 25838
+    },
+    {
+     "z": 12,
+     "x": 1417,
+     "y": 2185,
+     "status": "present",
+     "bytes": 16477
+    },
+    {
+     "z": 12,
+     "x": 1418,
+     "y": 2183,
+     "status": "present",
+     "bytes": 14851
+    },
+    {
+     "z": 12,
+     "x": 1418,
+     "y": 2184,
+     "status": "present",
+     "bytes": 21726
+    },
+    {
+     "z": 12,
+     "x": 1418,
+     "y": 2185,
+     "status": "present",
+     "bytes": 22331
+    },
+    {
+     "z": 12,
+     "x": 1419,
+     "y": 2183,
+     "status": "present",
+     "bytes": 15622
+    },
+    {
+     "z": 12,
+     "x": 1419,
+     "y": 2184,
+     "status": "present",
+     "bytes": 19777
+    },
+    {
+     "z": 12,
+     "x": 1419,
+     "y": 2185,
+     "status": "present",
+     "bytes": 21305
+    },
+    {
+     "z": 12,
+     "x": 1420,
+     "y": 2183,
+     "status": "present",
+     "bytes": 11841
+    },
+    {
+     "z": 12,
+     "x": 1420,
+     "y": 2184,
+     "status": "present",
+     "bytes": 10344
+    },
+    {
+     "z": 12,
+     "x": 1420,
+     "y": 2185,
+     "status": "present",
+     "bytes": 6857
+    }
+   ]
+  },
+  "V3": {
+   "camera": {
+    "id": "V3",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 10,
+    "width": 780,
+    "height": 900
+   },
+   "source_zoom": 10,
+   "overzoom": false,
+   "features": 17826,
+   "unique_ids": 14865,
+   "max_tile_bytes": 53102,
+   "tiles": [
+    {
+     "z": 10,
+     "x": 353,
+     "y": 544,
+     "status": "present",
+     "bytes": 53102
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 545,
+     "status": "present",
+     "bytes": 38822
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 546,
+     "status": "present",
+     "bytes": 39533
+    },
+    {
+     "z": 10,
+     "x": 353,
+     "y": 547,
+     "status": "present",
+     "bytes": 49029
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 544,
+     "status": "present",
+     "bytes": 40230
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 545,
+     "status": "present",
+     "bytes": 38641
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 546,
+     "status": "present",
+     "bytes": 51090
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 547,
+     "status": "present",
+     "bytes": 47811
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 544,
+     "status": "present",
+     "bytes": 47057
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 545,
+     "status": "present",
+     "bytes": 27316
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 546,
+     "status": "present",
+     "bytes": 19112
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 547,
+     "status": "present",
+     "bytes": 30057
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 544,
+     "status": "present",
+     "bytes": 20547
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 545,
+     "status": "present",
+     "bytes": 23991
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 546,
+     "status": "present",
+     "bytes": 10071
+    },
+    {
+     "z": 10,
+     "x": 356,
+     "y": 547,
+     "status": "present",
+     "bytes": 29290
+    }
+   ]
+  },
+  "V4": {
+   "camera": {
+    "id": "V4",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 10,
+    "width": 360,
+    "height": 640
+   },
+   "source_zoom": 10,
+   "overzoom": false,
+   "features": 9560,
+   "unique_ids": 8376,
+   "max_tile_bytes": 51090,
+   "tiles": [
+    {
+     "z": 10,
+     "x": 354,
+     "y": 544,
+     "status": "present",
+     "bytes": 40230
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 545,
+     "status": "present",
+     "bytes": 38641
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 546,
+     "status": "present",
+     "bytes": 51090
+    },
+    {
+     "z": 10,
+     "x": 354,
+     "y": 547,
+     "status": "present",
+     "bytes": 47811
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 544,
+     "status": "present",
+     "bytes": 47057
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 545,
+     "status": "present",
+     "bytes": 27316
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 546,
+     "status": "present",
+     "bytes": 19112
+    },
+    {
+     "z": 10,
+     "x": 355,
+     "y": 547,
+     "status": "present",
+     "bytes": 30057
+    }
+   ]
+  },
+  "W8": {
+   "camera": {
+    "id": "W8",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 8,
+    "width": 1440,
+    "height": 900
+   },
+   "source_zoom": 8,
+   "overzoom": false,
+   "features": 145566,
+   "unique_ids": 122195,
+   "max_tile_bytes": 195440,
+   "tiles": [
+    {
+     "z": 8,
+     "x": 85,
+     "y": 134,
+     "status": "present",
+     "bytes": 59747
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 135,
+     "status": "present",
+     "bytes": 63658
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 136,
+     "status": "present",
+     "bytes": 26020
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 137,
+     "status": "present",
+     "bytes": 86756
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 138,
+     "status": "present",
+     "bytes": 136118
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 134,
+     "status": "present",
+     "bytes": 54152
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 135,
+     "status": "present",
+     "bytes": 159997
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 136,
+     "status": "present",
+     "bytes": 136578
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 137,
+     "status": "present",
+     "bytes": 114503
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 138,
+     "status": "present",
+     "bytes": 123085
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 134,
+     "status": "present",
+     "bytes": 67149
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 135,
+     "status": "present",
+     "bytes": 134607
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 136,
+     "status": "present",
+     "bytes": 155066
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 137,
+     "status": "present",
+     "bytes": 144649
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 138,
+     "status": "present",
+     "bytes": 186596
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 134,
+     "status": "present",
+     "bytes": 42753
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 135,
+     "status": "present",
+     "bytes": 195440
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 136,
+     "status": "present",
+     "bytes": 175301
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 137,
+     "status": "present",
+     "bytes": 189796
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 138,
+     "status": "present",
+     "bytes": 151182
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 134,
+     "status": "present",
+     "bytes": 27284
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 135,
+     "status": "present",
+     "bytes": 121129
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 136,
+     "status": "present",
+     "bytes": 62349
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 137,
+     "status": "present",
+     "bytes": 101886
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 138,
+     "status": "present",
+     "bytes": 190599
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 134,
+     "status": "present",
+     "bytes": 9515
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 135,
+     "status": "present",
+     "bytes": 99010
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 136,
+     "status": "present",
+     "bytes": 74909
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 137,
+     "status": "present",
+     "bytes": 168559
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 138,
+     "status": "present",
+     "bytes": 186421
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 134,
+     "status": "present",
+     "bytes": 109197
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 135,
+     "status": "present",
+     "bytes": 167340
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 136,
+     "status": "present",
+     "bytes": 122349
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 137,
+     "status": "present",
+     "bytes": 65993
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 138,
+     "status": "present",
+     "bytes": 26270
+    }
+   ]
+  },
+  "W9": {
+   "camera": {
+    "id": "W9",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 9,
+    "width": 1440,
+    "height": 900
+   },
+   "source_zoom": 9,
+   "overzoom": false,
+   "features": 56759,
+   "unique_ids": 48363,
+   "max_tile_bytes": 131134,
+   "tiles": [
+    {
+     "z": 9,
+     "x": 174,
+     "y": 271,
+     "status": "present",
+     "bytes": 75841
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 272,
+     "status": "present",
+     "bytes": 111706
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 273,
+     "status": "present",
+     "bytes": 41094
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 274,
+     "status": "present",
+     "bytes": 42796
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 271,
+     "status": "present",
+     "bytes": 58478
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 272,
+     "status": "present",
+     "bytes": 71232
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 273,
+     "status": "present",
+     "bytes": 90913
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 274,
+     "status": "present",
+     "bytes": 76346
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 271,
+     "status": "present",
+     "bytes": 114108
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 272,
+     "status": "present",
+     "bytes": 83157
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 273,
+     "status": "present",
+     "bytes": 97414
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 274,
+     "status": "present",
+     "bytes": 99274
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 271,
+     "status": "present",
+     "bytes": 131134
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 272,
+     "status": "present",
+     "bytes": 74887
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 273,
+     "status": "present",
+     "bytes": 78134
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 274,
+     "status": "present",
+     "bytes": 77292
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 271,
+     "status": "present",
+     "bytes": 89905
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 272,
+     "status": "present",
+     "bytes": 50617
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 273,
+     "status": "present",
+     "bytes": 44502
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 274,
+     "status": "present",
+     "bytes": 42646
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 271,
+     "status": "present",
+     "bytes": 33744
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 272,
+     "status": "present",
+     "bytes": 12952
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 273,
+     "status": "present",
+     "bytes": 5794
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 274,
+     "status": "present",
+     "bytes": 32987
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 271,
+     "status": "present",
+     "bytes": 21810
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 272,
+     "status": "present",
+     "bytes": 8607
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 273,
+     "status": "present",
+     "bytes": 8313
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 274,
+     "status": "present",
+     "bytes": 31497
+    }
+   ]
+  },
+  "W11": {
+   "camera": {
+    "id": "W11",
+    "center": [
+     -55.27,
+     -11.91
+    ],
+    "zoom": 11,
+    "width": 1440,
+    "height": 900
+   },
+   "source_zoom": 11,
+   "overzoom": false,
+   "features": 10377,
+   "unique_ids": 8259,
+   "max_tile_bytes": 28556,
+   "tiles": [
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1090,
+     "status": "present",
+     "bytes": 12353
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1091,
+     "status": "present",
+     "bytes": 7931
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1092,
+     "status": "present",
+     "bytes": 12429
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1093,
+     "status": "present",
+     "bytes": 13657
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1094,
+     "status": "present",
+     "bytes": 13790
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1090,
+     "status": "present",
+     "bytes": 19674
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1091,
+     "status": "present",
+     "bytes": 18098
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1092,
+     "status": "present",
+     "bytes": 19004
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1093,
+     "status": "present",
+     "bytes": 15883
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1094,
+     "status": "present",
+     "bytes": 15828
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1090,
+     "status": "present",
+     "bytes": 14571
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1091,
+     "status": "present",
+     "bytes": 22710
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1092,
+     "status": "present",
+     "bytes": 28556
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1093,
+     "status": "present",
+     "bytes": 14863
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1094,
+     "status": "present",
+     "bytes": 12444
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1090,
+     "status": "present",
+     "bytes": 8296
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1091,
+     "status": "present",
+     "bytes": 15020
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1092,
+     "status": "present",
+     "bytes": 21603
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1093,
+     "status": "present",
+     "bytes": 15121
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1094,
+     "status": "present",
+     "bytes": 19584
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1090,
+     "status": "present",
+     "bytes": 8493
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1091,
+     "status": "present",
+     "bytes": 10042
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1092,
+     "status": "present",
+     "bytes": 8429
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1093,
+     "status": "present",
+     "bytes": 8645
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1094,
+     "status": "present",
+     "bytes": 10067
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1090,
+     "status": "present",
+     "bytes": 16227
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1091,
+     "status": "present",
+     "bytes": 6771
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1092,
+     "status": "present",
+     "bytes": 6716
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1093,
+     "status": "present",
+     "bytes": 5976
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1094,
+     "status": "present",
+     "bytes": 7948
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1090,
+     "status": "present",
+     "bytes": 10129
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1091,
+     "status": "present",
+     "bytes": 5049
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1092,
+     "status": "present",
+     "bytes": 5994
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1093,
+     "status": "present",
+     "bytes": 4024
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1094,
+     "status": "present",
+     "bytes": 8080
+    }
+   ]
+  }
+ },
+ "zoom_walk": {
+  "8": {
+   "center": [
+    -55.27,
+    -11.91
+   ],
+   "max_tile_bytes": 195440,
+   "tiles": [
+    {
+     "z": 8,
+     "x": 85,
+     "y": 134,
+     "status": "present",
+     "bytes": 59747
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 135,
+     "status": "present",
+     "bytes": 63658
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 136,
+     "status": "present",
+     "bytes": 26020
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 137,
+     "status": "present",
+     "bytes": 86756
+    },
+    {
+     "z": 8,
+     "x": 85,
+     "y": 138,
+     "status": "present",
+     "bytes": 136118
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 134,
+     "status": "present",
+     "bytes": 54152
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 135,
+     "status": "present",
+     "bytes": 159997
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 136,
+     "status": "present",
+     "bytes": 136578
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 137,
+     "status": "present",
+     "bytes": 114503
+    },
+    {
+     "z": 8,
+     "x": 86,
+     "y": 138,
+     "status": "present",
+     "bytes": 123085
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 134,
+     "status": "present",
+     "bytes": 67149
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 135,
+     "status": "present",
+     "bytes": 134607
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 136,
+     "status": "present",
+     "bytes": 155066
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 137,
+     "status": "present",
+     "bytes": 144649
+    },
+    {
+     "z": 8,
+     "x": 87,
+     "y": 138,
+     "status": "present",
+     "bytes": 186596
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 134,
+     "status": "present",
+     "bytes": 42753
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 135,
+     "status": "present",
+     "bytes": 195440
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 136,
+     "status": "present",
+     "bytes": 175301
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 137,
+     "status": "present",
+     "bytes": 189796
+    },
+    {
+     "z": 8,
+     "x": 88,
+     "y": 138,
+     "status": "present",
+     "bytes": 151182
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 134,
+     "status": "present",
+     "bytes": 27284
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 135,
+     "status": "present",
+     "bytes": 121129
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 136,
+     "status": "present",
+     "bytes": 62349
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 137,
+     "status": "present",
+     "bytes": 101886
+    },
+    {
+     "z": 8,
+     "x": 89,
+     "y": 138,
+     "status": "present",
+     "bytes": 190599
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 134,
+     "status": "present",
+     "bytes": 9515
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 135,
+     "status": "present",
+     "bytes": 99010
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 136,
+     "status": "present",
+     "bytes": 74909
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 137,
+     "status": "present",
+     "bytes": 168559
+    },
+    {
+     "z": 8,
+     "x": 90,
+     "y": 138,
+     "status": "present",
+     "bytes": 186421
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 134,
+     "status": "present",
+     "bytes": 109197
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 135,
+     "status": "present",
+     "bytes": 167340
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 136,
+     "status": "present",
+     "bytes": 122349
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 137,
+     "status": "present",
+     "bytes": 65993
+    },
+    {
+     "z": 8,
+     "x": 91,
+     "y": 138,
+     "status": "present",
+     "bytes": 26270
+    }
+   ]
+  },
+  "9": {
+   "center": [
+    -55.27,
+    -11.91
+   ],
+   "max_tile_bytes": 131134,
+   "tiles": [
+    {
+     "z": 9,
+     "x": 174,
+     "y": 271,
+     "status": "present",
+     "bytes": 75841
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 272,
+     "status": "present",
+     "bytes": 111706
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 273,
+     "status": "present",
+     "bytes": 41094
+    },
+    {
+     "z": 9,
+     "x": 174,
+     "y": 274,
+     "status": "present",
+     "bytes": 42796
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 271,
+     "status": "present",
+     "bytes": 58478
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 272,
+     "status": "present",
+     "bytes": 71232
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 273,
+     "status": "present",
+     "bytes": 90913
+    },
+    {
+     "z": 9,
+     "x": 175,
+     "y": 274,
+     "status": "present",
+     "bytes": 76346
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 271,
+     "status": "present",
+     "bytes": 114108
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 272,
+     "status": "present",
+     "bytes": 83157
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 273,
+     "status": "present",
+     "bytes": 97414
+    },
+    {
+     "z": 9,
+     "x": 176,
+     "y": 274,
+     "status": "present",
+     "bytes": 99274
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 271,
+     "status": "present",
+     "bytes": 131134
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 272,
+     "status": "present",
+     "bytes": 74887
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 273,
+     "status": "present",
+     "bytes": 78134
+    },
+    {
+     "z": 9,
+     "x": 177,
+     "y": 274,
+     "status": "present",
+     "bytes": 77292
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 271,
+     "status": "present",
+     "bytes": 89905
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 272,
+     "status": "present",
+     "bytes": 50617
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 273,
+     "status": "present",
+     "bytes": 44502
+    },
+    {
+     "z": 9,
+     "x": 178,
+     "y": 274,
+     "status": "present",
+     "bytes": 42646
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 271,
+     "status": "present",
+     "bytes": 33744
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 272,
+     "status": "present",
+     "bytes": 12952
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 273,
+     "status": "present",
+     "bytes": 5794
+    },
+    {
+     "z": 9,
+     "x": 179,
+     "y": 274,
+     "status": "present",
+     "bytes": 32987
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 271,
+     "status": "present",
+     "bytes": 21810
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 272,
+     "status": "present",
+     "bytes": 8607
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 273,
+     "status": "present",
+     "bytes": 8313
+    },
+    {
+     "z": 9,
+     "x": 180,
+     "y": 274,
+     "status": "present",
+     "bytes": 31497
+    }
+   ]
+  },
+  "11": {
+   "center": [
+    -55.27,
+    -11.91
+   ],
+   "max_tile_bytes": 28556,
+   "tiles": [
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1090,
+     "status": "present",
+     "bytes": 12353
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1091,
+     "status": "present",
+     "bytes": 7931
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1092,
+     "status": "present",
+     "bytes": 12429
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1093,
+     "status": "present",
+     "bytes": 13657
+    },
+    {
+     "z": 11,
+     "x": 706,
+     "y": 1094,
+     "status": "present",
+     "bytes": 13790
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1090,
+     "status": "present",
+     "bytes": 19674
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1091,
+     "status": "present",
+     "bytes": 18098
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1092,
+     "status": "present",
+     "bytes": 19004
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1093,
+     "status": "present",
+     "bytes": 15883
+    },
+    {
+     "z": 11,
+     "x": 707,
+     "y": 1094,
+     "status": "present",
+     "bytes": 15828
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1090,
+     "status": "present",
+     "bytes": 14571
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1091,
+     "status": "present",
+     "bytes": 22710
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1092,
+     "status": "present",
+     "bytes": 28556
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1093,
+     "status": "present",
+     "bytes": 14863
+    },
+    {
+     "z": 11,
+     "x": 708,
+     "y": 1094,
+     "status": "present",
+     "bytes": 12444
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1090,
+     "status": "present",
+     "bytes": 8296
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1091,
+     "status": "present",
+     "bytes": 15020
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1092,
+     "status": "present",
+     "bytes": 21603
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1093,
+     "status": "present",
+     "bytes": 15121
+    },
+    {
+     "z": 11,
+     "x": 709,
+     "y": 1094,
+     "status": "present",
+     "bytes": 19584
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1090,
+     "status": "present",
+     "bytes": 8493
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1091,
+     "status": "present",
+     "bytes": 10042
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1092,
+     "status": "present",
+     "bytes": 8429
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1093,
+     "status": "present",
+     "bytes": 8645
+    },
+    {
+     "z": 11,
+     "x": 710,
+     "y": 1094,
+     "status": "present",
+     "bytes": 10067
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1090,
+     "status": "present",
+     "bytes": 16227
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1091,
+     "status": "present",
+     "bytes": 6771
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1092,
+     "status": "present",
+     "bytes": 6716
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1093,
+     "status": "present",
+     "bytes": 5976
+    },
+    {
+     "z": 11,
+     "x": 711,
+     "y": 1094,
+     "status": "present",
+     "bytes": 7948
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1090,
+     "status": "present",
+     "bytes": 10129
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1091,
+     "status": "present",
+     "bytes": 5049
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1092,
+     "status": "present",
+     "bytes": 5994
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1093,
+     "status": "present",
+     "bytes": 4024
+    },
+    {
+     "z": 11,
+     "x": 712,
+     "y": 1094,
+     "status": "present",
+     "bytes": 8080
+    }
+   ]
+  }
+ }
+}

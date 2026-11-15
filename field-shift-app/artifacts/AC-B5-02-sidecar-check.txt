@@ -1,0 +1,21 @@
+rows: sidecar 795125, parquet 795125
+class_status: not_computed
+class rows: 0, null rows: 795125
+
+spot check: 10 Ids, re-read from the parquet
+  Id 170899     area_ha      23.4225 | geodesic      23.4225 (0.00000%) | equal area      23.4225 (0.00000%) | publisher      23.5723 (0.635%)
+  Id 2284705    area_ha      15.9764 | geodesic      15.9764 (0.00000%) | equal area      15.9764 (0.00000%) | publisher      16.0769 (0.625%)
+  Id 3193181    area_ha       6.9486 | geodesic       6.9486 (0.00000%) | equal area       6.9486 (0.00001%) | publisher       6.9919 (0.620%)
+  Id 3678206    area_ha       1.2800 | geodesic       1.2800 (0.00004%) | equal area       1.2800 (0.00004%) | publisher       1.2879 (0.618%)
+  Id 5177512    area_ha     182.5881 | geodesic     182.5881 (0.00000%) | equal area     182.5881 (0.00000%) | publisher     183.6974 (0.604%)
+  Id 6638891    area_ha       1.7621 | geodesic       1.7621 (0.00001%) | equal area       1.7621 (0.00001%) | publisher       1.7725 (0.589%)
+  Id 7873753    area_ha     130.9473 | geodesic     130.9473 (0.00000%) | equal area     130.9473 (0.00002%) | publisher     131.7123 (0.581%)
+  Id 8234115    area_ha       1.6037 | geodesic       1.6037 (0.00003%) | equal area       1.6037 (0.00002%) | publisher       1.6130 (0.578%)
+  Id 8852224    area_ha     552.1773 | geodesic     552.1773 (0.00000%) | equal area     552.1770 (0.00006%) | publisher     555.3708 (0.575%)
+  Id 12544527   area_ha       1.5075 | geodesic       1.5075 (0.00001%) | equal area       1.5075 (0.00001%) | publisher       1.5159 (0.553%)
+
+worst deviation from a recomputed geometry area: 0.000060%
+publisher mbvalid_area_2024: median delta 0.596%, max 0.635%
+json: artifacts/AC-B5-02-sidecar-check.json
+
+checks: 49, failures: 0

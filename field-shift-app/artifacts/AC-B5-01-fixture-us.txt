@@ -1,0 +1,93 @@
+Brazil comparison against the fixture at 70329fc
+  381825001868504: ring overshoot past the query box 0.00366 deg
+  381825001868504: ring area 153.187 acres, csbacres 153.187, delta 0.000%
+  381825001868512: ring overshoot past the query box 0.00321 deg
+  381825001868512: ring area 150.337 acres, csbacres 150.337, delta 0.000%
+  381825001868517: ring overshoot past the query box 0.00348 deg
+  381825001868517: ring area 155.599 acres, csbacres 155.599, delta 0.000%
+
+checks: 186, failures: 0
+fixture: OK
+GET /fields -> 6 fields
+  keys of a US entry: ['acres', 'boundary', 'center', 'climate', 'cntyfips', 'coverage', 'coverage_basis', 'crops_observed', 'csbacres', 'csbid', 'history', 'id', 'location', 'name', 'region', 'soil', 'statefips']
+  mt-santa-carmem-01 region=br coverage= 86 state=ranked    threshold=None scenarios=['Current sequence', 'Soybean → Corn cover', 'Soybean → Cotton']
+  mt-santa-carmem-02 region=br coverage= 91 state=ranked    threshold=None scenarios=['Current sequence', 'Soybean → Corn cover', 'Soybean → Cotton']
+  mt-santa-carmem-03 region=br coverage= 62 state=abstained threshold=coverage_below_80_percent scenarios=['Current sequence', 'Soybean → Corn cover', 'Soybean → Cotton']
+  381825001868504    region=us coverage=100 state=ranked    threshold=None scenarios=['Current sequence', 'Spring Wheat → Sugarbeets', 'Spring Wheat → Sugarbeets → Soybeans → Corn']
+  381825001868512    region=us coverage=100 state=ranked    threshold=None scenarios=['Current sequence', 'Soybeans → Sunflower', 'Corn → Soybeans → Sunflower → Spring Wheat']
+  381825001868517    region=us coverage=100 state=ranked    threshold=None scenarios=['Current sequence', 'Sugarbeets → Spring Wheat', 'Sugarbeets → Spring Wheat → Soybeans → Corn']
+unknown id -> HTTPException 404
+
+failures: 0
+---
+Notes that belong with this evidence, written by card t_cf98ed11
+---------------------------------------------------------------
+
+1. Ring fidelity. The three rings are the Feature Service geometry verbatim
+   (the verifier compares every vertex against data/work/us-38017.geojson,
+   sha256 30072763f00a3f2efbeb32a916c2f2ad7ee9ff2257c730434a24fe1198b32c70),
+   and the geodesic area of each ring matches the service's own `csbacres` to
+   0.000%: 153.187, 150.337 and 155.599 acres. The service answers every
+   feature that intersects the envelope, so each field reaches up to 0.0037 deg
+   past the box edge on one side; that is the service's own selection rule, not
+   a clip of the ring.
+
+2. `coverage` is 100 on the three United States entries, and that number is not
+   a satellite observation coverage like the Brazil entries' 86, 91 and 62. It
+   is the share of CDL years that carry a class: 8 of 8, 2018 to 2025. Every
+   entry carries `coverage_basis` saying so. The backend computes
+   `coverage < 80` to decide abstention (`backend/main.py`, get_scenarios), so a
+   missing key would break the route; a 100 that meant something else would be
+   worse than the documented definition. The app prints it as
+   "{coverage}% data coverage", which is true under the documented definition
+   and overstates nothing about imagery.
+
+3. Scenario crops are drawn from each field's own CDL history, and the verifier
+   asserts it: every crop in every scenario belongs to `crops_observed`, which
+   is the set of crops in that field's eight years. No cotton appears: code 2
+   is not in any of the three fields' eight years, and it is not among the six
+   Cass County classes that reach one percent of the county's 2025 area (the
+   probe's `county_comparison`: 5, 1, 23, 41, 6 and 42). Cotton is in Table C2
+   because the RAT carries it, not because this box has any.
+
+4. The Brazil entries keep every value they had at 70329fc. The verifier reads
+   that commit's fixture and compares each Brazil entry with the one in the
+   tree, after dropping the single `region` key this build adds; the check runs
+   186 assertions and all of them pass.
+
+5. String catalog keys the app card needs before the United States cards render
+   their own text. `RotationFlipCard` resolves a heading through
+   `translationKeyFor(name) ?? "scenarios.name.<id>"` and the five facts
+   through `translationKeyFor(text) ?? "scenarios.fixture.<id>.<field>"`, and
+   `t()` returns the key itself when neither exists. The Brazil ids and prose
+   are in `src/strings/en.ts`; these nine are not:
+
+   scenarios.name.csb-381825001868504-current
+   scenarios.name.csb-381825001868504-observed-rotation
+   scenarios.name.csb-381825001868504-distinct-crops
+   scenarios.name.csb-381825001868512-current
+   scenarios.name.csb-381825001868512-observed-rotation
+   scenarios.name.csb-381825001868512-distinct-crops
+   scenarios.name.csb-381825001868517-current
+   scenarios.name.csb-381825001868517-observed-rotation
+   scenarios.name.csb-381825001868517-distinct-crops
+
+   plus `scenarios.fixture.<same nine ids>.{why,evidence,benefit,gap,risk}`,
+   whose English text is the text in the fixture, and two crop keys for the
+   kicker of a scenario whose crops include them:
+   `common.crop.spring wheat` and `common.crop.sugarbeets` (the kicker builds
+   the key as `common.crop.${crop.toLowerCase()}`). Until those keys exist the
+   back face of a United States card prints its key name where the prose should
+   be. That is app-card work: no `src/` file is touched by this card.
+
+6. The SMAP bar reads a row whose layer is `SMAP soil moisture`, and no United
+   States entry carries one, because no SMAP retrieval was made at these fields.
+   The first visual therefore prints the "Not reported for this option" state,
+   which is the honest render. The soil and the September 2026 PRISM rain are
+   evidence rows on every scenario and reach the supporting data table.
+
+7. `GET /fields` still answers every entry's keys except `scenarios`, so the
+   extra United States keys (`region`, `coverage_basis`, `history`,
+   `crops_observed`, `soil`, `climate`, `acres`, `csbacres`, `csbid`,
+   `statefips`, `cntyfips`) reach the client as JSON. The 25 backend tests of
+   test_commands.py and test_layers.py pass against this fixture.

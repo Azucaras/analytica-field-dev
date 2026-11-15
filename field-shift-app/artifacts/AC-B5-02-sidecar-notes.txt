@@ -1,0 +1,105 @@
+Brazil class sidecar: what was built, and the one column that could not be
+==========================================================================
+Card t_cf98ed11, CO-B5-02 and Table C of specs/bloco-5-poligonos-de-cultura.md
+
+Product
+-------
+data/polygons/polygon-class-mt-2025.sqlite
+  21,929,984 bytes
+  sha256 eeb47e0e8990e438786672a697f7c7b4e3a5cb208f1c78266d0bb084fe4ae2c7
+  795,125 rows, one per Id of
+  data/work/trazo3_brazil_mato_grosso_2024.parquet
+  (sha256 285f9bb4e1e5e9ae3fce98ca7b2bb1c4640dbd6f3ab30d5ceebc7e37701632ba,
+  916,097,780 bytes, 795,125 rows, 795,125 distinct Ids, no null Id)
+
+Schema: polygon_class(Id INTEGER PRIMARY KEY, area_ha REAL NOT NULL,
+class_id INTEGER, collection INTEGER, year INTEGER, class_basis TEXT,
+class_source TEXT, mbmode24 INTEGER) plus build_meta(key, value).
+
+What is complete
+----------------
+area_ha is complete on all 795,125 rows, computed from the source polygon
+geometry with a geodesic area on the WGS84 ellipsoid, m2/10000.
+
+  total 29,741,258.370 ha
+  min        0.952625 ha
+  max   11,548.727944 ha
+  rows with a non-positive or unreadable area: 0
+
+Ten Ids spread across the file were re-read from the parquet and recomputed
+twice: geodesic, and planar in EPSG:6933 (an equal-area projection). The worst
+deviation of the sidecar value from either recomputation is 0.00006 percent,
+well inside the one percent the card asks for. As an independent check the
+publisher's own mbvalid_area_2024 column sits 0.55 to 0.64 percent above the
+geodesic figure on those ten rows, a small systematic offset consistent with a
+different pixel rule, not with noisy areas.
+
+The overlap assumption was measured, not assumed. One row in every 159 of the
+795,125 was tested against the others for a positive-area intersection:
+5,000 sampled, 0 overlapping pairs, largest overlap 0.000 m2. Fields that
+overlap would split shared pixels between two polygon ids.
+
+What is not complete, and why
+-----------------------------
+class_id, collection and year are NULL on every row, and build_meta carries
+class_status `not_computed` with class_not_computed_reason. The class has to be
+a zonal mode over the MapBiomas Collection 11 2025 raster and no copy of that
+raster is reachable from this machine. Three measurements, 2026-11-15 UTC:
+
+1. The object MapBiomas documents for direct download,
+   https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection11/lulc/coverage/brazil_coverage/brazil_coverage-col11_2025.tif
+   answers 403 AccessDenied for an anonymous caller, and 403 for the Google
+   account that `gcloud auth list` shows as active on this host
+   (carloshnpwork@gmail.com). The collection_10 URL that the same documentation
+   lists answers 403 the same way, so this is the bucket's policy, not a wrong
+   path. `gcloud storage ls gs://mapbiomas-public/initiatives/brasil/collection_11/`
+   answers 403 as well, so the naming cannot even be listed.
+
+2. brasil.mapbiomas.org/downloads states that the map download is suspended:
+   "A função de baixar mapas está temporariamente suspensa. Acesse os dados
+   diretamente pelos assets no Google Earth Engine (GEE)."
+
+3. Google Earth Engine is the remaining route and it is closed here. The asset
+   `projects/mapbiomas-public/assets/brazil/lulc/collection11/...` needs a
+   Google account registered for Earth Engine and a Cloud project with the
+   Earth Engine API enabled. All eight projects `gcloud projects list` shows for
+   this host's authenticated account were tried: six answer "the Earth Engine
+   API has not been used in project <id> before or it is disabled" and two are
+   suspended. Enabling a billed API and registering for Earth Engine are the
+   account owner's decisions, not a worker's.
+
+Guessing was not an option. The parquet carries `mbmode24`, the publisher's own
+per-polygon mode. It is 2024 and its collection is unverified (M-05 of the
+spec), so writing it into class_id together with collection 11 and year 2025
+would put a false provenance on every Brazil readout: R-18 makes a join load
+print "MapBiomas Collection 11, 2025" whenever it paints class_id. That column
+is kept as `mbmode24` for audit and is never read as the class.
+
+The way to finish it
+--------------------
+With a local copy of the 2025 classification band (a GeoTIFF whose pixel values
+are the Collection 11 codes):
+
+  python scripts/build_class_sidecar.py \
+    --parquet data/work/trazo3_brazil_mato_grosso_2024.parquet \
+    --out data/polygons/polygon-class-mt-2025.sqlite \
+    --raster <the 2025 GeoTIFF> --raster-band 1 --collection 11 --year 2025
+
+The zonal mode itself is implemented and checked: scripts/test_class_sidecar.py
+burns five known polygons over a synthetic categorical raster and compares the
+striped implementation with a brute-force per-polygon read, covering a single
+class, a majority split, an even tie (which resolves to the smaller class id),
+a polygon entirely over class 0 (which is ignored and yields NULL) and a polygon
+that crosses stripe boundaries. Five of five agree, including the pixel counts.
+What is unverified is the run against the real mosaic: its class values, its
+30 m grid, and the runtime for 795,125 polygons.
+
+Commands
+--------
+  python scripts/build_class_sidecar.py --parquet ... --out ... --label sidecar-area-only
+  python scripts/record_sidecar.py --sqlite ... --out data/polygons/polygon-class-mt-2025.build.json
+  python scripts/verify_class_sidecar.py --json-out artifacts/AC-B5-02-sidecar-check.json
+  python scripts/test_class_sidecar.py
+
+Artifacts of this run: artifacts/AC-B5-02-sidecar-check.json and
+artifacts/AC-B5-02-sidecar-check.txt (49 checks, 0 failures).
