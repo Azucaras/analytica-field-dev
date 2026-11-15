@@ -1099,3 +1099,37 @@
       animation-duration: 0s !important;
     }
   }
+
+/* Block 5: the hover tooltip of R-27, the class dot of the fields chip (R-28) and the compact
+   attribution control's margin (R-33). The tooltip never takes a pointer event and carries no
+   transition, so reduced motion has nothing to disable. */
+.polygon-tooltip {
+  position: absolute;
+  z-index: 26;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #101418e6;
+  color: #f4f6f8;
+  font-size: 12px;
+  line-height: 1.2;
+  max-width: 200px;
+  pointer-events: none;
+  transition: none;
+}
+
+.field-class-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* R-33 and AM-02: the library's own 10 px margin would pull the collapsed control off the
+   corner box `src/index.css` already places, so the app zeroes it at every width. */
+.app-shell > .map-panel .maplibregl-ctrl-attrib.maplibregl-compact {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .polygon-tooltip { transition-duration: 0s !important; }
+}

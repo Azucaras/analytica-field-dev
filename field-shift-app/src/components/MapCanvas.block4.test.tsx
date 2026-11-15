@@ -8,7 +8,18 @@ import { MapStub } from '@/test/maplibre-stub'
 
 vi.mock('maplibre-gl', async () => {
   const { MapStub } = await import('@/test/maplibre-stub')
-  return { Map: MapStub, NavigationControl: class {}, setWorkerUrl: vi.fn() }
+  return {
+    Map: MapStub,
+    NavigationControl: class {},
+    AttributionControl: class {
+      options: unknown
+      constructor(options?: unknown) { this.options = options }
+      onAdd() { return {} }
+      onRemove() {}
+    },
+    addProtocol: vi.fn(),
+    setWorkerUrl: vi.fn(),
+  }
 })
 
 type TileAnswer = {
@@ -27,9 +38,20 @@ function installFetch() {
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     const path = new URL(url).pathname
+    // Block 5 reads `/polygons/mode` once per load. This suite counts tile requests only, so
+    // the mode read is answered (absent build) and is not recorded among the tiles.
+    if (path === '/polygons/mode') {
+      return {
+        ok: false,
+        status: 404,
+        headers: new Headers(),
+        json: async () => null,
+        arrayBuffer: async () => new ArrayBuffer(0),
+      } as unknown as Response
+    }
     const match = path.match(/^\/tiles\/([^/]+)\//)
     const layerId = match ? decodeURIComponent(match[1]) : ''
-    tileRequests.push(url)
+    if (match) tileRequests.push(url)
     const answer = answers[layerId] ?? {}
     const headers = new Headers()
     if (answer.date !== null && answer.date !== undefined) headers.set('X-Tile-Date', answer.date)

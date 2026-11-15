@@ -139,13 +139,19 @@ describe('R-43 the basemap adapter boundary (AC-34)', () => {
     expect(active({ ...otherNames, VITE_GOOGLE_MAPS_API_KEY: 'f' }).id).toBe('google-satellite')
   })
 
-  it('keeps every Google host in the adapter module, and no component reads the adapters', () => {
-    // R-43: block 4 renders no basemap change, so nothing outside this module may even name a
-    // Google host, and no component may import the registry yet.
+  it('keeps every Google host in the adapter module, and the map surface is the only reader', () => {
+    // Block 5 R-30 renders the basemap, so the map surface (MapCanvas), the store's one
+    // `basemapId` value and the App's `?basemap=` read of the registry are the only readers of
+    // this module. No component names a Google host, and no other module imports the registry.
     expect(googleHostSources()).toEqual(['src/lib/basemap-adapters.ts'])
     const importers = sourceFiles().filter((file) => file !== 'src/lib/basemap-adapters.ts'
-      && /basemap-adapters/.test(readFileSync(resolve(process.cwd(), file), 'utf8')))
-    expect(importers).toEqual([])
+      && !file.includes('.test.')
+      && /from '.*basemap-adapters'/.test(readFileSync(resolve(process.cwd(), file), 'utf8')))
+    expect(importers.sort()).toEqual([
+      'src/App.tsx',
+      'src/components/MapCanvas.tsx',
+      'src/lib/map-store.ts',
+    ])
   })
 
   it('records zero requests to a Google host in the test run, and writes the network log', () => {
