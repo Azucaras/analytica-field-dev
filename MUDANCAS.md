@@ -30,6 +30,14 @@ EUA o ano vai de outubro a setembro, porque o efeito do El Niño aparece no inve
 O contraste nos EUA não é tão limpo quanto no Brasil. Lubbock recebe bem mais chuva no inverno de El Niño
 (+35%), mas McLean também (+21%), então os dois não se espelham.
 
+## Integração com a `main` da equipe
+
+Em 15 de novembro a `exp_vass` foi integrada à `main` da equipe, que já trazia o registro de camadas, a linha do
+tempo, os polígonos de cultura e a região dos EUA em Cass County (Dakota do Norte). Os nossos blocos 4 a 6 viraram
+9 a 11, porque a equipe já usava os números 4 a 8. Os talhões-piloto aparecem na região a que pertencem, o seletor
+de safra deu lugar à linha do tempo da equipe e o `pt-BR.ts` ganhou as 91 chaves novas dela. Também foram
+corrigidas duas falhas de teste que só aconteciam no Windows.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.

@@ -1,4 +1,4 @@
-# Block 4: ENSO signal and real climate evidence
+# Block 9: ENSO signal and real climate evidence
 
 Approved 2026-11-14 ("Aprovado, implemente"). Built and checked the same day.
 

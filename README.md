@@ -9,8 +9,11 @@ season started compared with normal and with past strong El Nino years, and the 
 The **Análise** button opens the full analysis for the field's municipality or county: forecasts, ranked rotations
 with the arithmetic behind each score, yield history by crop, vegetation, land use and slope.
 
-It covers five places: Santa Carmem (MT), Tupanciretã (RS) and Luís Eduardo Magalhães (BA) in Brazil, and McLean
-County (Illinois) and Lubbock County (Texas) in the United States.
+The map has two regions, chosen with `?region=us` (the default) or `?region=br`. Each shows real crop field
+outlines (Crop Sequence Boundaries in the US, Trazo3 in Brazil), a layer rail of NASA products and a daily
+timeline. The climate evidence and the analysis cover five places: Santa Carmem (MT), Tupanciretã (RS) and Luís
+Eduardo Magalhães (BA) in Brazil, and McLean County (Illinois) and Lubbock County (Texas) in the United States. The
+US region's own example fields are in Cass County (North Dakota), which the climate pipeline does not cover yet.
 
 ## Quick start
 
