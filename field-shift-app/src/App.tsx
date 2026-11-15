@@ -7,10 +7,19 @@ import { TimelineDock } from '@/components/TimelineDock'
 import { AbstentionNotice } from '@/components/AbstentionNotice'
 import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
+import { PolygonPanel } from '@/components/PolygonPanel'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { useLayers } from '@/lib/use-layers'
 import { seasonForDate } from '@/lib/timeline'
+import {
+  regionAdapter,
+  regionFromSearch,
+  searchWithRegion,
+} from '@/lib/regions'
+import { BASEMAP_ADAPTERS } from '@/lib/basemap-adapters'
+import { unmappedClassColour } from '@/lib/polygon-style'
+import { polygonIdFromSearch, searchWithPolygon, commandFieldId } from '@/lib/polygon-selection'
 import {
   COMPACT_QUERY,
   NARROW_QUERY,
@@ -50,6 +59,7 @@ function backendFailureReason(reason: unknown): string {
 export const ZOrder = Object.freeze({
   chips: 10,
   layerRail: 20,
+  polygonPanel: 25,
   evidence: 30,
   abstentionNotice: 40,
   timelineDock: 45,
@@ -61,6 +71,9 @@ export const ZOrder = Object.freeze({
 function App() {
   const selectedFieldId = useMapStore((state) => state.selectedFieldId)
   const selectField = useMapStore((state) => state.selectField)
+  const regionId = useMapStore((state) => state.regionId)
+  const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
+  const polygonClass = useMapStore((state) => state.polygonClass)
   const command = useCommandToggle()
   const supportingData = useSupportingDataToggle()
   const [fields, setFields] = useState<FieldSummary[]>([])
@@ -98,6 +111,52 @@ function App() {
   // Block 4: one `/layers` request per chosen date and viewport tile feeds both the rail
   // and the map (R-14, R-24). The rail no longer fetches on its own.
   useLayers(mapTile)
+
+  // R-01, R-23 and R-32: the load reads `?region=`, `?basemap=` and `?polygon=` once. The
+  // region is never chosen by a visible control, the basemap stays EOX without a Google key,
+  // and a `?polygon=` that does not resolve in the active region clears the selection.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const search = window.location.search
+    const store = useMapStore.getState()
+    const loadedRegion = regionFromSearch(search)
+    if (loadedRegion !== store.regionId) store.setRegionId(loadedRegion)
+    const requestedBasemap = new URLSearchParams(search).get('basemap')
+    if (requestedBasemap === 'google' || requestedBasemap === 'google-satellite') {
+      const google = BASEMAP_ADAPTERS.find((adapter) => adapter.id === 'google-satellite')
+      // R-32: without a key the EOX adapter stays, and the region says why.
+      if (google?.selectable()) store.setBasemapId('google-satellite')
+      else store.setBasemapKeyMissing(true)
+    }
+    const restored = polygonIdFromSearch(search, regionAdapter(loadedRegion))
+    if (restored !== null) store.restorePolygon(restored)
+    else if (store.selectedPolygonId !== null) store.clearPolygonSelection()
+  }, [])
+
+  // R-03 and R-23: the URL is the only record of the region and the polygon selection, so it
+  // is rewritten with `history.replaceState` and never with a navigation or local storage.
+  // The effect reads the store rather than the render snapshot, so the first write after the
+  // mount read above cannot momentarily drop `?region=` or `?polygon=`.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const store = useMapStore.getState()
+    const next = searchWithPolygon(
+      searchWithRegion(window.location.search, store.regionId),
+      regionAdapter(store.regionId),
+      store.selectedPolygonId,
+    )
+    if (next !== window.location.search) {
+      window.history.replaceState(null, '', `${window.location.pathname}${next}${window.location.hash}`)
+    }
+  }, [regionId, selectedPolygonId])
+
+  // R-24 and AM-10: only the fixture fields of the active region are listed or drawn, so a
+  // Brazil chip never appears on a United States map. Before the CSB fixture exists the
+  // United States list is empty, which is the honest state.
+  const regionFields = useMemo(
+    () => fields.filter((field) => regionAdapter(regionId).fixtureIds.includes(field.id)),
+    [fields, regionId],
+  )
 
   const hasNotice = Boolean(error || (scenarioState === 'abstained' && threshold && scenarios.length > 0))
 
@@ -153,8 +212,20 @@ function App() {
   }, [hasNotice])
 
   const selectedField = useMemo(
-    () => fields.find((field) => field.id === selectedFieldId) ?? null,
-    [fields, selectedFieldId],
+    () => regionFields.find((field) => field.id === selectedFieldId) ?? null,
+    [regionFields, selectedFieldId],
+  )
+  // R-28: the chip's class comes from the table through the store, never from the catalog, and
+  // an unresolved or unmapped class draws the unmapped colour.
+  const selectedPolygonChip = useMemo(
+    () => (selectedPolygonId === null
+      ? null
+      : {
+        fieldId: commandFieldId(regionAdapter(regionId), selectedPolygonId),
+        name: polygonClass?.name ?? null,
+        hex: polygonClass?.hex ?? unmappedClassColour(),
+      }),
+    [selectedPolygonId, polygonClass, regionId],
   )
   // R-14, R-15: every evidence row is presented from its own fields. The layer name is
   // the fixture string through its catalog key; the basis label comes from the row's
@@ -295,10 +366,18 @@ function App() {
 
   return (
     <main className="app-shell" style={shellStyle}>
-      <MapCanvas fields={fields} selectedField={selectedField} onTileChange={setMapTile} />
+      <MapCanvas fields={regionFields} selectedField={selectedField} onTileChange={setMapTile} />
       <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
         <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
       </div>
+
+      {/* Block 5, R-40 and OD-03: the Polygon region sits at its own numbers at 1440 and 780.
+          At 360 it is not mounted at all, and the fields chip carries the class there. */}
+      {!narrowViewport && (
+        <div className="polygon-panel-anchor" style={{ zIndex: ZOrder.polygonPanel }}>
+          <PolygonPanel />
+        </div>
+      )}
 
       <div className="overlay anchor-top-left layer-chips" style={{ zIndex: ZOrder.chips }}>
         <div className="overlay-interactive top-chip brand-chip">
@@ -334,13 +413,14 @@ function App() {
 
         <div className="overlay anchor-left field-list-anchor layer-chips" style={{ zIndex: ZOrder.chips }}>
           <FieldsPanel
-            fields={fields}
+            fields={regionFields}
             selectedFieldId={selectedFieldId}
             isLoading={isLoadingFields}
             error={error}
             canRetry={canRetryFields}
             onSelectField={handleSelectField}
             onRetry={handleRetryFields}
+            selectedPolygon={selectedPolygonChip}
           />
         </div>
       </div>
@@ -391,7 +471,11 @@ function App() {
                 </svg>
               </button>
             </div>
-            <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
+            {/* AM-07 and R-26: a polygon has no coverage measurement, so the pill is unmounted
+                while a polygon is the selected field rather than printing a 0 percent. */}
+            {selectedPolygonId === null && (
+              <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
+            )}
             {showFixtureNote && (
               <p className="fixture-season-note">
                 {t('timeline.fixture_data', { season: fixtureSeason, derived: derivedSeason })}

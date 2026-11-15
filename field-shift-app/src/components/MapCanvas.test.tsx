@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useMapStore } from '@/lib/map-store'
@@ -36,12 +36,27 @@ vi.mock('maplibre-gl', () => ({
     getStyle = vi.fn(() => ({ layers: [] }))
     getZoom = vi.fn(() => 11)
     getCenter = vi.fn(() => ({ lng: -55.27, lat: -11.91 }))
+    getCanvas = () => ({ style: {} as { cursor?: string } })
+    setPaintProperty = vi.fn()
+    setLayoutProperty = vi.fn()
+    setFeatureState = vi.fn()
+    removeFeatureState = vi.fn()
+    removeControl = vi.fn()
+    queryRenderedFeatures = vi.fn(() => [])
+    off = vi.fn()
     on(event: string, callback: () => void) {
       mapBus.on(event, callback)
     }
     remove = vi.fn()
   },
   NavigationControl: class {},
+  AttributionControl: class {
+    options: unknown
+    constructor(options?: unknown) { this.options = options }
+    onAdd() { return {} }
+    onRemove() {}
+  },
+  addProtocol: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 
@@ -120,11 +135,19 @@ async function expectSelectedFieldUi() {
   expect(screen.queryByText('Select a field to view rotation scenarios.')).toBeNull()
 }
 
+beforeEach(() => {
+  // Block 5 defaults the region to the United States (R-01) and lists only the active
+  // region's fixtures (R-24), so these fixture flows run with Brazil active.
+  window.history.replaceState({}, '', '/?region=br')
+  useMapStore.setState({ regionId: 'br' })
+})
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   mapBus.reset()
-  useMapStore.setState({ selectedFieldId: null, composition: 'map' })
+  useMapStore.setState({ selectedFieldId: null, composition: 'map', regionId: 'us', selectedPolygonId: null })
+  window.history.replaceState({}, '', '/')
 })
 
 describe('initial field selection does not depend on event ordering', () => {

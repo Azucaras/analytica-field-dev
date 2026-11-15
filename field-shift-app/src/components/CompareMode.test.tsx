@@ -10,7 +10,18 @@ import { MapStub } from '@/test/maplibre-stub'
 
 vi.mock('maplibre-gl', async () => {
   const { MapStub } = await import('@/test/maplibre-stub')
-  return { Map: MapStub, NavigationControl: class {}, setWorkerUrl: vi.fn() }
+  return {
+    Map: MapStub,
+    NavigationControl: class {},
+    AttributionControl: class {
+      options: unknown
+      constructor(options?: unknown) { this.options = options }
+      onAdd() { return {} }
+      onRemove() {}
+    },
+    addProtocol: vi.fn(),
+    setWorkerUrl: vi.fn(),
+  }
 })
 
 const catalog = buildLayerCatalog(RECORDED_LAYERS_RESPONSE)

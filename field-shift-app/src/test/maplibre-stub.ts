@@ -30,23 +30,64 @@ export class MapStub {
   addLayerCalls = 0
   removeLayerCalls = 0
   moveLayerCalls: string[] = []
-  listeners: Record<string, Array<() => void>> = {}
+  listeners: Record<string, Array<(...args: never[]) => void>> = {}
   center = { lng: -55.27, lat: -11.91 }
   zoom = 11
   flyToCalls = 0
+  lastFlyTo: Record<string, unknown> | null = null
   options: Record<string, unknown>
+  /** Block 5: the calls the polygon surface makes, recorded so a criterion can read them. */
+  featureStateCalls: Array<{ state: Record<string, unknown>; value?: Record<string, unknown> }> = []
+  removedFeatureStateCalls: Array<Record<string, unknown>> = []
+  layoutCalls: Array<{ id: string; property: string; value: unknown }> = []
+  controls: unknown[] = []
+  renderedFeatures: Array<{ id?: string | number; properties?: Record<string, unknown> | null }> = []
+  cursor = ''
+  queryOptions: Array<Record<string, unknown>> = []
 
   constructor(options: Record<string, unknown>) {
     this.options = options
     MapStub.instances.push(this)
   }
 
-  addControl() {}
+  addControl(control?: unknown) {
+    this.controls.push(control)
+  }
+
+  removeControl(control?: unknown) {
+    this.controls = this.controls.filter((entry) => entry !== control)
+  }
+
   remove() {}
 
-  addSource(id: string, spec: { tiles?: string[]; bounds?: [number, number, number, number] }) {
+  /** R-19: MapLibre's own cursor is written through the canvas element. */
+  getCanvas() {
+    const stub = this
+    return {
+      style: {
+        get cursor() { return stub.cursor },
+        set cursor(value: string) { stub.cursor = value },
+      },
+    }
+  }
+
+  setFeatureState(state: Record<string, unknown>, value?: Record<string, unknown>) {
+    this.featureStateCalls.push({ state, value })
+  }
+
+  removeFeatureState(state: Record<string, unknown>) {
+    this.removedFeatureStateCalls.push(state)
+  }
+
+  queryRenderedFeatures(options: Record<string, unknown> = {}) {
+    this.queryOptions.push(options)
+    return this.renderedFeatures
+  }
+
+  addSource(id: string, spec: { tiles?: string[]; bounds?: [number, number, number, number]; [key: string]: unknown }) {
     this.addSourceCalls += 1
-    const source: StubSource = {
+    const source: StubSource & Record<string, unknown> = {
+      ...spec,
       id,
       tiles: [...(spec.tiles ?? [])],
       bounds: spec.bounds,
@@ -85,12 +126,14 @@ export class MapStub {
   }
 
   /** Without a `beforeId`, MapLibre moves the layer to the top of the stack. */
-  moveLayer(id: string) {
+  moveLayer(id: string, beforeId?: string) {
     this.moveLayerCalls.push(id)
     const layer = this.layers.find((entry) => entry.id === id)
     if (!layer) return
     this.layers = this.layers.filter((entry) => entry.id !== id)
-    this.layers.push(layer)
+    const index = beforeId ? this.layers.findIndex((entry) => entry.id === beforeId) : -1
+    if (index >= 0) this.layers.splice(index, 0, layer)
+    else this.layers.push(layer)
   }
 
   getStyle() {
@@ -106,7 +149,9 @@ export class MapStub {
     return this.layers.find((entry) => entry.id === id)?.paint?.[property]
   }
 
-  setLayoutProperty() {}
+  setLayoutProperty(id: string, property: string, value: unknown) {
+    this.layoutCalls.push({ id, property, value })
+  }
 
   getZoom() {
     return this.zoom
@@ -125,17 +170,33 @@ export class MapStub {
     }
   }
 
-  flyTo() {
+  flyTo(options?: Record<string, unknown>) {
     this.flyToCalls += 1
+    this.lastFlyTo = options ?? null
   }
 
-  on(event: string, callback: () => void) {
-    ;(this.listeners[event] ??= []).push(callback)
-    if (event === 'style.load') callback()
+  /** The two forms MapLibre accepts: `on(event, cb)` and `on(event, layerId, cb)`. */
+  on(event: string, layerOrCallback?: unknown, maybeCallback?: (...args: never[]) => void) {
+    const callback = (typeof layerOrCallback === 'function' ? layerOrCallback : maybeCallback) as
+      | ((...args: never[]) => void)
+      | undefined
+    if (callback) (this.listeners[event] ??= []).push(callback)
+    if (event === 'style.load') callback?.()
   }
 
-  emit(event: string) {
-    for (const callback of this.listeners[event] ?? []) callback()
+  off(event: string, layerOrCallback?: unknown, maybeCallback?: (...args: never[]) => void) {
+    const callback = typeof layerOrCallback === 'function' ? layerOrCallback : maybeCallback
+    if (!callback) {
+      delete this.listeners[event]
+      return
+    }
+    this.listeners[event] = (this.listeners[event] ?? []).filter((entry) => entry !== callback)
+  }
+
+  emit(event: string, payload?: unknown) {
+    for (const callback of [...(this.listeners[event] ?? [])]) {
+      (callback as unknown as (value?: unknown) => void)(payload)
+    }
   }
 
   static reset() {

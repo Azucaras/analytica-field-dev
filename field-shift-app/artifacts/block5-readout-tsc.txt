@@ -1,0 +1,6 @@
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+
+real	0m3.670s
+user	0m6.672s
+sys	0m0.429s
