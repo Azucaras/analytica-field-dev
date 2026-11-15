@@ -13,7 +13,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ClimateCard, ClimateChart, NumbersView, ProvenanceTable, RotationCard, SoilCard } from './NumbersView'
-import { formatMetric, type NumbersPayload } from '@/lib/numbers'
+import { formatMetric, type ClimateSection, type NumbersPayload } from '@/lib/numbers'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { recordedNumbersPayload, RECORDED_FIELD_ID } from '@/test/numbers-recorded'
 
@@ -190,5 +190,39 @@ describe('the climate resolution line the null payload never triggered (R-10, Ta
 
     const { container } = render(<ClimateCard climate={payload.sections.climate} window={payload.query.window} />)
     expect(container.querySelector('.numbers-resolution')?.textContent).toBe('Resolution: 0.5 degree cell.')
+  })
+})
+
+describe('the normals reader the unavailable payload broke (Table E, R-12)', () => {
+  // Table E requires `normals` in every climate state. The unavailable section this route sends when
+  // POWER is offline carries it with the reason; a payload from a build before that fix carries no key
+  // at all, and the card must not dereference it.
+  it('prints the abstain text with its reason and renders an older payload without the key', () => {
+    const payload = recordedNumbersPayload()
+    const unavailable: ClimateSection = {
+      ...payload.sections.climate,
+      state: 'unavailable',
+      as_of: null,
+      fetched_at: null,
+      cached: false,
+      error: 'ConnectError',
+      window: null,
+      // The wire shape of the unavailable section: no series families, no aggregates (the route sends `{}`).
+      series: {} as ClimateSection['series'],
+      aggregates: {},
+      normals: { of_years: 0, excluded_years: [], error: 'ConnectError' },
+    }
+
+    expect(() => render(<ClimateCard climate={unavailable} window={payload.query.window} />)).not.toThrow()
+    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
+    // The same section carries no series families, so the chart prints its empty text rather than throwing.
+    expect(screen.getByText('No valid day in the window.')).toBeTruthy()
+
+    // An older build's payload: the type says the key is there, the wire did not carry it.
+    cleanup()
+    const older = structuredClone(unavailable) as Partial<ClimateSection>
+    delete older.normals
+    expect(() => render(<ClimateCard climate={older as ClimateSection} window={payload.query.window} />)).not.toThrow()
+    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
   })
 })
