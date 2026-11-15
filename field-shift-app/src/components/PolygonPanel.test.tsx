@@ -237,6 +237,22 @@ describe('the legend rows of R-37 and R-21', () => {
     expect(items).toEqual(['Pasture', 'class not mapped'])
   })
 
+  it('prints the No CDL row with its year, and the class not mapped row, as two rows', () => {
+    setStore({
+      polygonMode: usScene,
+      regionId: 'us',
+      legendRows: [
+        { classId: 5, name: 'Soybeans', nameKey: null, hex: '#267000', unmapped: false },
+        { classId: null, name: null, nameKey: 'polygon.no_cdl_class', params: { year: 2025 }, hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+        { classId: null, name: null, nameKey: 'polygon.class_not_mapped', hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+      ],
+    })
+    render(<PolygonPanel />)
+    const list = screen.getByRole('list', { name: 'Classes in view' })
+    const items = within(list).getAllByRole('listitem').map((node) => node.textContent)
+    expect(items).toEqual(['Soybeans', 'No CDL class for 2025', 'class not mapped'])
+  })
+
   it('prints the empty text, and no rows, when the view holds no polygon', () => {
     setStore({ polygonMode: usScene, legendRows: [] })
     render(<PolygonPanel />)

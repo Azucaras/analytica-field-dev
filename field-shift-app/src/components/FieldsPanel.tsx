@@ -10,8 +10,14 @@ export const FIELDS_CHIP_ROW_ID = 'fields-chip-row'
 export type SelectedPolygonChip = {
   /** The `select_field` id of the polygon, `trazo:12345` or `csb:381825001868504`. */
   fieldId: string
+  /** The class name of the table, or `null` when the class is not in the table. */
   name: string | null
   hex: string
+  /**
+   * R-21 and R-28: the painted year of a United States null or absent class, which prints
+   * `No CDL class for {Y}`. `null` for every other unmapped value, which prints `class not mapped`.
+   */
+  noCdlYear?: number | null
 }
 
 type FieldsPanelProps = {
@@ -23,6 +29,19 @@ type FieldsPanelProps = {
   onSelectField: (fieldId: string) => void
   onRetry: () => void
   selectedPolygon?: SelectedPolygonChip | null
+}
+
+/**
+ * R-28 and R-27: the chip prints the table's class name; for a United States null or absent class
+ * the No CDL label of its painted year (catalog key `polygon.no_cdl_class`); otherwise
+ * `class not mapped` (catalog key `polygon.class_not_mapped`). The label is never abbreviated.
+ */
+function chipLabelOf(polygon: SelectedPolygonChip): string {
+  if (polygon.name) return polygon.name
+  if (polygon.noCdlYear !== null && polygon.noCdlYear !== undefined) {
+    return t('polygon.no_cdl_class', { year: polygon.noCdlYear })
+  }
+  return t('polygon.class_not_mapped')
 }
 
 export function FieldsPanel({
@@ -39,7 +58,7 @@ export function FieldsPanel({
   const selectedField = fields.find((field) => field.id === selectedFieldId) ?? null
   // R-28: the chip resolves the name through the class table, not through the catalog, and it
   // renders in both panel states. AM-04 makes it the single class surface at 360x640.
-  const chipName = selectedPolygon ? selectedPolygon.name ?? t('polygon.class_not_mapped') : null
+  const chipName = selectedPolygon ? chipLabelOf(selectedPolygon) : null
 
   return (
     <section className="overlay-interactive field-chip-stack" aria-label={t('map.your_fields')}>

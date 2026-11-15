@@ -38,11 +38,12 @@ import {
   POLYGON_INTERACTIVE_MIN_ZOOM,
   classDisplay,
   classPropertyFor,
+  noCdlYearOf,
   paintedClassYear,
 } from '@/lib/polygon-style'
 import { classIdFrom, legendRowsForMap } from '@/lib/polygon-legend'
 import { commandFieldId, featureStateCall } from '@/lib/polygon-selection'
-import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, type Box } from '@/lib/polygon-tooltip'
+import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, polygonTooltipText, type Box } from '@/lib/polygon-tooltip'
 import { attributionCreditName, collapseAttributionControl, nameAttributionToggle, rawFeatureFrom } from '@/lib/polygon-readout'
 import { runCommand } from '@/lib/commands'
 import { outerRingOf } from '@/lib/numbers'
@@ -551,7 +552,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       }
       const active = regionAdapter(store.regionId)
       const property = classPropertyFor(active, chosenDateOf(store), scene.classSource ?? undefined)
-      store.setLegendRows(legendRowsForMap(map, active, property))
+      store.setLegendRows(legendRowsForMap(map, active, property, noCdlYearOf(active, null, chosenDateOf(store))))
     }
     publishZoom()
     publishLegend()
@@ -716,7 +717,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       }
       map.getCanvas().style.cursor = 'pointer'
       const property = classPropertyFor(active, chosenDateOf(useMapStore.getState()), scene.classSource ?? undefined)
-      const display = classDisplay(active, classIdFrom(active, feature.properties, property))
+      const classValue = classIdFrom(active, feature.properties, property)
       const container = containerRef.current?.getBoundingClientRect()
       if (!container) return
       const placement = placeTooltip(
@@ -726,7 +727,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         rightEdgeColumnBox(),
       )
       setTooltip(placement.hidden ? null : {
-        text: display.name ?? t('polygon.class_not_mapped'),
+        text: polygonTooltipText(active, classValue, chosenDateOf(useMapStore.getState())),
         left: placement.left,
         top: placement.top,
       })

@@ -87,3 +87,51 @@ describe('the fields header chip for a polygon (R-28, AC-24, AM-04)', () => {
     expect(onSelectField).toHaveBeenCalledWith('trazo:12345')
   })
 })
+
+describe('the fields chip per state (R-28, AC-24, R-44)', () => {
+  it('prints No CDL class for {Y} for a United States null class, with the year substituted', () => {
+    render(
+      <FieldsPanel
+        {...baseProps}
+        selectedPolygon={{ fieldId: 'us:381825001868504', name: null, hex: UNMAPPED_CLASS_COLOUR, noCdlYear: 2026 }}
+      />,
+    )
+    const chip = screen.getByRole('button', { name: 'No CDL class for 2026' })
+    expect(chip.textContent).toBe('No CDL class for 2026')
+    expect(chip.querySelector('[data-class-hex]')?.getAttribute('data-class-hex')).toBe(UNMAPPED_CLASS_COLOUR)
+    expect(chip.textContent).not.toContain('%')
+  })
+
+  it('does not print class not mapped for a United States null class', () => {
+    render(
+      <FieldsPanel
+        {...baseProps}
+        selectedPolygon={{ fieldId: 'us:381825001868504', name: null, hex: UNMAPPED_CLASS_COLOUR, noCdlYear: 2026 }}
+      />,
+    )
+    expect(screen.queryByText('class not mapped')).toBeNull()
+  })
+
+  it('prints class not mapped for an unmapped code, and never No CDL class for', () => {
+    render(
+      <FieldsPanel
+        {...baseProps}
+        selectedPolygon={{ fieldId: 'us:999', name: null, hex: UNMAPPED_CLASS_COLOUR, noCdlYear: null }}
+      />,
+    )
+    const chip = screen.getByRole('button', { name: 'class not mapped' })
+    expect(chip.textContent).toBe('class not mapped')
+    expect(screen.queryByText(/No CDL class for/)).toBeNull()
+  })
+
+  it('prints the class name for a mapped class, with no unmapped label', () => {
+    render(
+      <FieldsPanel
+        {...baseProps}
+        selectedPolygon={{ fieldId: 'us:1', name: 'Corn', hex: '#ffd300', noCdlYear: null }}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Corn' }).textContent).toBe('Corn')
+    expect(screen.queryByText('class not mapped')).toBeNull()
+  })
+})
