@@ -146,7 +146,8 @@ export type NdviScene = {
   valid_fraction: number | null
   kept_pixels: number | null
   polygon_pixels: number | null
-  partial: boolean
+  /** Null until the COG reader of OD-01 can mark a point partial; the route sends null today. */
+  partial: boolean | null
 }
 
 export type NdviSection = {
@@ -154,8 +155,18 @@ export type NdviSection = {
   scenes: NdviScene[]
   scene_count: number | null
   clear_count: number | null
-  best_valid_fraction?: number | null
-  assets?: string[]
+  /**
+   * Table E's ndvi `assets`: the B04, B08 and SCL addresses the STAC search returned, labelled by
+   * their own file stem (`B04.tif` is `B04`). Empty when no search ran, never absent.
+   */
+  assets: string[]
+  /**
+   * R-29 names the best valid fraction. It is null while the COG reader of OD-01 is open, and
+   * `best_valid_fraction_reason` names that missing producer beside it; a number means the reader
+   * computed it. Nothing is ever filled in here.
+   */
+  best_valid_fraction: number | null
+  best_valid_fraction_reason: string | null
   source: string
   as_of: string | null
   reason?: string | null
@@ -205,11 +216,19 @@ export type MunicipalityRow = { code: string; name: string; year: number; soy_ha
 export type MunicipalitySection = {
   state: SectionState
   municipality: MunicipalityRow | null
-  state_row?: (MunicipalityRow & { label: string }) | null
+  /**
+   * Table E's municipality `state` object. It is carried as `state_row` because the section's own
+   * `state` key is the state token of R-45: one JSON object cannot hold both. Null when the field
+   * carries no IBGE state code, and `state_reason` names why.
+   */
+  state_row: (MunicipalityRow & { label: string }) | null
+  state_reason: string | null
   share: number | null
   source: string
   as_of: string | null
   reason?: string | null
+  /** Present only when the SIDRA read itself failed; the section abstains with this text. */
+  error?: string | null
 }
 
 export type FragmentSection = {
