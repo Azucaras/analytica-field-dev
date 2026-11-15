@@ -31,6 +31,11 @@ type ScenarioCardsProps = {
   isLoading?: boolean
   emptyReason?: string | null
   /**
+   * R-49, AC-41: the block 3 season chip. The polygon surface turns it off, because a season is
+   * not a value of a polygon. It defaults on, so the fixture rotation panel keeps its chip.
+   */
+  seasonChip?: boolean
+  /**
    * R-49: while the rotation panel is collapsed the three cards and the list
    * `Rotation scenarios` are unmounted, not hidden, so neither is in the DOM or in the
    * accessibility tree and no card control can take focus. The heading block stays,
@@ -46,6 +51,7 @@ export function ScenarioCards({
   isLoading = false,
   emptyReason,
   collapsed = false,
+  seasonChip = true,
 }: ScenarioCardsProps) {
   return (
     <section className="scenario-panel" aria-labelledby="scenario-title">
@@ -54,7 +60,7 @@ export function ScenarioCards({
           <p className="eyebrow">{t('scenarios.rotation_planning')}</p>
           <h2 id="scenario-title">{t('scenarios.title')}</h2>
         </div>
-        <span className="season-chip">{t('scenarios.season', { season: '2025/26' })}</span>
+        {seasonChip && <span className="season-chip">{t('scenarios.season', { season: '2025/26' })}</span>}
       </div>
       {collapsed ? null : (
         <>
