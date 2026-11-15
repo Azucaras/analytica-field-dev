@@ -262,21 +262,32 @@ export function placeWaterMask(
   } else {
     map.setPaintProperty(WATER_MASK_LAYER_ID, 'fill-color', colour)
   }
-  map.moveLayer(WATER_MASK_LAYER_ID)
+  const ceiling = rasterCeiling(map)
+  map.moveLayer(WATER_MASK_LAYER_ID, ceiling)
   for (let index = stack.length - 1; index >= 0; index -= 1) {
     const id = stack[index]
     if (catalog.find((entry) => entry.id === id)?.surface === 'land') continue
     for (const key of [rasterLayerId(id), `${rasterLayerId(id)}${COMPARE_SUFFIX.a}`, `${rasterLayerId(id)}${COMPARE_SUFFIX.b}`]) {
-      if (map.getLayer(key)) map.moveLayer(key)
+      if (map.getLayer(key)) map.moveLayer(key, ceiling)
     }
   }
 }
 
+/**
+ * Where the raster stack ends: just under the crop polygons, or under the labels when no
+ * polygon is mounted. Moving a raster to the very top used to paint SMAP and the other
+ * imagery over the crop polygons and the place names.
+ */
+function rasterCeiling(map: MapLibreMap): string | undefined {
+  return POLYGON_LAYER_IDS.find((id) => map.getLayer(id)) ?? firstSymbolId(map)
+}
+
 /** R-18: the stack list puts its first item on top, so the list is applied bottom up. */
 function applyOrder(map: MapLibreMap, order: string[]) {
+  const ceiling = rasterCeiling(map)
   for (let index = order.length - 1; index >= 0; index -= 1) {
     const layerId = rasterLayerId(order[index])
-    if (map.getLayer(layerId)) map.moveLayer(layerId)
+    if (map.getLayer(layerId)) map.moveLayer(layerId, ceiling)
   }
 }
 
@@ -376,6 +387,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   // re-read, so an effect that ran before the style loaded never ran again.
   const [mapReady, setMapReady] = useState(false)
   const didSetInitialFieldRef = useRef(false)
+  const autoSelectedIdRef = useRef<string | null>(null)
   const composition = useMapStore((state) => state.composition)
   const catalog = useMapStore((state) => state.catalog)
   const layerOn = useMapStore((state) => state.on)
@@ -483,6 +495,9 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     if (useMapStore.getState().selectedPolygonId !== null) return
     const first = fields[0]
     if (!first) return
+    // The field picked on load keeps the region's own view, so the crop polygons around it
+    // are on screen; only a field the user picks moves the camera.
+    autoSelectedIdRef.current = first.id
     useMapStore.getState().selectField(first.id)
     didSetInitialFieldRef.current = true
   }, [fields])
@@ -498,9 +513,17 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map || !selectedField || !didSetInitialFieldRef.current) return
+    if (autoSelectedIdRef.current === selectedField.id) {
+      autoSelectedIdRef.current = null
+      return
+    }
+    autoSelectedIdRef.current = null
     const bounds = fieldBounds(selectedField.boundary)
     if (bounds && typeof map.fitBounds === 'function') {
-      map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 500 })
+      // Wide padding keeps the neighbouring crop polygons in view around the field.
+      const canvas = map.getCanvas()
+      const padding = Math.max(60, Math.round(Math.min(canvas.clientWidth || 0, canvas.clientHeight || 0) * 0.25))
+      map.fitBounds(bounds, { padding, maxZoom: 14, duration: 500 })
     } else {
       map.flyTo({ center: selectedField.center, zoom: 11, duration: 500 })
     }

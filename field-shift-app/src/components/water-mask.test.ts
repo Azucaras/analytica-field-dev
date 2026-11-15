@@ -4,6 +4,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 vi.mock('maplibre-gl', () => ({ Map: class {}, NavigationControl: class {}, AttributionControl: class {}, addProtocol: vi.fn(), setWorkerUrl: vi.fn() }))
 
 const { placeWaterMask, WATER_MASK_LAYER_ID } = await import('./MapCanvas')
+const { POLYGON_LAYER_IDS } = await import('@/lib/polygon-source')
 
 type Layer = { id: string; type: string; source?: string; 'source-layer'?: string }
 
@@ -16,9 +17,11 @@ function fakeMap(layers: Layer[]) {
     setPaintProperty: vi.fn(),
     addLayer: (layer: Layer) => { stack.push(layer) },
     removeLayer: (id: string) => { stack.splice(stack.findIndex((layer) => layer.id === id), 1) },
-    moveLayer: (id: string) => {
-      const index = stack.findIndex((layer) => layer.id === id)
-      stack.push(...stack.splice(index, 1))
+    moveLayer: (id: string, before?: string) => {
+      const [layer] = stack.splice(stack.findIndex((entry) => entry.id === id), 1)
+      const at = before ? stack.findIndex((entry) => entry.id === before) : -1
+      if (at < 0) stack.push(layer)
+      else stack.splice(at, 0, layer)
     },
   }
   return { map: map as unknown as MapLibreMap, order: () => stack.map((layer) => layer.id) }
@@ -45,5 +48,22 @@ describe('the water mask over land-only layers', () => {
     expect(order()).toContain(WATER_MASK_LAYER_ID)
     placeWaterMask(map, catalog, ['imerg-daily'], 'map')
     expect(order()).not.toContain(WATER_MASK_LAYER_ID)
+  })
+
+  it('keeps the mask and the rasters under the crop polygons and the labels', () => {
+    const polygon = POLYGON_LAYER_IDS[0]
+    const { map, order } = fakeMap([
+      water,
+      { id: 'lst-terra-raster', type: 'raster' },
+      { id: 'imerg-daily-raster', type: 'raster' },
+      { id: polygon, type: 'fill' },
+      { id: 'place-label', type: 'symbol' },
+    ])
+    placeWaterMask(map, catalog, ['imerg-daily', 'lst-terra'], 'map')
+    const ids = order()
+    for (const id of [WATER_MASK_LAYER_ID, 'lst-terra-raster', 'imerg-daily-raster']) {
+      expect(ids.indexOf(id)).toBeLessThan(ids.indexOf(polygon))
+    }
+    expect(ids.indexOf(polygon)).toBeLessThan(ids.indexOf('place-label'))
   })
 })

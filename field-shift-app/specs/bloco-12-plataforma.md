@@ -24,8 +24,12 @@ problems were present on the team's `main` before the Field Phase work was merge
 
 - Scenario names and crops of the Cass County fields printed raw catalog keys. A scenario the catalog does not
   know is now named by its crops, and its facts use the fixture's own sentences.
-- Picking a field fits the map to the field outline (up to zoom 15) instead of a fixed zoom 11, at which a
-  150 m Cass County field was a dot. Fields have a fill, and the selected one a brighter outline.
+- Picking a field fits the map to the field outline (up to zoom 14, with a quarter of the map as padding so the
+  neighbouring crop polygons stay in view) instead of a fixed zoom 11, at which a 150 m Cass County field was a
+  dot. The field selected automatically on load keeps the region's own view. Fields have a fill, and the
+  selected one a brighter outline.
+- Raster layers were moved to the very top of the map style, above the crop polygons and the place labels, so
+  SMAP (on by default) covered the crop classes. Rasters and the water mask now stop under the polygon layers.
 - Coarse layers (1 km or larger) are drawn with hard pixel edges, and a map note gives the pixel size and warns
   when a pixel is larger than a field.
 - The compare divider was a 44 px range input floating on the map. It is now a full-height line with a drag
