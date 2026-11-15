@@ -9,7 +9,10 @@ import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
 import { PolygonPanel } from '@/components/PolygonPanel'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
+import { NumbersToggle, NUMBERS_TOGGLE_ATTR } from '@/components/NumbersToggle'
+import { NumbersView } from '@/components/NumbersView'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
+import { numbersOpenFromSearch, searchWithNumbers } from '@/lib/numbers'
 import { useLayers } from '@/lib/use-layers'
 import { seasonForDate } from '@/lib/timeline'
 import {
@@ -66,6 +69,8 @@ export const ZOrder = Object.freeze({
   scenarioCards: 50,
   controlStrip: 60,
   agentBar: 70,
+  /** Block 6, AM-05: the numbers surface sits above every map screen key. */
+  numbersView: 80,
 })
 
 function App() {
@@ -74,6 +79,7 @@ function App() {
   const regionId = useMapStore((state) => state.regionId)
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const polygonClass = useMapStore((state) => state.polygonClass)
+  const numbersOpen = useMapStore((state) => state.numbersOpen)
   const command = useCommandToggle()
   const supportingData = useSupportingDataToggle()
   const [fields, setFields] = useState<FieldSummary[]>([])
@@ -131,7 +137,30 @@ function App() {
     const restored = polygonIdFromSearch(search, regionAdapter(loadedRegion))
     if (restored !== null) store.restorePolygon(restored)
     else if (store.selectedPolygonId !== null) store.clearPolygonSelection()
+    // Block 6, R-01: `?numbers=1` opens the numbers surface, and nothing else in the URL changes.
+    store.setNumbersOpen(numbersOpenFromSearch(search))
   }, [])
+
+  // Block 6, R-01 and R-02: opening and closing the numbers surface writes or removes the one
+  // `numbers` parameter with `history.replaceState`. Every other parameter is kept as it was.
+  const openNumbers = useCallback(() => {
+    useMapStore.getState().setNumbersOpen(true)
+    window.history.replaceState(null, '', `${window.location.pathname}${searchWithNumbers(window.location.search, true)}${window.location.hash}`)
+  }, [])
+
+  const closeNumbers = useCallback(() => {
+    useMapStore.getState().setNumbersOpen(false)
+    window.history.replaceState(null, '', `${window.location.pathname}${searchWithNumbers(window.location.search, false)}${window.location.hash}`)
+  }, [])
+
+  // R-05 and AC-01: closing returns focus to the `Field numbers` button that opened the surface.
+  const wasNumbersOpenRef = useRef(false)
+  useEffect(() => {
+    if (wasNumbersOpenRef.current && !numbersOpen) {
+      document.querySelector<HTMLButtonElement>(`[${NUMBERS_TOGGLE_ATTR}]`)?.focus()
+    }
+    wasNumbersOpenRef.current = numbersOpen
+  }, [numbersOpen])
 
   // R-03 and R-23: the URL is the only record of the region and the polygon selection, so it
   // is rewritten with `history.replaceState` and never with a navigation or local storage.
@@ -365,7 +394,7 @@ function App() {
   } as CSSProperties
 
   return (
-    <main className="app-shell" style={shellStyle}>
+    <main className={numbersOpen ? 'app-shell is-numbers-open' : 'app-shell'} style={shellStyle}>
       <MapCanvas fields={regionFields} selectedField={selectedField} onTileChange={setMapTile} />
       <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
         <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
@@ -394,6 +423,7 @@ function App() {
           <span className="top-chip profile-avatar" aria-label={t('map.grower_profile')}>GM</span>
           <CommandToggle isOpen={command.isOpen} buttonRef={command.buttonRef} onToggle={handleToggleCommand} />
           <SupportingDataToggle isOpen={supportingData.isOpen} onToggle={handleToggleSupportingData} />
+          <NumbersToggle onOpen={openNumbers} />
         </div>
       </div>
 
@@ -526,6 +556,12 @@ function App() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Block 6, R-01 and R-02: the numbers surface is a sibling of the map screen. While it is
+          open, `.is-numbers-open` hides every other child of the shell (NumbersView.css). */}
+      {numbersOpen && (
+        <NumbersView selectedField={selectedField} onClose={closeNumbers} />
       )}
     </main>
   )

@@ -1442,7 +1442,7 @@ describe('block 4 wave 4: the dock states, the two toggles and the motion rules'
     expect(wave4Sources).not.toMatch(/useCommandToggle|useSupportingDataToggle|SUPPORTING_DATA_PANEL_ID/)
   })
 
-  it('R-41, AC-22: the top right strip is the label, the avatar, Command and Supporting data in that order', async () => {
+  it('R-41, AC-22: the top right strip is the label, the avatar, Command, Supporting data and, from block 6, Field numbers', async () => {
     stubWidth('1440')
     mockApi()
     render(<App />)
@@ -1450,11 +1450,13 @@ describe('block 4 wave 4: the dock states, the two toggles and the motion rules'
     await screen.findByRole('region', { name: 'Timeline' })
     const strip = document.querySelector('.anchor-top-right .topbar-meta') as HTMLElement
     const children = [...strip.children]
-    expect(children).toHaveLength(4)
+    // Block 6, R-01: the `Field numbers` button is the one control added after Supporting data.
+    expect(children).toHaveLength(5)
     expect(children[0].textContent).toBe('FIELD INTELLIGENCE')
     expect(children[1].getAttribute('aria-label')).toBe('Grower profile')
     expect(children[2].textContent).toBe('Command')
     expect(children[3].textContent).toBe('Supporting data')
+    expect(children[4].textContent).toBe('Field numbers')
     expect(document.querySelector('[aria-label="Season"]')).toBeNull()
     expect(document.querySelector('select')).toBeNull()
   })

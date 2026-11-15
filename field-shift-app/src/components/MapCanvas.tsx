@@ -45,6 +45,7 @@ import { commandFieldId, featureStateCall } from '@/lib/polygon-selection'
 import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, type Box } from '@/lib/polygon-tooltip'
 import { attributionCreditName, collapseAttributionControl, nameAttributionToggle, rawFeatureFrom } from '@/lib/polygon-readout'
 import { runCommand } from '@/lib/commands'
+import { outerRingOf } from '@/lib/numbers'
 import { PolygonTooltip } from '@/components/PolygonTooltip'
 import { t } from '@/strings'
 
@@ -571,7 +572,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
      */
     const syncSelectedClass = () => {
       const store = useMapStore.getState()
-      if (store.selectedPolygonId === null || store.polygonClass !== null) return
+      if (store.selectedPolygonId === null) return
+      if (store.polygonClass !== null && store.polygonRing !== null) return
       const scene = store.polygonMode
       if (!scene?.tiers) return
       const region = regionAdapter(store.regionId)
@@ -581,11 +583,15 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         (feature) => String(feature.id ?? feature.properties?.[region.idProperty]) === String(store.selectedPolygonId),
       )
       if (!match) return
-      store.setPolygonClass(
-        classDisplay(region, classIdFrom(region, match.properties, property)),
-        rawFeatureFrom(region, match.properties, property),
-      )
-      store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
+      if (store.polygonClass === null) {
+        store.setPolygonClass(
+          classDisplay(region, classIdFrom(region, match.properties, property)),
+          rawFeatureFrom(region, match.properties, property),
+        )
+        store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
+      }
+      // Block 6, Table B: the outline the map rendered is the ring the numbers request carries.
+      if (store.polygonRing === null) store.setPolygonRing(outerRingOf(match.geometry))
     }
     syncSelectedClass()
     map.on('idle', syncSelectedClass)
@@ -593,6 +599,37 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       map.off('idle', syncSelectedClass)
     }
   }, [mapReady, selectedPolygonId, polygonScene, regionId])
+
+  // Block 6, R-02: while the numbers surface is open the map screen is `display: none`. The
+  // camera is read before the surface opens, and on close `map.resize()` runs once and the
+  // camera is restored if the resize moved it, so the centre, zoom, bearing and pitch are the
+  // values they had before opening.
+  const numbersOpen = useMapStore((state) => state.numbersOpen)
+  const cameraBeforeNumbersRef = useRef<{ center: [number, number]; zoom: number; bearing: number; pitch: number } | null>(null)
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    if (numbersOpen) {
+      const center = map.getCenter()
+      cameraBeforeNumbersRef.current = {
+        center: [center.lng, center.lat],
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      }
+      return
+    }
+    const before = cameraBeforeNumbersRef.current
+    if (before === null) return
+    cameraBeforeNumbersRef.current = null
+    map.resize()
+    const center = map.getCenter()
+    const moved = center.lng !== before.center[0] || center.lat !== before.center[1]
+      || map.getZoom() !== before.zoom || map.getBearing() !== before.bearing || map.getPitch() !== before.pitch
+    if (moved) {
+      map.jumpTo({ center: before.center, zoom: before.zoom, bearing: before.bearing, pitch: before.pitch })
+    }
+  }, [numbersOpen, mapReady])
 
   // R-19, R-20, R-22, R-27: hover, the tooltip, the cursor and the press.
   useEffect(() => {
