@@ -15,6 +15,7 @@ import {
   formatMetric,
   interiorPoint,
   METRICS,
+  printedWindow,
   type AggregateName,
   type ClimateSection,
   type ClimateSeries,
@@ -252,6 +253,9 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
     tmax_day: climate.series?.tmax_day ?? [],
     tmin_day: climate.series?.tmin_day ?? [],
   }
+  // R-16 asks for the window the aggregates were computed over. An unavailable section resolves
+  // none, and R-48 makes the card print its reason instead of a window line built from nulls.
+  const windowFacts = printedWindow(window)
   return (
     <Card
       id="climate"
@@ -261,15 +265,19 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
       basis={climate.basis}
       resolution={climate.resolution}
     >
-      <p className="numbers-window">
-        {t('numbers.window_line', {
-          start: window.start,
-          end: window.end,
-          valid: window.valid_days,
-          days: window.days,
-          dropped: window.dropped_days,
-        })}
-      </p>
+      {windowFacts ? (
+        <p className="numbers-window">
+          {t('numbers.window_line', {
+            start: windowFacts.start,
+            end: windowFacts.end,
+            valid: windowFacts.valid_days,
+            days: windowFacts.days,
+            dropped: windowFacts.dropped_days,
+          })}
+        </p>
+      ) : (
+        <p className="numbers-abstain">{t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })}</p>
+      )}
       <p className="numbers-cell-statement">{t('numbers.climate.cell')}</p>
       <dl className="numbers-rows">
         {aggregates.map((key) => (
@@ -304,6 +312,13 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
 
 function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance'] }) {
   const missing = water.missing
+  // R-22 prints the window the balance was computed over. R-48's unavailable section and the
+  // abstention with no consolidated rain day carry `window: null`, and then the card prints its
+  // reason in place of the window line instead of reading five nulls into it.
+  const windowFacts = printedWindow(water.window)
+  const noWindow = water.error
+    ? t('numbers.abstain.climate', { error: water.error })
+    : t('numbers.no_value')
   // R-23: the balance abstains as a whole. The reason is printed once for the card, and each of
   // the three numbers shows `not computed`, so no partial sum and no zero stands in for it.
   const cell = (value: number | null) => (value === null && missing ? t('numbers.water.not_computed') : t('numbers.no_value'))
@@ -334,7 +349,11 @@ function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance
         </div>
       </dl>
       <p className="numbers-formula">{t('numbers.water.formula')}</p>
-      <p className="numbers-window">{t('numbers.water.window', { start: water.window.start, end: water.window.end, days: water.window.days })}</p>
+      {windowFacts ? (
+        <p className="numbers-window">{t('numbers.water.window', { start: windowFacts.start, end: windowFacts.end, days: windowFacts.days })}</p>
+      ) : (
+        <p className="numbers-abstain">{noWindow}</p>
+      )}
       <p className="numbers-statement">{t('numbers.water.out_statement')}</p>
       <p className="numbers-statement">{t('numbers.water.statement')}</p>
     </Card>
@@ -784,7 +803,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
     : []
   const classText = isPolygon ? (readout.find((row) => row.key === 'class')?.value ?? '') : t('numbers.header.no_class_source')
   const areaText = isPolygon ? (readout.find((row) => row.key === 'area')?.value ?? '') : t('numbers.header.no_area_source')
-  const window = payload?.query.window ?? null
+  const window = printedWindow(payload?.query.window)
 
   let body: ReactNode
   if (fieldId === null) {
