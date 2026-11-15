@@ -877,7 +877,9 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     const text = ndviCardSentence(container)
     expect(text).toContain('scene count')
     expect(text).toContain(payload.sections.ndvi.source)
-    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    // The route writes the cause in `error`, and that key outranks the gap register, so the sentence
+    // carries the section error here; the gap cause is the fallback when no error is sent.
+    expect(text).toContain(payload.sections.ndvi.error ?? 'no ndvi error')
     // The rule the sentence states stays, because it is what the reader needs to act on.
     expect(text).toContain('At least two scenes at or above 0.5 are needed.')
     expect(text).not.toContain('No value')
