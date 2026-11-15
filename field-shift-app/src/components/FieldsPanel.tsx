@@ -9,12 +9,20 @@ import { t, translationKeyFor } from '@/strings'
 export const FIELDS_CHIP_ROW_ID = 'fields-chip-row'
 
 /**
- * R-28, AC-24: the one width band where the chip prints the short form. The AC-24 measurement
- * at 780x900 shows the long form's border box running 26.36 px past the 202.80 px panel, which
- * `contain: layout paint` then cuts. At 360 the long form ends at 296.00, the panel right edge,
- * and at 1440 it ends at 298.00 inside the 320.00 px panel, so those widths keep the long form.
+ * R-28, AC-24: the one width band where the chip prints the short form, as the overflow rows of
+ * `artifacts/AC-24-overflow.txt` measured it. The band is 641 to 881 px inclusive, both edges
+ * included because both are measured widths:
+ * - 640 and below: the narrow single column, and the long form ends on the panel's right edge
+ *   (0.00 px past it at 640 and at 360), so it fits and the long form prints.
+ * - 641 to 881: the long form does not fit. At 641 and 700 it is ellipsized inside its own box
+ *   (102 and 117 px of the 131 px it needs); from 767 to 881 the chip box runs past the panel
+ *   edge, which `contain: layout paint` cuts (29.75 px past at 767, 0.11 px at 881).
+ * - 882 and above: the long form fits with the panel edge clear of it (0.16 px at 882,
+ *   22.00 px inside at 1440), so the long form prints again.
+ * The 641 and 881 numbers are the measurement's own; the `min-width` and `max-width` bounds are
+ * inclusive so each edge width prints the form its row measured.
  */
-export const SHORT_NO_CDL_QUERY = '(min-width: 768px) and (max-width: 1023px)'
+export const SHORT_NO_CDL_QUERY = '(min-width: 641px) and (max-width: 881px)'
 
 /** R-28: the polygon carried by the fields header chip, as the active region names it. */
 export type { SelectedPolygonChip }

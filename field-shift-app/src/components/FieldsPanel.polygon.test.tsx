@@ -30,6 +30,23 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+/**
+ * AC-24: evaluate a media query's own `min-width` and `max-width` numbers against a width.
+ *
+ * jsdom does not evaluate media queries, and a stub that answers a fixed boolean hides a band with
+ * a wrong edge. This parses the query the component exports, so a test at 641 or 882 fails when the
+ * band's numbers are wrong instead of agreeing with them.
+ */
+function queryMatchesAt(query: string, width: number): boolean {
+  return query.split(/\s+and\s+/).every((part) => {
+    const min = /min-width:\s*(\d+(?:\.\d+)?)px/.exec(part)
+    if (min) return width >= Number(min[1])
+    const max = /max-width:\s*(\d+(?:\.\d+)?)px/.exec(part)
+    if (max) return width <= Number(max[1])
+    throw new Error(`the test cannot evaluate this query part: ${part}`)
+  })
+}
+
 describe('the fields header chip for a polygon (R-28, AC-24, AM-04)', () => {
   it('renders the class name, its colour dot and no percentage', () => {
     render(<FieldsPanel {...baseProps} selectedPolygon={{ fieldId: 'trazo:12345', name: 'Soybean', hex: '#f5b3c8' }} />)
@@ -137,15 +154,17 @@ describe('the fields chip per state (R-28, AC-24, R-44)', () => {
   })
 })
 
-describe('the fields chip at the three AC-24 widths (R-28, AC-24, R-44)', () => {
-  // jsdom has no layout, so these tests pin the exact string each preset prints, which panel
-  // content box the chip mounts in, and the two negatives. The pixel containment is measured in
-  // the real browser and recorded in AC-24-overflow.txt: at 780 the short chip box is 104.80 px
-  // wide, right edge 180.80 against the 202.80 px panel (22.00 px inside); at 360 the long form
-  // ends at 296.00, the panel edge; at 1440 it ends at 298.00 inside the 320.00 px panel.
-  function stubChipWidth(preset: '360' | '780' | '1440') {
+describe('the fields chip at the AC-24 widths (R-28, AC-24, R-44)', () => {
+  // jsdom has no layout, so these tests pin the string each width prints and which panel content
+  // box the chip mounts in. The stub answers the real `SHORT_NO_CDL_QUERY` for a width instead of
+  // returning a fixed boolean: a stub keyed to one preset width is how a band with both edges
+  // wrong stayed green. The pixel containment is measured in the real browser and recorded in
+  // artifacts/AC-24-overflow.txt: at 780 the short chip box is 104.80 px wide, right edge 180.80
+  // against the 202.80 px panel (22.00 px inside); at 360 the long form ends at 296.00, the panel
+  // edge; at 1440 it ends at 298.00 inside the 320.00 px panel.
+  function stubChipWidth(width: number) {
     vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: preset === '780' && query === SHORT_NO_CDL_QUERY,
+      matches: queryMatchesAt(query, width),
       media: query,
       onchange: null,
       addEventListener: () => {},
@@ -164,14 +183,14 @@ describe('the fields chip at the three AC-24 widths (R-28, AC-24, R-44)', () => 
   }
 
   it('prints the long form at 360, where the chip box ends at the 296.00 panel edge', () => {
-    stubChipWidth('360')
+    stubChipWidth(360)
     render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
     expect(screen.getByRole('button', { name: 'No CDL class for 2026' }).textContent).toBe('No CDL class for 2026')
     expect(screen.queryByText('No CDL 2026')).toBeNull()
   })
 
   it('prints the short form at 780, and the long form is not in the document', () => {
-    stubChipWidth('780')
+    stubChipWidth(780)
     render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
     const chip = screen.getByRole('button', { name: 'No CDL 2026' })
     expect(chip.textContent).toBe('No CDL 2026')
@@ -181,16 +200,65 @@ describe('the fields chip at the three AC-24 widths (R-28, AC-24, R-44)', () => 
   })
 
   it('returns to the long form at 1440, where the chip box ends 22.00 px inside the panel', () => {
-    stubChipWidth('1440')
+    stubChipWidth(1440)
     render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
     expect(screen.getByRole('button', { name: 'No CDL class for 2026' }).textContent).toBe('No CDL class for 2026')
     expect(screen.queryByText('No CDL 2026')).toBeNull()
   })
 
   it('keeps class not mapped for an unmapped code in the short-form band', () => {
-    stubChipWidth('780')
+    stubChipWidth(780)
     render(<FieldsPanel {...baseProps} selectedPolygon={{ ...usNull, noCdlYear: null }} />)
     expect(screen.getByRole('button', { name: 'class not mapped' }).textContent).toBe('class not mapped')
     expect(screen.queryByText(/No CDL/)).toBeNull()
+  })
+})
+
+describe('the short-form band edges (R-28, AC-24)', () => {
+  // The reviewer's band-edge measurement, `AC-24-band-edges-review-t_71e817ec.txt`: the long form
+  // is ellipsized or cut from 641 through 881 inclusive, and it fits at 640 and below and from 882
+  // up. These two rows are the edges the wrong band missed.
+  const usNull = {
+    fieldId: 'csb:381825001868504',
+    name: null,
+    hex: UNMAPPED_CLASS_COLOUR,
+    noCdlYear: 2026,
+  }
+
+  function stubChipWidth(width: number) {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: queryMatchesAt(query, width),
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }))
+  }
+
+  it('declares the measured band, both edges inclusive', () => {
+    expect(SHORT_NO_CDL_QUERY).toBe('(min-width: 641px) and (max-width: 881px)')
+    for (const width of [641, 700, 767, 801, 881]) {
+      expect(queryMatchesAt(SHORT_NO_CDL_QUERY, width)).toBe(true)
+    }
+    for (const width of [360, 640, 882, 1023, 1024, 1440]) {
+      expect(queryMatchesAt(SHORT_NO_CDL_QUERY, width)).toBe(false)
+    }
+  })
+
+  it('prints No CDL {Y} at 641, the first width whose row shows overflow', () => {
+    stubChipWidth(641)
+    render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
+    expect(screen.getByRole('button', { name: 'No CDL 2026' }).textContent).toBe('No CDL 2026')
+    expect(screen.queryByText(/No CDL class for/)).toBeNull()
+  })
+
+  it('prints No CDL class for {Y} at 882, the first width where the long form fits', () => {
+    stubChipWidth(882)
+    render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
+    expect(screen.getByRole('button', { name: 'No CDL class for 2026' }).textContent).toBe('No CDL class for 2026')
+    expect(screen.queryByText('No CDL 2026')).toBeNull()
   })
 })
