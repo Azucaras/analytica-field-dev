@@ -519,8 +519,8 @@ describe('a selected polygon (R-03, R-49, Table B, AC-50)', () => {
 
 /**
  * R-12, AC-11: an abstained row names the missing input, its source and its cause. The payload's
- * `reason` is the cause when the route sends one; otherwise the cause is the section's own gap
- * row, which is where the route records why the input is missing.
+ * section `error` is the cause when the route sends one, then the older `reason` key; otherwise the
+ * cause is the section's own gap row, which is where the route records why the input is missing.
  */
 describe('abstention texts name the missing input, its source and its cause (R-12, AC-11)', () => {
   function cellText(container: HTMLElement, metric: string): string {
@@ -634,6 +634,70 @@ describe('abstention texts name the missing input, its source and its cause (R-1
       expect(text, metric).toContain(reason)
       expect(text, metric).toContain(payload.sections.municipality.source)
       expect(text, metric).not.toContain('municipality code is unresolved')
+    }
+  })
+
+  /**
+   * Option 1 of the section cause: `error` is the field the route writes when it could not read a
+   * section, and it is the cause the row prints. Each payload below deletes every gap row of the
+   * section, so the section field is the only cause the payload records and the not-recorded
+   * sentence would be false. NDVI and the municipality are the captured and recorded shapes; SMAP
+   * reads no network source in wave 1, so its payload is the shape `_unavailable` writes once that
+   * read lands.
+   */
+  it('prints the SMAP section error, not the not-recorded sentence, when the payload carries no SMAP gap row', async () => {
+    const payload = recordedNumbersPayload()
+    const failure = 'the SMAP palette proxy answered 503'
+    payload.sections.smap = { ...payload.sections.smap, error: failure }
+    payload.gaps = payload.gaps.filter((gap) => gap.section !== 'smap')
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const smap = container.querySelector('[data-card="smap"]') as HTMLElement
+    const text = smap.querySelector('p.numbers-abstain')?.textContent ?? ''
+    expect(text).toContain(failure)
+    expect(text).toContain(payload.sections.smap.source)
+    expect(text).not.toContain('the reason was not recorded')
+    expect(text).not.toContain('No value')
+  })
+
+  it('prints the NDVI section error, not the not-recorded sentence, when the payload carries no NDVI gap row', async () => {
+    // The offline capture is the real shape the route sends: the NDVI section carries `error` and
+    // never `reason`. Deleting its gap row leaves the section error as the only cause.
+    const failure = 'search window unknown: climate source unavailable'
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.ndvi.error).toBe(failure)
+    payload.gaps = payload.gaps.filter((gap) => gap.section !== 'ndvi')
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    for (const metric of ['ndvi_scene_count', 'ndvi_clear_count'] as const) {
+      const text = cellText(container, metric)
+      expect(text, metric).toContain(failure)
+      expect(text, metric).toContain(payload.sections.ndvi.source)
+      expect(text, metric).not.toContain('the reason was not recorded')
+      expect(text, metric).not.toContain('No value')
+    }
+  })
+
+  it('prints the municipality section error, not the not-recorded sentence, when the payload carries no municipal gap row', async () => {
+    const payload = recordedNumbersPayload()
+    const failure = 'malformed SIDRA response'
+    payload.sections.municipality = {
+      ...payload.sections.municipality,
+      reason: null,
+      error: failure,
+    }
+    payload.gaps = payload.gaps.filter((gap) => gap.section !== 'municipality')
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    for (const metric of ['municipality_soy_ha', 'polygon_share'] as const) {
+      const text = cellText(container, metric)
+      expect(text, metric).toContain(failure)
+      expect(text, metric).toContain(payload.sections.municipality.source)
+      expect(text, metric).not.toContain('the reason was not recorded')
+      expect(text, metric).not.toContain('No value')
     }
   })
 
@@ -759,7 +823,7 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     expect(text).not.toContain('No value')
   })
 
-  it('names the NDVI scene count and the Earth Search source when the capture sends a null count (R-12, AC-11)', async () => {
+  it('names the NDVI scene count, the Earth Search source and the section error when the capture sends a null count (R-12, AC-11)', async () => {
     const payload = structuredClone(OFFLINE)
     expect(payload.sections.ndvi.scene_count).toBeNull()
     stubNumbersFetch(payload)
@@ -768,11 +832,13 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     const text = cellText(container, 'ndvi_scene_count')
     expect(text).toContain('NDVI scene count not read')
     expect(text).toContain(payload.sections.ndvi.source)
-    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    // The capture carries `error` and no `reason`, so the route's own error is the cause the row prints.
+    expect(payload.sections.ndvi.error).toBe('search window unknown: climate source unavailable')
+    expect(text).toContain('search window unknown: climate source unavailable')
     expect(text).not.toContain('No value')
   })
 
-  it('names the NDVI clear scene count and the Earth Search source when the capture sends a null count (R-12, AC-11)', async () => {
+  it('names the NDVI clear scene count, the Earth Search source and the section error when the capture sends a null count (R-12, AC-11)', async () => {
     const payload = structuredClone(OFFLINE)
     expect(payload.sections.ndvi.clear_count).toBeNull()
     stubNumbersFetch(payload)
@@ -781,7 +847,8 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     const text = cellText(container, 'ndvi_clear_count')
     expect(text).toContain('NDVI clear scene count not read')
     expect(text).toContain(payload.sections.ndvi.source)
-    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    expect(payload.sections.ndvi.error).toBe('search window unknown: climate source unavailable')
+    expect(text).toContain('search window unknown: climate source unavailable')
     expect(text).not.toContain('No value')
   })
 
