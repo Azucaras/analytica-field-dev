@@ -125,6 +125,20 @@
   white-space: nowrap;
 }
 
+/* R-07: the ring area is a second cell inside the Area fact, so R-03's four header values keep
+   their places at every width. */
+.numbers-header-ring {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+}
+
+.numbers-header-ring-label {
+  color: #6b7a66;
+  font-size: 11px;
+}
+
 .numbers-body {
   flex: 0 0 auto;
   box-sizing: border-box;

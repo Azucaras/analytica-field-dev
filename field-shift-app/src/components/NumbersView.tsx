@@ -343,7 +343,20 @@ function SmapCard({ smap }: { smap: NumbersPayload['sections']['smap'] }) {
       </p>
       <p className="numbers-disclosure" data-disclosure>{t('numbers.smap.route1')}</p>
       {smap.days.length === 0 && (
-        <p className="numbers-abstain">{t('numbers.abstain.smap', { reason: smap.reason ?? t('numbers.no_value') })}</p>
+        <>
+          <p className="numbers-abstain">{t('numbers.abstain.smap', { reason: smap.reason ?? t('numbers.no_value') })}</p>
+          {/* R-07: the family rows print their abstention with their own metric ids (AC-06). */}
+          <dl className="numbers-rows">
+            <div className="numbers-row">
+              <dt>{t('numbers.smap.surface')}</dt>
+              <dd><Printed metric="smap_surface" value={null} abstain={t('numbers.smap.not_read')} /></dd>
+            </div>
+            <div className="numbers-row">
+              <dt>{t('numbers.smap.rootzone')}</dt>
+              <dd><Printed metric="smap_rootzone" value={null} abstain={t('numbers.smap.not_read')} /></dd>
+            </div>
+          </dl>
+        </>
       )}
       {smap.days.length > 0 && (
         <table className="numbers-table numbers-smap-table">
@@ -396,7 +409,22 @@ function NdviCard({ ndvi }: { ndvi: NumbersPayload['sections']['ndvi'] }) {
           <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={t('numbers.no_value')} /></dd>
         </div>
       </dl>
-      {plotted.length === 0 && <p className="numbers-abstain">{t('numbers.ndvi.none_plotted')}</p>}
+      {plotted.length === 0 && (
+        <>
+          <p className="numbers-abstain">{t('numbers.ndvi.none_plotted')}</p>
+          {/* R-07: no point means the two family rows abstain with their own metric ids (AC-06). */}
+          <dl className="numbers-rows">
+            <div className="numbers-row">
+              <dt>{t('numbers.ndvi_mean')}</dt>
+              <dd><Printed metric="ndvi_mean" value={null} abstain={t('numbers.ndvi.not_plotted')} /></dd>
+            </div>
+            <div className="numbers-row">
+              <dt>{t('numbers.ndvi_valid_fraction')}</dt>
+              <dd><Printed metric="ndvi_valid_fraction" value={null} abstain={t('numbers.ndvi.not_plotted')} /></dd>
+            </div>
+          </dl>
+        </>
+      )}
       {ndvi.state !== 'ok' && (
         <p className="numbers-abstain">
           {t('numbers.abstain.ndvi', {
@@ -506,48 +534,57 @@ export function RotationCard({ rotation }: { rotation: NumbersPayload['sections'
 }
 
 function MunicipalCard({ municipal }: { municipal: NumbersPayload['sections']['municipality'] }) {
+  const reason = municipal.reason ?? t('numbers.no_value')
+  const municipality = municipal.municipality
+  const stateRow = municipal.state_row ?? null
   return (
     <Card id="municipal" title={t('numbers.card.municipal')} source={municipal.source} asOf={municipal.as_of} basis="retrieved">
-      {municipal.municipality ? (
-        <dl className="numbers-rows">
+      <dl className="numbers-rows">
+        {municipality && (
           <div className="numbers-row">
             <dt>{t('numbers.municipal.municipality')}</dt>
-            <dd>{municipal.municipality.name} ({municipal.municipality.code})</dd>
+            <dd>{municipality.name} ({municipality.code})</dd>
           </div>
-          <div className="numbers-row">
-            <dt>{t('numbers.municipal.soy_planted', { year: municipal.municipality.year })}</dt>
-            <dd>
-              <Printed
-                metric="municipality_soy_ha"
-                value={municipal.municipality.soy_ha}
-                abstain={t('numbers.abstain.municipal', { reason: t('numbers.no_value') })}
-              />
-            </dd>
-          </div>
-        </dl>
-      ) : (
-        <p className="numbers-abstain">{t('numbers.abstain.municipal', { reason: municipal.reason ?? t('numbers.no_value') })}</p>
-      )}
-      {municipal.state_row && (
-        <dl className="numbers-rows">
-          <div className="numbers-row">
-            <dt>
-              {t('numbers.municipal.state')}, {t('numbers.municipal.soy_planted', { year: municipal.state_row.year })}
-            </dt>
-            <dd>
-              <Printed metric="state_soy_ha" value={municipal.state_row.soy_ha} abstain={t('numbers.no_value')} />
-              <span className="numbers-state-label">{t('numbers.municipal.state_label')}</span>
-            </dd>
-          </div>
-        </dl>
-      )}
+        )}
+        {/* R-07 and R-38: with no municipality the row abstains in place, carrying its own metric id. */}
+        <div className="numbers-row">
+          <dt>
+            {municipality
+              ? t('numbers.municipal.soy_planted', { year: municipality.year })
+              : t('numbers.municipality_soy_ha')}
+          </dt>
+          <dd>
+            <Printed
+              metric="municipality_soy_ha"
+              value={municipality ? municipality.soy_ha : null}
+              abstain={t('numbers.abstain.municipal', { reason })}
+            />
+          </dd>
+        </div>
+        {/* R-38: the state row prints labelled beside an abstained municipal row, and abstains in place. */}
+        <div className="numbers-row">
+          <dt>
+            {stateRow
+              ? `${t('numbers.municipal.state')}, ${t('numbers.municipal.soy_planted', { year: stateRow.year })}`
+              : t('numbers.state_soy_ha')}
+          </dt>
+          <dd>
+            <Printed
+              metric="state_soy_ha"
+              value={stateRow ? stateRow.soy_ha : null}
+              abstain={t('numbers.abstain.state', { reason })}
+            />
+            {stateRow && <span className="numbers-state-label">{t('numbers.municipal.state_label')}</span>}
+          </dd>
+        </div>
+      </dl>
       <div className="numbers-row">
         <dt>{t('numbers.municipal.share_label')}</dt>
         <dd>
           <Printed
             metric="polygon_share"
             value={municipal.share}
-            abstain={t('numbers.abstain.share', { reason: municipal.reason ?? t('numbers.no_value') })}
+            abstain={t('numbers.abstain.share', { reason })}
           />
         </dd>
       </div>
@@ -760,6 +797,8 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
     for (const row of payload?.provenance ?? []) map.set(row.metric, row)
     return map
   }, [payload])
+  const areaRow = rows.get('area')
+  const ringRow = rows.get('ring_area')
 
   // R-03: the class and the area of a polygon are block 5's own readout values; a fixture field
   // has no block 5 source, so both rows print their absence text, never a number.
@@ -803,69 +842,89 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
             <p className="numbers-last-read">{t('numbers.last_read', { date: dateOf(s.climate.fetched_at) })}</p>
           </>
         )}
-        <RowsContext.Provider value={rows}>
-          <div className="numbers-cards">
-            <ClimateCard climate={s.climate} window={payload.query.window} />
-            <WaterCard water={s.water_balance} />
-            <SmapCard smap={s.smap} />
-            <NdviCard ndvi={s.ndvi} />
-            <SoilCard soil={s.soil} />
-            <RotationCard rotation={s.rotation} />
-            <MunicipalCard municipal={s.municipality} />
-          </div>
-          <ProvenanceTable rows={payload.provenance} />
-          <GapRegister gaps={payload.gaps} />
-        </RowsContext.Provider>
+        <div className="numbers-cards">
+          <ClimateCard climate={s.climate} window={payload.query.window} />
+          <WaterCard water={s.water_balance} />
+          <SmapCard smap={s.smap} />
+          <NdviCard ndvi={s.ndvi} />
+          <SoilCard soil={s.soil} />
+          <RotationCard rotation={s.rotation} />
+          <MunicipalCard municipal={s.municipality} />
+        </div>
+        <ProvenanceTable rows={payload.provenance} />
+        <GapRegister gaps={payload.gaps} />
       </>
     )
   } else {
     body = null
   }
 
+  // R-08: the row map covers the whole surface, header included, so the header's `area` and
+  // `ring_area` cells read the same provenance rows as the cards.
   return (
-    <section aria-labelledby="numbers-title" className="numbers-view" data-numbers-view role="region">
-      <header className="numbers-header">
-        <button className="numbers-back" onClick={onClose} ref={backRef} type="button">
-          {t('numbers.back')}
-        </button>
-        <div className="numbers-title-block">
-          <h2 id="numbers-title">{t('numbers.region')}</h2>
-          {fieldId !== null && <span className="numbers-field-id">{fieldId}</span>}
-        </div>
-        {fieldId !== null && (
-          <dl className="numbers-header-facts">
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.class')}</dt>
-              <dd>
-                <span>{classText}</span>
-                {isPolygon && <BasisChip basis={region.basis} />}
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.area')}</dt>
-              <dd>
-                <span>{areaText}</span>
-                {isPolygon && <BasisChip basis={region.basis} />}
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.date')}</dt>
-              <dd>
-                <span>{chosenDate}</span>
-                <BasisChip basis="entered" />
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.window')}</dt>
-              <dd>
-                {window ? <span>{t('numbers.header.window_value', { start: window.start, end: window.end })}</span> : <span>{t('numbers.no_value')}</span>}
-                <BasisChip basis="modelled" />
-              </dd>
-            </div>
-          </dl>
-        )}
-      </header>
-      <div className="numbers-body">{body}</div>
-    </section>
+    <RowsContext.Provider value={rows}>
+      <section aria-labelledby="numbers-title" className="numbers-view" data-numbers-view role="region">
+        <header className="numbers-header">
+          <button className="numbers-back" onClick={onClose} ref={backRef} type="button">
+            {t('numbers.back')}
+          </button>
+          <div className="numbers-title-block">
+            <h2 id="numbers-title">{t('numbers.region')}</h2>
+            {fieldId !== null && <span className="numbers-field-id">{fieldId}</span>}
+          </div>
+          {fieldId !== null && (
+            <dl className="numbers-header-facts">
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.class')}</dt>
+                <dd>
+                  <span>{classText}</span>
+                  {isPolygon && <BasisChip basis={region.basis} />}
+                </dd>
+              </div>
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.area')}</dt>
+                <dd>
+                  {/* R-07: the area row prints here, as block 5's value or as its abstention, with its id. */}
+                  <span
+                    className={areaRow?.value === null ? 'numbers-abstain' : undefined}
+                    data-metric={areaRow ? 'area' : undefined}
+                  >
+                    {areaText}
+                  </span>
+                  {isPolygon && <BasisChip basis={region.basis} />}
+                  {/* R-07: the ring's spherical hectares are the header row `ring_area`; it prints its own
+                      number and basis in the same fact, so R-03's four header values keep their places. */}
+                  {ringRow && (
+                    <span className="numbers-header-ring">
+                      <span className="numbers-header-ring-label">{t('numbers.ring_area')}</span>
+                      <Printed
+                        metric="ring_area"
+                        value={typeof ringRow.value === 'number' ? ringRow.value : null}
+                        abstain={t('numbers.no_value')}
+                      />
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.date')}</dt>
+                <dd>
+                  <span>{chosenDate}</span>
+                  <BasisChip basis="entered" />
+                </dd>
+              </div>
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.window')}</dt>
+                <dd>
+                  {window ? <span>{t('numbers.header.window_value', { start: window.start, end: window.end })}</span> : <span>{t('numbers.no_value')}</span>}
+                  <BasisChip basis="modelled" />
+                </dd>
+              </div>
+            </dl>
+          )}
+        </header>
+        <div className="numbers-body">{body}</div>
+      </section>
+    </RowsContext.Provider>
   )
 }
