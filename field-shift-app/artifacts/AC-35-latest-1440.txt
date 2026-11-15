@@ -1,46 +1,39 @@
-AC-35 (R-44) the `Latest image` control at 1440x900
-====================================================
+# AC-35 (R-44) the `Latest image` control at 1440x900, second gate run
 
 recorded: 2026-11-14
-criterion: AC-35, covers R-44. Method: tests on the recorded HLS fixture, and computer use
-at 1440x900. Artifact named by the spec: vitest output and `AC-35-latest-1440.png`.
-
-The PNG is produced by the computer-use run at run time and is not versioned: the repository
-root ignores `field-shift-app/artifacts/*.png`, and the repair card forbids screenshots in the
-tree. This file is the text evidence of the same run. The rectangle, the accessible name, the
-pressed state, the result text and the request log below are read from the live DOM.
+This file replaces the first gate's absence record at the same path. The spec names
+`AC-35-latest-1440.png`; the PNG is not versioned (repository ignore rule and the card's ban on
+images), so this is the text evidence of the same run.
 
 tree measured
 -------------
-branch:   block4/repair-basemap-latest (this card), on top of gate/block4-gate 82b3b90
-spec:     field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8, 681 lines,
-          raw sha256 dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c
+branch:   gate/block4-gate2, commit a071c80 (worktree of the repository), which is
+          gate/block4-gate 82b3b90 + the fixture commit 5f46897 + the basemap adapter f6c5e7e
+          + the Latest image scan 911ad55 + main 0129f0b merged in
+spec:     field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8, 681 lines, raw sha256
+          dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c, freeze digest
+          f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e
 servers:  backend `python3 -m uvicorn main:app --host 127.0.0.1 --port 8010`
-          front   `VITE_API_BASE_URL=http://127.0.0.1:8010 npx vite --host 127.0.0.1 --port 5200`
-viewport: 1440x900 (CDP Emulation.setDeviceMetricsOverride, width 1440, height 900)
-load:     http://127.0.0.1:5200/ with no `?date=`, so the axis default 2026-11-14
+          front   `VITE_API_BASE_URL=http://127.0.0.1:8010 npx vite --host 127.0.0.1 --port 5276`
+harness:  /usr/sbin/chromium, headless=new, real 1440x900 window (CDP Browser.setWindowBounds)
 
-the control
------------
+load:      http://127.0.0.1:5276/ with no `?date=`, so the axis default 2026-11-14
+
+control
+-------
 row:              `hls-l30` (HLS Landsat reflectance, 30 m), expanded through `Layer options`
-accessible name:  `Latest image`
-visible text:     `Latest image`
+accessible name:  Latest image
+visible text:     Latest image
 aria-pressed:     `false` at rest, `true` while the scan runs, `false` when it ends
-tabIndex:         0, no `disabled` attribute (R-26 reachability note)
-rectangle:        x 1124.00, y 805.50, 251.00 x 44.00 px inside the 1440x900 viewport,
-                  after `scrollIntoView` on the button; height 44.00 px meets the 44 px
-                  minimum that R-26 sets for every control of an expanded row
-row rectangle:    x 1080.00, y 484.50, 295.00 x 367.00 px (expanded)
+rectangle:        x 1124.00, y 805.50, 251.00 x 44.00 (right 1375.00, bottom 849.50)
+row rectangle:    x 1080.00, y 484.50, 295.00 x 367.00 (right 1375.00, bottom 851.50)
+other rows:       `hls-s30` 1 control, `ndvi-8day` 0, every row in the document 2
 
-Rows that do not carry the control: `smap-l3` and the other non-optical rows render no
-`Latest image` button, because only an optical layer holds a byte threshold (R-05, R-44).
-
-the scan, measured on the live tree
------------------------------------
+the scan
+--------
 chosen date before the press: 2026-11-14
 chosen date after the press:  2026-11-01
 coverage calls, in order, one date each (`GET /layers/hls-l30/coverage?date=<D>&days=1`):
-
   date=2026-11-14&days=1
   date=2026-11-13&days=1
   date=2026-11-12&days=1
@@ -56,44 +49,21 @@ coverage calls, in order, one date each (`GET /layers/hls-l30/coverage?date=<D>&
   date=2026-11-02&days=1
   date=2026-11-01&days=1
 
-Fourteen calls, 2026-11-14 down to 2026-11-01, and not one date older than 2026-11-01.
-The first call is 2026-11-14, which is after the layer's declared end 2026-11-06: the scan is
-not clamped to it (R-08, AC-35).
-
-`GET /layers/hls-l30/coverage?date=2026-11-01&days=1` answered on this run:
-  {"status":"ok","layer":"hls-l30","start":"2026-11-01","end":"2026-11-01","days":1,
-   "dates":[{"date":"2026-11-01","http_status":200,"bytes":109485,"coverage_ok":true}]}
-
-`GET /layers/hls-l30/coverage?date=2026-11-10&days=1` answered:
-  {"status":"ok","layer":"hls-l30","start":"2026-11-10","end":"2026-11-10","days":1,
-   "dates":[{"date":"2026-11-10","http_status":404,"bytes":196,"coverage_ok":false}]}
-
-Both agree with M-17 by character. This live run is a smoke reading of its own date and is not
-an oracle: the oracle is `src/lib/latest-image.test.ts` over
-`artifacts/fixtures/hls-l30-coverage-zoom12-2026-11-14.json`.
+14 calls, 2026-11-14 down to 2026-11-01, and not one date older than 2026-11-01. The first call is 2026-11-14, which is after the
+layer's declared end 2026-11-06: the scan is not clamped to it (R-08, AC-35). Every coverage call
+answered HTTP 200 with the date row inside it; the row for 2026-11-01 reported 109,485 bytes and the
+row for 2026-11-10 reported a 404 of 196 bytes, both matching M-17.
 
 after the scan
 --------------
 timeline dock date input: 2026-11-01
 timeline range value text: `2026-11-01, today`
 row `hls-l30`, after the `/layers` response for the new date:
-  `HLS Landsat reflectance, 30 m | retrieved | 30 m | 2026-11-01 | today | on date`
-The intermediate render between the press and that response carried the 2026-11-14 walk's
-reading of the same layer: `2026-11-01 | 13 days old | earlier observation`, which is AC-41's
-age 13 for the walk at 2026-11-14.
-
-the other two outcomes, measured in jsdom on the recorded fixture
------------------------------------------------------------------
-`src/lib/latest-image.test.ts` and `src/components/LatestImage.test.tsx`:
-  - no date above 5,000 bytes: status `none_in_lookback`, the chosen date does not move, the
-    row prints `no observation in lookback` with no `<time>` element and `data-status`
-    `none_in_lookback`;
-  - a mock 500 at 2026-11-10 (`days=1` answering 503): the scan stops at 2026-11-10, the date
-    does not move, the row prints `unavailable` with `data-status` `unavailable`, and the next
-    date 2026-11-09 is never requested.
+  HLS Landsat reflectance, 30 m retrieved 30 m 2026-11-01 today on date Opacity, HLS Landsat reflectance, 30 m Compare, HLS Landsat reflectance, 30 m Latest image
+  data-status `on_date`
 
 what this run does not claim
 ---------------------------
-No live upstream 500 was found on 2026-11-14 (the spec records the same: the live 500 at
-2026-10-25 did not reproduce), so the `unavailable` branch is evidenced by the mock transport
-the spec names, as AC-35 requires.
+No live upstream 500 exists on 2026-11-14, so the `unavailable` branch rests on the mock transport
+and on the backend 503 test, as AC-35 writes it. The full record is `AC-35-latest-image.txt`.
+

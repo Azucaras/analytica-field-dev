@@ -1,39 +1,128 @@
-AC-33 resize chain: 1440x900 -> 780x900 -> 360x640, with the dock and the panel toggles pressed
+# AC-33 (R-40) the resize chain, second gate run
 
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
-of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
-(wave4-source-hashes.txt). CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
-Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
-screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
-the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
+recorded: 2026-11-14
+criterion: AC-33, covers R-40. Method: computer use across 1440x900, 780x900 and 360x640.
+The spec names `AC-33-resize-360.png` and `AC-33-states.txt`. The PNG is not versioned (the
+repository ignores `field-shift-app/artifacts/*.png` and the gate card forbids images in the
+tree), so this file is the text evidence of the same run. The raw event log of the page is
+`AC-33-resize-events.txt`.
 
+tree measured
+-------------
+branch:   gate/block4-gate2, commit a071c80, a worktree of the repository
+          gate/block4-gate 82b3b90 (main 441d4de + waves 1 to 4 + the band patch)
+          + the block 4 repair branch block4/repair-basemap-latest
+            (5f46897 the HLS L30 coverage fixture, f6c5e7e the basemap adapter,
+             911ad55 the Latest image scan and control)
+          + main 0129f0b merged in
+spec:     field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8, 681 lines,
+          raw sha256 dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c,
+          freeze digest f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e
+servers:  backend `python3 -m uvicorn main:app --host 127.0.0.1 --port 8010`
+          front   `VITE_API_BASE_URL=http://127.0.0.1:8010 npx vite --host 127.0.0.1 --port 5276`
+harness:  /usr/sbin/chromium, headless=new, viewport null, window resized with CDP
+          `Browser.setWindowBounds` (window height = inner height + chrome). No
+          `Emulation.setDeviceMetricsOverride` was used anywhere in this run.
 
-step 1-1440 at 1440x900
-   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
-   rotation collapsed true; Timeline controls aria-expanded None; region mounted True; toggle inside region None
-   dock [22.00, 641.00, 984.00, 92.00]; toggle [not mounted]; panel [22.00, 741.00, 984.00, 143.00]
-   compare divider [698.00, 0.00, 44.00, 900.00]
+Why this run replaces the first gate's AC-33 reading
+--------------------------------------------------
+The first gate resized with `Emulation.setDeviceMetricsOverride`, and that Chromium delivered
+neither a `resize` event nor a media-query change to the page, so `useMediaMatch` kept the
+1440 first-paint bucket at 780x900 and the `Timeline controls` toggle never mounted. Here the
+window itself is resized, and the page receives both events: 2 `resize` and 3 `mq-change` entries are in the log below, in order.
 
-step 2-resized-780 at 780x900
-   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
-   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region False
-   dock [22.00, 641.00, 373.00, 92.00]; toggle [22.00, 589.00, 44.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
-   compare divider [368.00, 0.00, 44.00, 900.00]
+The chain, step by step
+----------------------
 
-step 3-press1-collapse at 780x900
-   chosen date None; pin aria-pressed true; compare aria-pressed true
-   rotation collapsed true; Timeline controls aria-expanded false; region mounted False; toggle inside region False
-   dock [not mounted]; toggle [22.00, 689.00, 373.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
-   compare divider [368.00, 0.00, 44.00, 900.00]
+1440x900, first paint
+  viewport 1440x900 (matchMedia max-width 640 = False, max-width 1020 = False)
+  chosen date: 2026-11-14
+  pin `Pin date, SMAP soil moisture`: mounted False, aria-pressed absent
+  compare `Compare, MODIS NDVI, 8 day`: mounted False, aria-pressed absent, side B date absent
+  rotation panel: data-collapsed false, rect x 22.00, y 557.81, 984.00 x 326.19 (right 1006.00, bottom 884.00)
+  `Timeline controls` nodes: 0, aria-expanded None, rect absent, inside the region False
+  region `Timeline`: mounted True, rect x 22.00, y 457.81, 984.00 x 92.00 (right 1006.00, bottom 549.81)
 
-step 4-press2-expand at 780x900
-   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
-   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region False
-   dock [22.00, 641.00, 373.00, 92.00]; toggle [22.00, 589.00, 44.00, 44.00]; panel [22.00, 741.00, 373.00, 143.00]
-   compare divider [368.00, 0.00, 44.00, 900.00]
+1440x900, after the date 2026-11-12, the pin, compare on, and the panel collapse
+  viewport 1440x900 (matchMedia max-width 640 = False, max-width 1020 = False)
+  chosen date: 2026-11-12
+  pin `Pin date, SMAP soil moisture`: mounted True, aria-pressed true
+  compare `Compare, MODIS NDVI, 8 day`: mounted True, aria-pressed true, side B date 2026-11-05
+  rotation panel: data-collapsed true, rect x 22.00, y 741.00, 984.00 x 143.00 (right 1006.00, bottom 884.00)
+  `Timeline controls` nodes: 0, aria-expanded None, rect absent, inside the region False
+  region `Timeline`: mounted True, rect x 22.00, y 641.00, 984.00 x 92.00 (right 1006.00, bottom 733.00)
 
-step 5-resized-360 at 360x640
-   chosen date 2026-11-12; pin aria-pressed true; compare aria-pressed true
-   rotation collapsed true; Timeline controls aria-expanded true; region mounted True; toggle inside region True
-   dock [8.00, 224.00, 288.00, 92.00]; toggle [8.00, 224.50, 44.00, 44.00]; panel [8.00, 489.00, 344.00, 143.00]
-   compare divider [158.00, 0.00, 44.00, 640.00]
+780x900, after the window resize (no reload)
+  viewport 780x900 (matchMedia max-width 640 = False, max-width 1020 = True)
+  chosen date: 2026-11-12
+  pin `Pin date, SMAP soil moisture`: mounted True, aria-pressed true
+  compare `Compare, MODIS NDVI, 8 day`: mounted True, aria-pressed true, side B date 2026-11-05
+  rotation panel: data-collapsed true, rect x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00)
+  `Timeline controls` nodes: 1, aria-expanded true, rect x 22.00, y 589.00, 44.00 x 44.00 (right 66.00, bottom 633.00), inside the region False
+  region `Timeline`: mounted True, rect x 22.00, y 641.00, 373.00 x 92.00 (right 395.00, bottom 733.00)
+
+780x900, after the first press on `Timeline controls`
+  viewport 780x900 (matchMedia max-width 640 = False, max-width 1020 = True)
+  chosen date: None
+  pin `Pin date, SMAP soil moisture`: mounted True, aria-pressed true
+  compare `Compare, MODIS NDVI, 8 day`: mounted True, aria-pressed true, side B date 2026-11-05
+  rotation panel: data-collapsed true, rect x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00)
+  `Timeline controls` nodes: 1, aria-expanded false, rect x 22.00, y 689.00, 373.00 x 44.00 (right 395.00, bottom 733.00), inside the region False
+  region `Timeline`: mounted False, rect absent
+  (the `Go to date` input is unmounted with the region, so the date reads `None` here; it is read
+  again after the second press, below, and the criterion's clauses are asserted there)
+
+780x900, after the second press on `Timeline controls`
+  viewport 780x900 (matchMedia max-width 640 = False, max-width 1020 = True)
+  chosen date: 2026-11-12
+  pin `Pin date, SMAP soil moisture`: mounted True, aria-pressed true
+  compare `Compare, MODIS NDVI, 8 day`: mounted True, aria-pressed true, side B date 2026-11-05
+  rotation panel: data-collapsed true, rect x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00)
+  `Timeline controls` nodes: 1, aria-expanded true, rect x 22.00, y 589.00, 44.00 x 44.00 (right 66.00, bottom 633.00), inside the region False
+  region `Timeline`: mounted True, rect x 22.00, y 641.00, 373.00 x 92.00 (right 395.00, bottom 733.00)
+
+360x640, after the window resize (no reload)
+  viewport 360x640 (matchMedia max-width 640 = True, max-width 1020 = True)
+  chosen date: 2026-11-12
+  pin `Pin date, SMAP soil moisture`: mounted True, aria-pressed true
+  compare `Compare, MODIS NDVI, 8 day`: mounted True, aria-pressed true, side B date 2026-11-05
+  rotation panel: data-collapsed true, rect x 8.00, y 489.00, 344.00 x 143.00 (right 352.00, bottom 632.00)
+  `Timeline controls` nodes: 1, aria-expanded true, rect x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50), inside the region True
+  region `Timeline`: mounted True, rect x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00)
+
+Verdict, clause by clause
+-------------------------
+  PASS  date set to 2026-11-12 at 1440x900
+  PASS  pin set at 1440x900
+  PASS  compare on at 1440x900
+  PASS  rotation panel collapsed at 1440x900
+  PASS  resize to 780x900 keeps the date
+  PASS  resize to 780x900 keeps the pin
+  PASS  resize to 780x900 keeps compare on
+  PASS  resize to 780x900 keeps the compare date
+  PASS  resize to 780x900 keeps the panel collapsed
+  PASS  first press collapses the dock (aria-expanded false, region unmounted)
+  PASS  second press expands the dock (aria-expanded true, region mounted)
+  PASS  resize to 360x640 keeps the date
+  PASS  resize to 360x640 keeps the pin
+  PASS  resize to 360x640 keeps compare on
+  PASS  resize to 360x640 keeps the compare date
+  PASS  resize to 360x640 keeps the panel collapsed
+  PASS  resize to 360x640 does not reapply the collapsed default: toggle aria-expanded true
+  PASS  the region `Timeline` is mounted at 360x640
+  PASS  the region measures 92.00 px tall at 360x640
+  PASS  the region top is y 224.00 at 360x640
+
+**AC-33 verdict: PASS.** All 20 clauses hold with a real window resize. The pin is read from the
+expanded row's `aria-pressed`; the compare state is read from the same row's `aria-pressed` and
+its side B date input; the date from the `Timeline` region's `Go to date` input.
+
+What this run does not claim
+---------------------------
+- It does not claim the user's own display or a phone at 360: the window is a headless Chromium
+  window resized through CDP, with devicePixelRatio 1.
+- It does not claim a pointer or touch drag; the two presses are CDP mouse clicks at the toggle's
+  own coordinates (`locator.click()`).
+- It does not claim the dropdown or the picker of the native date input; the date is set through
+  the input's own value event, as the first gate did.
+

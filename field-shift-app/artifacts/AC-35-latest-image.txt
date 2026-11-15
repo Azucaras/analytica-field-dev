@@ -1,13 +1,118 @@
-AC-35 (R-44)
-method: tests on the recorded HLS fixture + computer use at 1440x900
-command: grep over src/ and backend/, git grep over every branch, plus the full vitest run
-measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
-------------------------------------------------------------------------------
-searched: grep -rni "latest image|latestimage|latest_image" src/ backend/ -> 0 hits in every branch
-(git grep over refs/heads and refs/remotes); grep "AC-35" src/ backend/ -> 0 hits; the verbose vitest log has no
-AC-35 test; the browser at 1440x900 has no control whose accessible name or text is "Latest image"
-(document.body.innerText.includes("Latest image") = false, and the optical rows hls-l30 / hls-s30 carry no such button).
-the backend half that does exist is the coverage route (GET /layers/{id}/coverage), which R-44 itself calls a
-different scan, and its test test_r_44_coverage_records_every_date_of_the_window_and_answers_503_on_a_stop passes.
-measured value that fails it: controls named Latest image 0, AC-35 tests 0, artifact AC-35-latest-1440.png absent.
-verdict: FAIL (not implemented)
+# AC-35 (R-44) the `Latest image` control, second gate run
+
+recorded: 2026-11-14
+criterion: AC-35, covers R-44. Method: tests on the recorded HLS fixture, and computer use at
+1440x900. Artifact named by the spec: the vitest output and `AC-35-latest-1440.png`.
+
+The PNG is not versioned: the repository ignores `field-shift-app/artifacts/*.png` and the gate
+card forbids images in the tree. This file and `AC-35-latest-1440.txt` are the text evidence of
+the same run.
+
+tree measured
+-------------
+branch:   gate/block4-gate2, commit a071c80 (worktree of the repository), which is
+          gate/block4-gate 82b3b90 + the fixture commit 5f46897 + the basemap adapter f6c5e7e
+          + the Latest image scan 911ad55 + main 0129f0b merged in
+spec:     field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8, 681 lines, raw sha256
+          dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c, freeze digest
+          f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e
+servers:  backend `python3 -m uvicorn main:app --host 127.0.0.1 --port 8010`
+          front   `VITE_API_BASE_URL=http://127.0.0.1:8010 npx vite --host 127.0.0.1 --port 5276`
+harness:  /usr/sbin/chromium, headless=new, real 1440x900 window (CDP Browser.setWindowBounds)
+
+The control, live at 1440x900
+-----------------------------
+  accessible name:  Latest image
+  visible text:     Latest image
+  rectangle:        x 1124.00, y 805.50, 251.00 x 44.00 (right 1375.00, bottom 849.50) inside the 1440x900 viewport, after `scrollIntoView`
+  height 44.00 px meets the 44 px minimum R-26 sets for every control of an expanded row
+  tabIndex 0, `disabled` attribute absent
+  aria-pressed at rest `false`, during the scan `true`, after it `false`
+  row `hls-l30` rectangle x 1080.00, y 484.50, 295.00 x 367.00 (right 1375.00, bottom 851.50)
+  the two optical rows carry it and no other row does: `hls-l30` 1, `hls-s30` 1, `ndvi-8day` 0,
+  all `Latest image` controls in the document: 2
+
+Every control of the expanded `hls-l30` row, with its own rectangle, in R-26's order:
+  input  Opacity, HLS Landsat reflectance, 30 m               251.00 x 44.00
+  button Move HLS Landsat reflectance, 30 m up                44.00 x 44.00
+  button Move HLS Landsat reflectance, 30 m down              44.00 x 44.00
+  button Pin date, HLS Landsat reflectance, 30 m              251.00 x 44.00
+  button Compare, HLS Landsat reflectance, 30 m               251.00 x 44.00
+  button Latest image                                         251.00 x 44.00
+
+The scan, live on this tree with the backend on 8010
+--------------------------------------------------
+  chosen date before the press: 2026-11-14
+  chosen date after the press:  2026-11-01
+  elapsed: 8051 ms
+  coverage calls, in order, one date each (`GET /layers/hls-l30/coverage?date=<D>&days=1`):
+    2026-11-14  -> HTTP 200
+    2026-11-13  -> HTTP 200
+    2026-11-12  -> HTTP 200
+    2026-11-11  -> HTTP 200
+    2026-11-10  -> HTTP 200
+    2026-11-09  -> HTTP 200
+    2026-11-08  -> HTTP 200
+    2026-11-07  -> HTTP 200
+    2026-11-06  -> HTTP 200
+    2026-11-05  -> HTTP 200
+    2026-11-04  -> HTTP 200
+    2026-11-03  -> HTTP 200
+    2026-11-02  -> HTTP 200
+    2026-11-01  -> HTTP 200
+  calls: 14; first date 2026-11-14; last date 2026-11-01; oldest date requested 2026-11-01
+  the first request 2026-11-14 lies after the declared end 2026-11-06, so the scan is not clamped
+  no date older than 2026-11-01 was requested
+
+  after the scan, the row `hls-l30` reads:
+    HLS Landsat reflectance, 30 m retrieved 30 m 2026-11-01 today on date Opacity, HLS Landsat reflectance, 30 m Compare, HLS Landsat reflectance, 30 m Latest image
+    data-status `on_date`, range value text `2026-11-01, today`
+
+The live coverage route, re-read by the gate on 2026-11-14 for three dates:
+  2026-11-01  HTTP 200  {"http_status":200,"bytes":109485,"coverage_ok":true}
+  2026-11-10  HTTP 200  {"http_status":404,"bytes":196,"coverage_ok":false}
+  2026-11-14  HTTP 200  {"http_status":404,"bytes":196,"coverage_ok":false}
+These agree with M-17 by character: the first date above 5,000 bytes going backwards from 2026-11-14
+is 2026-11-01 (109,485 B).
+
+The other two outcomes, in the tests the criterion names
+--------------------------------------------------------
+`$ npx vitest run src/lib/latest-image.test.ts src/components/LatestImage.test.tsx`
+  Test Files  2 passed (2)
+       Tests  13 passed (13)
+
+  - reads the fixture the spec names, at the first field tile of zoom 12
+  - lands on 2026-11-01, the first date above 5,000 bytes going backwards
+  - starts at the chosen date 2026-11-14, not at the declared end 2026-11-06
+  - keeps the chosen date and reports none_in_lookback when no date holds imagery
+  - stops at a 503 on 2026-11-10, keeps the date and reports unavailable
+  - requests no date before the axis start (R-08)
+  - treats an unreachable transport as unavailable without moving the date
+  - is named Latest image, sits on the two optical rows and on no other row
+  - moves the chosen date to 2026-11-01 and requests that date last
+  - keeps the date and shows none_in_lookback when the window holds no imagery
+  - keeps the date and shows unavailable when a 503 stops the scan at 2026-11-10
+  - reports the scan in flight through aria-pressed and clears it afterwards
+  - does not run a second scan while the first is in flight
+
+The coverage route's own 503 answer is a backend test, quoted by name from the suite run:
+  `test_r_44_coverage_records_every_date_of_the_window_and_answers_503_on_a_stop`
+  (`backend/test_layers.py` lines 428 to 452), part of the 25 backend tests that pass below.
+
+The fixture the criterion names
+-------------------------------
+  artifacts/fixtures/hls-l30-coverage-zoom12-2026-11-14.json
+  sha256 1cdef4234ae82ecc66a0f37207ab5905fd0ad4166668d58cd3b409d68d461b61
+  each date from 2026-10-15 to 2026-11-14 at tile 12/2184/1419, with its status, byte count and address.
+  The fixture was absent from every branch at the first gate; this tree carries it.
+
+What this run does not claim
+---------------------------
+- No live upstream 500 was found on 2026-11-14 (the spec records the same: the live 500 at 2026-10-25
+  did not reproduce). The `unavailable` branch is evidenced by the mock transport the spec names and
+  by the backend 503 test, never by a live 500.
+- The `aria-pressed` reading is the scan in flight, not a persistent toggle: R-44 gives the control one
+  action and no on or off state, so the pressed state is true only while the scan runs.
+- The picker of the native date input is not exercised; the date is read and written through the
+  input's own value.
+

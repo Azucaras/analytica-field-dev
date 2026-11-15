@@ -1,0 +1,19 @@
+# AC-33 resize event log, second gate run
+# recorded: 2026-11-14
+# harness: /usr/sbin/chromium, headless=new, real window resized with CDP Browser.setWindowBounds
+# listeners: window 'resize', matchMedia('(max-width: 640px)'), matchMedia('(max-width: 1020px)'),
+#            matchMedia('(max-height: 700px)') change, and a ResizeObserver on document.documentElement,
+#            all installed by an init script before the app loaded.
+# columns: kind | query or size | matches | inner width | ms since navigation start
+
+mq-initial  | (max-width: 640px)     | matches False | iw 1440 | t 34 ms
+mq-initial  | (max-width: 1020px)    | matches False | iw 1440 | t 34 ms
+mq-initial  | (max-height: 700px)    | matches False | iw 1440 | t 34 ms
+resize      | inner 780x900            | t 6497 ms
+mq-change   | (max-width: 1020px)    | matches True  | iw  780 | t 6498 ms
+resize      | inner 360x640            | t 9927 ms
+mq-change   | (max-width: 640px)     | matches True  | iw  360 | t 9927 ms
+mq-change   | (max-height: 700px)    | matches True  | iw  360 | t 9927 ms
+
+# The 780x900 resize entry carries inner height 900 because the harness adds the window chrome
+# height to the requested bounds; the second resize carries 360x640.

@@ -1,0 +1,307 @@
+# Block 4 rectangle sweep, second gate run: every state, dock, toggle, region, panel and rail
+
+recorded: 2026-11-14
+tree:     gate/block4-gate2, commit a071c80 (gate/block4-gate 82b3b90 + the block 4 repair
+          branch + main 0129f0b), spec revision 8 (raw sha256 dd1aa5a0..., freeze digest
+          f74a1715...)
+harness:  /usr/sbin/chromium, headless=new, a real window resized with CDP Browser.setWindowBounds
+          (a fresh load at each width). Rectangles are CSS px from getBoundingClientRect.
+
+This file re-measures, on the repaired tree, the boxes the first gate measured on 82b3b90. The dock,
+toggle, region, rotation panel, rail, navigation, notice, strip and fields-stack numbers are identical
+to the first gate's. One recorded box differs, and the difference is named rather than smoothed: the
+attribution control. See the last section.
+
+Every rectangle, per state
+--------------------------
+
+1. 1440x900: first paint: panel expanded, dock expanded
+   dock (region `Timeline`): x 22.00, y 457.81, 984.00 x 92.00 (right 1006.00, bottom 549.81)
+   `Timeline controls`: 0 node(s), aria-expanded None, absent, inside the region False, first child of its parent False
+   rotation panel: data-collapsed false, x 22.00, y 557.81, 984.00 x 326.19 (right 1006.00, bottom 884.00), cards 3, card tops [699.81, 699.81, 699.81], list `Rotation scenarios` mounted True
+   attribution x 935.80, y 776.00, 496.20 x 20.00 (right 1432.00, bottom 796.00)
+   navigation control x 1395.00, y 406.50, 29.00 x 87.00 (right 1424.00, bottom 493.50)
+   layer rail anchor x 1070.00, y 768.00, 350.00 x 120.00 (right 1420.00, bottom 888.00)
+   top strip x 994.88, y 18.00, 423.13 x 44.00 (right 1418.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 276.00 x 44.00 (right 298.00, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 868.08, y 591.31, 120.92 x 31.00 (right 989.00, bottom 622.31)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 1440 against clientWidth 1440
+
+2. 1440x900: panel collapsed by a press, dock expanded
+   dock (region `Timeline`): x 22.00, y 641.00, 984.00 x 92.00 (right 1006.00, bottom 733.00)
+   `Timeline controls`: 0 node(s), aria-expanded None, absent, inside the region False, first child of its parent False
+   rotation panel: data-collapsed true, x 22.00, y 741.00, 984.00 x 143.00 (right 1006.00, bottom 884.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 935.80, y 776.00, 496.20 x 20.00 (right 1432.00, bottom 796.00)
+   navigation control x 1395.00, y 406.50, 29.00 x 87.00 (right 1424.00, bottom 493.50)
+   layer rail anchor x 1070.00, y 768.00, 350.00 x 120.00 (right 1420.00, bottom 888.00)
+   top strip x 994.88, y 18.00, 423.13 x 44.00 (right 1418.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 276.00 x 44.00 (right 298.00, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 868.08, y 774.50, 120.92 x 31.00 (right 989.00, bottom 805.50)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 1440 against clientWidth 1440
+
+3. 780x900: first paint: panel collapsed, dock expanded
+   dock (region `Timeline`): x 22.00, y 641.00, 373.00 x 92.00 (right 395.00, bottom 733.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 22.00, y 589.00, 44.00 x 44.00 (right 66.00, bottom 633.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed true, x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 774.50, 120.92 x 31.00 (right 378.00, bottom 805.50)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+4. 780x900: panel expanded by a press, dock expanded
+   dock (region `Timeline`): x 22.00, y 450.00, 373.00 x 92.00 (right 395.00, bottom 542.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 22.00, y 398.00, 44.00 x 44.00 (right 66.00, bottom 442.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed false, x 22.00, y 542.81, 373.00 x 341.19 (right 395.00, bottom 884.00), cards 3, card tops [684.81, 684.81, 684.81], list `Rotation scenarios` mounted True
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 576.31, 120.92 x 31.00 (right 378.00, bottom 607.31)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+5. 780x900: dock collapsed, panel expanded
+   dock (region `Timeline`): absent
+   `Timeline controls`: 1 node(s), aria-expanded false, x 22.00, y 490.81, 373.00 x 44.00 (right 395.00, bottom 534.81), inside the region False, first child of its parent True
+   rotation panel: data-collapsed false, x 22.00, y 542.81, 373.00 x 341.19 (right 395.00, bottom 884.00), cards 3, card tops [684.81, 684.81, 684.81], list `Rotation scenarios` mounted True
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 576.31, 120.92 x 31.00 (right 378.00, bottom 607.31)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+6. 780x900: dock collapsed, panel collapsed
+   dock (region `Timeline`): absent
+   `Timeline controls`: 1 node(s), aria-expanded false, x 22.00, y 689.00, 373.00 x 44.00 (right 395.00, bottom 733.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed true, x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 774.50, 120.92 x 31.00 (right 378.00, bottom 805.50)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+7. 780x900: dock expanded, panel expanded (reset)
+   dock (region `Timeline`): x 22.00, y 450.00, 373.00 x 92.00 (right 395.00, bottom 542.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 22.00, y 398.00, 44.00 x 44.00 (right 66.00, bottom 442.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed false, x 22.00, y 542.81, 373.00 x 341.19 (right 395.00, bottom 884.00), cards 3, card tops [684.81, 684.81, 684.81], list `Rotation scenarios` mounted True
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 576.31, 120.92 x 31.00 (right 378.00, bottom 607.31)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+8. 360x640: first paint: panel collapsed, dock collapsed
+   dock (region `Timeline`): absent
+   `Timeline controls`: 1 node(s), aria-expanded false, x 8.00, y 224.00, 288.00 x 44.00 (right 296.00, bottom 268.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed true, x 8.00, y 489.00, 344.00 x 143.00 (right 352.00, bottom 632.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 0.00, y 404.41, 352.00 x 27.59 (right 352.00, bottom 432.00)
+   navigation control x 315.00, y 276.50, 29.00 x 87.00 (right 344.00, bottom 363.50)
+   layer rail anchor x 36.81, y 546.00, 259.19 x 86.00 (right 296.00, bottom 632.00)
+   top strip x 139.20, y 12.00, 208.80 x 44.00 (right 348.00, bottom 56.00)
+   fields stack x 8.00, y 58.00, 288.00 x 44.00 (right 296.00, bottom 102.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 214.08, y 503.00, 120.92 x 31.00 (right 335.00, bottom 534.00)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 360 against clientWidth 360
+
+9. 360x640: panel collapsed, dock expanded
+   dock (region `Timeline`): x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50), inside the region True, first child of its parent True
+   rotation panel: data-collapsed true, x 8.00, y 489.00, 344.00 x 143.00 (right 352.00, bottom 632.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 0.00, y 404.41, 352.00 x 27.59 (right 352.00, bottom 432.00)
+   navigation control x 315.00, y 276.50, 29.00 x 87.00 (right 344.00, bottom 363.50)
+   layer rail anchor x 36.81, y 546.00, 259.19 x 86.00 (right 296.00, bottom 632.00)
+   top strip x 139.20, y 12.00, 208.80 x 44.00 (right 348.00, bottom 56.00)
+   fields stack x 8.00, y 58.00, 288.00 x 44.00 (right 296.00, bottom 102.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 214.08, y 503.00, 120.92 x 31.00 (right 335.00, bottom 534.00)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 360 against clientWidth 360
+
+10. 360x640: panel expanded, dock expanded
+   dock (region `Timeline`): x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50), inside the region True, first child of its parent True
+   rotation panel: data-collapsed false, x 8.00, y 440.00, 344.00 x 192.00 (right 352.00, bottom 632.00), cards 3, card tops [582, 582, 582], list `Rotation scenarios` mounted True
+   attribution x 0.00, y 404.41, 352.00 x 27.59 (right 352.00, bottom 432.00)
+   navigation control x 315.00, y 276.50, 29.00 x 87.00 (right 344.00, bottom 363.50)
+   layer rail anchor x 36.81, y 546.00, 259.19 x 86.00 (right 296.00, bottom 632.00)
+   top strip x 139.20, y 12.00, 208.80 x 44.00 (right 348.00, bottom 56.00)
+   fields stack x 8.00, y 58.00, 288.00 x 44.00 (right 296.00, bottom 102.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 199.08, y 454.00, 120.92 x 31.00 (right 320.00, bottom 485.00)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 360 against clientWidth 360
+
+11. 360x640: F1: panel expanded, dock expanded, Command open
+   dock (region `Timeline`): x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50), inside the region True, first child of its parent True
+   rotation panel: data-collapsed false, x 8.00, y 440.00, 344.00 x 192.00 (right 352.00, bottom 632.00), cards 3, card tops [582, 582, 582], list `Rotation scenarios` mounted True
+   attribution x 0.00, y 404.41, 352.00 x 27.59 (right 352.00, bottom 432.00)
+   navigation control x 315.00, y 276.50, 29.00 x 87.00 (right 344.00, bottom 363.50)
+   layer rail anchor x 36.81, y 546.00, 259.19 x 86.00 (right 296.00, bottom 632.00)
+   top strip x 139.20, y 12.00, 208.80 x 44.00 (right 348.00, bottom 56.00)
+   fields stack x 8.00, y 58.00, 288.00 x 44.00 (right 296.00, bottom 102.00)
+   abstention notice absent
+   right edge column x 8.00, y 328.00, 288.00 x 104.00 (right 296.00, bottom 432.00)
+   coverage pill x 199.08, y 454.00, 120.92 x 31.00 (right 320.00, bottom 485.00)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 360 against clientWidth 360
+
+12. 360x640: Field 03 notice mounted, panel expanded, dock expanded
+   dock (region `Timeline`): x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50), inside the region True, first child of its parent True
+   rotation panel: data-collapsed false, x 8.00, y 440.00, 344.00 x 192.00 (right 352.00, bottom 632.00), cards 3, card tops [582, 582, 582], list `Rotation scenarios` mounted True
+   attribution x 0.00, y 404.41, 352.00 x 27.59 (right 352.00, bottom 432.00)
+   navigation control x 315.00, y 276.50, 29.00 x 87.00 (right 344.00, bottom 363.50)
+   layer rail anchor x 36.81, y 546.00, 259.19 x 86.00 (right 296.00, bottom 632.00)
+   top strip x 139.20, y 12.00, 208.80 x 44.00 (right 348.00, bottom 56.00)
+   fields stack x 8.00, y 117.19, 288.00 x 99.00 (right 296.00, bottom 216.19)
+   abstention notice x 8.00, y 58.00, 288.00 x 51.19 (right 296.00, bottom 109.19)
+   right edge column x 8.00, y 328.00, 288.00 x 104.00 (right 296.00, bottom 432.00)
+   coverage pill x 199.02, y 454.00, 120.98 x 31.00 (right 320.00, bottom 485.00)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 360 against clientWidth 360
+
+13. 1440x900: AC-40 attribution, panel expanded, dock expanded
+   dock (region `Timeline`): x 22.00, y 457.81, 984.00 x 92.00 (right 1006.00, bottom 549.81)
+   `Timeline controls`: 0 node(s), aria-expanded None, absent, inside the region False, first child of its parent False
+   rotation panel: data-collapsed false, x 22.00, y 557.81, 984.00 x 326.19 (right 1006.00, bottom 884.00), cards 3, card tops [699.81, 699.81, 699.81], list `Rotation scenarios` mounted True
+   attribution x 935.80, y 776.00, 496.20 x 20.00 (right 1432.00, bottom 796.00)
+   navigation control x 1395.00, y 406.50, 29.00 x 87.00 (right 1424.00, bottom 493.50)
+   layer rail anchor x 1070.00, y 768.00, 350.00 x 120.00 (right 1420.00, bottom 888.00)
+   top strip x 994.88, y 18.00, 423.13 x 44.00 (right 1418.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 276.00 x 44.00 (right 298.00, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 868.08, y 591.31, 120.92 x 31.00 (right 989.00, bottom 622.31)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 1440 against clientWidth 1440
+
+14. 1440x900: AC-40 attribution, panel collapsed, dock expanded
+   dock (region `Timeline`): x 22.00, y 641.00, 984.00 x 92.00 (right 1006.00, bottom 733.00)
+   `Timeline controls`: 0 node(s), aria-expanded None, absent, inside the region False, first child of its parent False
+   rotation panel: data-collapsed true, x 22.00, y 741.00, 984.00 x 143.00 (right 1006.00, bottom 884.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 935.80, y 776.00, 496.20 x 20.00 (right 1432.00, bottom 796.00)
+   navigation control x 1395.00, y 406.50, 29.00 x 87.00 (right 1424.00, bottom 493.50)
+   layer rail anchor x 1070.00, y 768.00, 350.00 x 120.00 (right 1420.00, bottom 888.00)
+   top strip x 994.88, y 18.00, 423.13 x 44.00 (right 1418.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 276.00 x 44.00 (right 298.00, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 868.08, y 774.50, 120.92 x 31.00 (right 989.00, bottom 805.50)
+   intersections: 20 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 1440 against clientWidth 1440
+
+15. 780x900: AC-40 attribution, panel collapsed, dock expanded
+   dock (region `Timeline`): x 22.00, y 641.00, 373.00 x 92.00 (right 395.00, bottom 733.00)
+   `Timeline controls`: 1 node(s), aria-expanded true, x 22.00, y 589.00, 44.00 x 44.00 (right 66.00, bottom 633.00), inside the region False, first child of its parent True
+   rotation panel: data-collapsed true, x 22.00, y 741.00, 373.00 x 143.00 (right 395.00, bottom 884.00), cards 0, card tops [], list `Rotation scenarios` mounted False
+   attribution x 275.80, y 776.00, 496.20 x 20.00 (right 772.00, bottom 796.00)
+   navigation control x 735.00, y 406.50, 29.00 x 87.00 (right 764.00, bottom 493.50)
+   layer rail anchor x 526.00, y 768.00, 234.00 x 120.00 (right 760.00, bottom 888.00)
+   top strip x 334.88, y 18.00, 423.13 x 44.00 (right 758.00, bottom 62.00)
+   fields stack x 22.00, y 72.00, 158.80 x 44.00 (right 180.80, bottom 116.00)
+   abstention notice absent
+   right edge column absent
+   coverage pill x 257.08, y 774.50, 120.92 x 31.00 (right 378.00, bottom 805.50)
+   intersections: 22 pairs measured, non-zero none, all 0.00 px2
+   document scrollWidth 780 against clientWidth 780
+
+The `Timeline` region's controls, at 1440x900 first paint and at 360x640 expanded
+---------------------------------------------------------------------------
+
+  1440x900: first paint: panel expanded, dock expanded
+    input  Go to date                   x 31.00, y 458.81, 98.00 x 44.00 (right 129.00, bottom 502.81)
+    button Previous day                 x 31.00, y 506.81, 44.00 x 44.00 (right 75.00, bottom 550.81)
+    input  Timeline date                x 83.00, y 506.81, 862.00 x 44.00 (right 945.00, bottom 550.81)
+    button Next day                     x 953.00, y 506.81, 44.00 x 44.00 (right 997.00, bottom 550.81)
+
+  360x640: panel expanded, dock expanded
+    button Timeline controls            x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50)
+    input  Go to date                   x 60.00, y 225.00, 106.00 x 44.00 (right 166.00, bottom 269.00)
+    button Previous day                 x 17.00, y 273.00, 44.00 x 44.00 (right 61.00, bottom 317.00)
+    input  Timeline date                x 69.00, y 273.00, 166.00 x 44.00 (right 235.00, bottom 317.00)
+    button Next day                     x 243.00, y 273.00, 44.00 x 44.00 (right 287.00, bottom 317.00)
+
+Findings the first gate recorded, re-measured and unchanged
+----------------------------------------------------------
+- The collapsed rotation panel measures 143.00 px at every width: 142.00 of header block plus one
+  border pixel. The 780x900 dock therefore lands at y 641.00 to 733.00 against the contract's 642 to
+  734, inside the 2 px tolerance.
+- The layer rail anchor top is 768.00 at 1440x900 and 546.00 at 360x640 because the rail now holds 13
+  rows with internal scroll. Its right edge (1420.00 / 760.00 / 296.00), bottom edge (888.00 /
+  632.00) and `.layer-rail` max-height (118 / 118 / 84) are unchanged.
+- Finding F1, the state the orchestrator asked for: 360x640, dock expanded, rotation panel expanded,
+  `Command` open. Toggle x 8.00, y 224.50, 44.00 x 44.00 (right 52.00, bottom 268.50) against block 3 R-40's right edge column x 8.00, y 328.00, 288.00 x 104.00 (right 296.00, bottom 432.00): intersection 0.00 px2; dock
+  against the same column 0.00 px2. Option A holds.
+- The Field 03 abstention notice state at 360x640: notice x 8.00, y 58.00, 288.00 x 51.19 (right 296.00, bottom 109.19), dock x 8.00, y 224.00, 288.00 x 92.00 (right 296.00, bottom 316.00), all intersections 0.00 px2.
+- Page errors during the sweep: none
+
+The one recorded box that differs from the first gate: the attribution control
+----------------------------------------------------------------------------
+At 1440x900 and at 780x900 this run measures `.maplibregl-ctrl-attrib` at 496.20 x 20.00 px, with its
+right edge at 1432.00 and 772.00. The first gate recorded 171.84 x 20.00 px at the same right edges
+(AC-40-attribution.txt). At 360x640 this run measures the control at 0.00, 404.41, 352.00 x 27.59,
+which is exactly block 3 CO-02's box; the first gate recorded the text box inside it, 180.16 to 352.00,
+13.80 px tall.
+
+Measured cause: the control's width follows the attribution text the map style supplies, and in this
+run the full text is present on every reading: `NASA GIBS · SMAP L4 · 9 km | OpenFreeMap ©
+OpenMapTiles Data from OpenStreetMap`. Four probes at +0.5 s, +2 s, +5 s and +8 s after load returned
+the same 496.20 px, so it is a steady state and not a race in this run. The right edge, which is what
+R-47 keeps the dock and the toggle clear of, is unchanged, and the intersection with the dock and the
+toggle is 0.00 px2 in every state of the table above, which is the only thing AC-40 asserts. Nothing
+in block 4 renders, styles or measures the attribution (block 3 CO-02, unchanged; the repair diff
+touches no attribution rule in `src/index.css`), so this is a difference between the two runs' reading
+of the same block 3 box, not a regression.
+
+
+Rail re-measure at 1440x900 (AC-21, R-26), added by the second gate run
+-------------------------------------------------------------------
+rows 13: smap-l3, smap-l4-surface, smap-l4-root, imerg-daily, imerg-30min, ndvi-8day, evi-8day, ndvi-monthly, lst-terra, lst-aqua, hls-l30, hls-s30, grace-mascon
+`Layer options` triggers: 13 of 13 measure [(44, 44)]
+collapsed first row text: SMAP soil moisture retrieved 9 km 2026-11-11 3 days old earlier observation No observation
+`.layer-rail` x 1071.00, y 769.00, 328.00 x 118.00 (right 1399.00, bottom 887.00), max-height 118px, overflow-y auto, scrollHeight 1074 against clientHeight 118
+expanded `hls-s30` carries `Latest image` yes; its controls:
+  button Layer options, HLS Sentinel-2 reflectance, 30 m      44.00 x 44.00
+  button Show HLS Sentinel-2 reflectance, 30 m                44.00 x 44.00
+  input  Opacity, HLS Sentinel-2 reflectance, 30 m            251.00 x 44.00
+  button Move HLS Sentinel-2 reflectance, 30 m up             44.00 x 44.00
+  button Move HLS Sentinel-2 reflectance, 30 m down           44.00 x 44.00
+  button Pin date, HLS Sentinel-2 reflectance, 30 m           251.00 x 44.00
+  button Compare, HLS Sentinel-2 reflectance, 30 m            251.00 x 44.00
+  button Latest image                                         251.00 x 44.00
+

@@ -1,14 +1,79 @@
-AC-34 (R-43)
-method: tests (vitest output and the network log of the test run)
-command: grep over src/ and backend/ plus the full vitest run
-measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
-------------------------------------------------------------------------------
-searched: grep -rni "google" src/ backend/ (no basemap adapter, no VITE_GOOGLE_MAPS_API_KEY, no Google adapter),
-grep -rni "eox|basemap" src/lib src/components (only two doc comments in MapCanvas.tsx), and the full verbose vitest
-log: no test carries AC-34 and no test records a network log of Google requests.
-what the tree has: one vector basemap, VECTOR_BASEMAP_STYLE = https://tiles.openfreemap.org/styles/liberty
-(src/lib/layer-catalog.ts line 107), selected unconditionally. There is no adapter interface and no EOX Sentinel-2
-cloudless layer, so the clause "the basemap registry SHALL select the EOX adapter" has no implementation to measure.
-measured value that fails it: adapters found 0, EOX references 0, VITE_GOOGLE_MAPS_API_KEY references 0, AC-34 tests 0.
-artifact named by the spec (vitest output plus the network log of the test run): the network log does not exist.
-verdict: FAIL (not implemented)
+# AC-34 (R-43) the basemap adapter boundary, second gate run
+
+recorded: 2026-11-14
+criterion: AC-34, covers R-43. Method: tests. Artifact named by the spec: the vitest output and
+the network log of the test run.
+
+tree measured
+-------------
+branch:   gate/block4-gate2, commit a071c80 (worktree of the repository), which is
+          gate/block4-gate 82b3b90 + the fixture commit 5f46897 + the basemap adapter f6c5e7e
+          + the Latest image scan 911ad55 + main 0129f0b merged in
+spec:     field-shift-app/specs/bloco-4-camadas-e-timeline.md, revision 8, 681 lines, raw sha256
+          dd1aa5a067fe1d8c908454132a5c77d75c6d272ee99a6e26828891ef695ea51c, freeze digest
+          f74a1715d28b0808504065653b296ffbce9e87a84aeb2e238949c6a42787d82e
+servers:  backend `python3 -m uvicorn main:app --host 127.0.0.1 --port 8010`
+          front   `VITE_API_BASE_URL=http://127.0.0.1:8010 npx vite --host 127.0.0.1 --port 5276`
+harness:  /usr/sbin/chromium, headless=new, real 1440x900 window (CDP Browser.setWindowBounds)
+
+What the criterion asks, and what was measured
+---------------------------------------------
+1. With `VITE_GOOGLE_MAPS_API_KEY` absent, the basemap registry selects the EOX adapter.
+   Measured in the vitest run below: `activeBasemapAdapter({}).id` is `eox-s2cloudless-2024`,
+   and the two adapters in the registry are `['eox-s2cloudless-2024', 'google-satellite']`.
+2. The test run records zero requests to a Google host.
+   Measured in the vitest run below: the test stubs `fetch` and asserts the recorded list is empty
+   and that its Google-host filter is empty. The log the test writes is `AC-34-network.txt`.
+3. Independent of the stub: a real browser load issues zero requests to a Google host.
+   Measured live at 1440x900 on this tree: 89 requests, hosts {"127.0.0.1": 74, "tiles.openfreemap.org": 15}, Google-host requests 0.
+
+The run
+-------
+```text
+$ npx vitest run src/lib/basemap-adapters.test.ts
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+```
+
+The seven tests, by name:
+  selects the EOX Sentinel-2 cloudless 2024 adapter when no Google key is present
+  holds the two adapters with the fields, the URL templates and the licence of Table E
+  carries the Table F attribution and the two EOX links by character
+  keeps the Google adapter specified but not selectable without the key
+  reads the key from VITE_GOOGLE_MAPS_API_KEY alone and from no other name
+  keeps every Google host in the adapter module, and no component reads the adapters
+  records zero requests to a Google host in the test run, and writes the network log
+
+The artifact is written by that test run, and the gate ran the test twice: the file's sha256 was
+`b65e50144dd764d776892bdfc8877db9f2b2ae508140ae24080f74ccdb40c9ba` before the second run and the same after it, so the log is reproducible.
+
+The Table F strings by character, counted by the gate from `src/lib/basemap-adapters.ts`
+(the spec's number is the requirement, the count is the measurement):
+
+  attributionText  111 characters
+    EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024)
+  shortCredit       53 characters
+    EOxCloudless by EOX IT Services GmbH, CC BY-NC-SA 4.0
+  EOX tiles         https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg
+  Google tiles      https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session={session}&key={key}
+  Google session    https://tile.googleapis.com/v1/createSession?key={key}
+
+Source hashes of the two modules this criterion and AC-35 add:
+  src/lib/basemap-adapters.ts  10a84e467a82baf689735f58abffc11e857cbcbf3cd3f7bf079ff6418371d293
+  src/lib/latest-image.ts      cbcf018867617b9e1235566ac6284a813a2dbfdcb77137f4deb96a9bae237d7b
+
+Reading of R-43 that this run enforces
+-------------------------------------
+R-43 says block 4 renders no basemap change, so the adapter is a boundary and not a wiring: the
+test asserts that no module outside `src/lib/basemap-adapters.ts` names a Google host and that no
+component imports the adapters. The visible basemap of the app is therefore still block 3's vector
+style, and the live load above shows it: {"127.0.0.1": 74, "tiles.openfreemap.org": 15}.
+A reader must not read this criterion as 'the satellite basemap renders EOX in block 4'; F-29 moves
+that rendering to block 5, and CO-B4-05 carries it.
+
+What this run does not claim
+---------------------------
+- No EOX tile request exists to measure, because nothing renders the adapter in block 4.
+- The Google adapter is never exercised against Google; the criterion only requires that it is inert
+  without the key, which the tests measure.
+
