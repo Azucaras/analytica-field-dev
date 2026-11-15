@@ -312,7 +312,7 @@ Keyboard, names and reduced motion:
 | `Polygon` region | `region` named `Polygon`, heading `Selected polygon` | none, it carries no control | R-39, R-42, AC-34 |
 | Tooltip | `aria-hidden="true"` | none | R-27, R-42 |
 | Attribution control | MapLibre's own control | its own expand key at every width | R-33, AM-02 |
-| Fields chip, polygon selected | `button` named `<class name>` or the unmapped label of R-27 | its own activation, select the polygon | R-28, AC-24 |
+| Fields chip, polygon selected | `button` named the class name, `class not mapped`, `No CDL class for {Y}`, or the short form `No CDL {Y}` where R-28 requires it | its own activation, select the polygon | R-28, AC-24 |
 
 ## Test oracles
 
@@ -442,7 +442,7 @@ Frozen at revision 5 on 2026-11-14. Revision 8, on 2026-11-15, amends AC-02, AC-
 | Open decisions | 10, OD-01 to OD-10, each with a written default; OD-02, OD-03 and OD-04 decided by the user on 2026-11-14, the other seven at their written defaults under the approval |
 | Carry-over | 14, CO-B5-01 to CO-B5-14 |
 | Findings | 29, M-01 to M-29 |
-| sha256 | `10f22859d50a3407cc8287fd431e4736a4f10932965c85ba3206f73b248489eb` |
+| sha256 | `f1d60c811dfe5c1af2c9d6953670539e33a017d78ed8bf65491a8ca9a48bb98d` |
 
 A file cannot carry the digest of itself, so the sha256 row holds `PENDING` before hashing. The raw sha256 of the frozen file bytes is reported on the card, because a file cannot record its own raw digest. Reproduce the digest with, from `field-shift-app/`:
 
