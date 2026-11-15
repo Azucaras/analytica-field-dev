@@ -52,22 +52,40 @@ function findUv() {
   return null
 }
 
+/** A Python 3.11 to 3.13 already on the machine, as [command, ...args], or null. */
+function findPython() {
+  const candidates = IS_WINDOWS
+    ? [['py', '-3.13'], ['py', '-3.12'], ['py', '-3.11'], ['python']]
+    : [['python3.13'], ['python3.12'], ['python3.11'], ['python3']]
+  for (const [cmd, ...args] of candidates) {
+    const probe = spawnSync(cmd, [...args, '-c', 'import sys; print(sys.version_info[0] * 100 + sys.version_info[1])'], { encoding: 'utf8' })
+    const version = Number(probe.stdout?.trim())
+    if (probe.status === 0 && version >= 311 && version <= 313) return [cmd, ...args]
+  }
+  return null
+}
+
 function ensureBackend() {
   if (existsSync(VENV_PYTHON)) return
   say('Primeira execução: criando o ambiente Python do backend (backend/.venv)…')
   const requirements = path.join(BACKEND_DIR, 'requirements.txt')
-  const uv = findUv()
+  const uv = process.env.FIELD_SHIFT_NO_UV ? null : findUv()
   if (uv) {
-    // Python 3.11 on purpose: uvicorn[standard] pulls pyyaml, which failed to build on 3.15.
+    // uv downloads Python 3.11 by itself if the machine does not have it.
     if (!run(uv, ['venv', '--python', '3.11', VENV_DIR])) fail('uv venv falhou.')
     if (!run(uv, ['pip', 'install', '--python', VENV_PYTHON, '-r', requirements])) fail('Instalação das dependências do backend falhou.')
     return
   }
-  const python = IS_WINDOWS ? 'py' : 'python3'
-  const versionArgs = IS_WINDOWS ? ['-3.11'] : []
-  if (!run(python, [...versionArgs, '-m', 'venv', VENV_DIR])) {
-    fail('Não achei o uv nem o Python 3.11. Instale o uv (winget install astral-sh.uv) e rode de novo.')
+  // Without uv, any Python 3.11 to 3.13 will do. Newer ones can lack prebuilt packages for FastAPI.
+  const python = findPython()
+  if (!python) {
+    fail(
+      'Não achei o uv nem um Python entre 3.11 e 3.13. O jeito mais simples é instalar o uv ' +
+        '(Windows: winget install astral-sh.uv; macOS/Linux: veja https://docs.astral.sh/uv/) e rodar de novo.',
+    )
   }
+  const [cmd, ...args] = python
+  if (!run(cmd, [...args, '-m', 'venv', VENV_DIR])) fail('Não consegui criar o ambiente Python.')
   if (!run(VENV_PYTHON, ['-m', 'pip', 'install', '-r', requirements])) fail('Instalação das dependências do backend falhou.')
 }
 

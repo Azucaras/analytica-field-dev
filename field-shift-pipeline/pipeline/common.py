@@ -30,6 +30,33 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT / "config"
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
+ENV_FILE = ROOT / ".env"
+
+
+def load_env_file(path: Path = ENV_FILE) -> list[str]:
+    """Read KEY=VALUE lines from field-shift-pipeline/.env into the environment.
+
+    The file is gitignored and optional; it only saves typing the keys in every new shell. A variable
+    already set in the shell wins over the file. Returns the names it set (never the values).
+    """
+    import os
+
+    if not path.exists():
+        return []
+    set_now = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = (part.strip() for part in line.split("=", 1))
+        value = value.strip('"').strip("'")
+        if name and value and name not in os.environ:
+            os.environ[name] = value
+            set_now.append(name)
+    return set_now
+
+
+load_env_file()
 
 USER_AGENT = "field-phase/0.1 (NASA Space Apps 2026; contact via repository)"
 TIMEOUT = 120
