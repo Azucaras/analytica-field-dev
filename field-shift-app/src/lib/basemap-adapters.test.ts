@@ -35,7 +35,8 @@ const GOOGLE_HOST = /(^|\.)googleapis\.com$|(^|\.)google\.com$/i
 function sourceFiles(): string[] {
   return readdirSync(resolve(process.cwd(), 'src'), { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile() && /\.(ts|tsx)$/.test(entry.name) && !entry.name.includes('.test.'))
-    .map((entry) => relative(process.cwd(), resolve(entry.parentPath, entry.name)))
+    // Forward slashes on every OS, so the list reads the same on Windows and Linux.
+    .map((entry) => relative(process.cwd(), resolve(entry.parentPath, entry.name)).replaceAll('\\', '/'))
 }
 
 /** The modules of the app that name a Google host at all. */

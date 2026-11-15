@@ -8,7 +8,7 @@ attribution (111 characters): EOxCloudless https://cloudless.eox.at by EOX IT Se
 licence: CC BY-NC-SA 4.0 for 2018 to 2025
 requests issued by the basemap registry: 0
 requests to a Google host: 0
-modules under src/ that name a Google host: src\lib\basemap-adapters.ts
+modules under src/ that name a Google host: src/lib/basemap-adapters.ts
 # the two Google URL templates exist in the registry as specified and are never requested:
 #   https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session={session}&key={key}
 #   https://tile.googleapis.com/v1/createSession?key={key}
