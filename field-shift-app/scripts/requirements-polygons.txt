@@ -1,0 +1,11 @@
+# Requirements for the polygon build helpers in scripts/polygon_build.py.
+# There is no system GDAL on the machine this build ran on, so the FlatGeobuf
+# conversion uses pyogrio's bundled GDAL (3.12.4) instead of the ogr2ogr CLI.
+# pyarrow, pandas and shapely are used to read the published GeoParquet and to
+# hand its geometry to the GDAL FlatGeobuf writer; mapbox-vector-tile decodes
+# the built MVT tiles for the feature counts of R-08.
+pyarrow
+pandas
+shapely
+pyogrio
+mapbox-vector-tile

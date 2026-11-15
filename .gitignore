@@ -19,6 +19,14 @@ field-shift-app/artifacts/*.png
 # runtime caches
 .tile-cache/
 
+# block 5 polygon build (CO-B5-01, CO-B5-02). the binary products are hundreds of
+# megabytes, so they are not versioned; artifacts/polygon-build-manifest.json
+# records the absolute path, the size and the sha256 of every one of them. the
+# two small Table G records and the class tables under data/polygons stay in the
+# tree, because the app reads the manifest at load and the gate reads the records.
+field-shift-app/data/polygons/*.pmtiles
+field-shift-app/data/work/
+
 # logs and editor or OS noise
 *.log
 .DS_Store
