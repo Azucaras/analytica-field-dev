@@ -163,6 +163,32 @@ export class MapStub {
     return this.zoom
   }
 
+  /** Block 6, R-02: the camera values and the resize the numbers surface makes on close. */
+  resizeCalls = 0
+  bearing = 0
+  pitch = 0
+  jumpToCalls: Array<Record<string, unknown>> = []
+
+  resize() {
+    this.resizeCalls += 1
+  }
+
+  getBearing() {
+    return this.bearing
+  }
+
+  getPitch() {
+    return this.pitch
+  }
+
+  jumpTo(options: Record<string, unknown>) {
+    this.jumpToCalls.push(options)
+    if (Array.isArray(options.center)) this.center = { lng: options.center[0] as number, lat: options.center[1] as number }
+    if (typeof options.zoom === 'number') this.zoom = options.zoom
+    if (typeof options.bearing === 'number') this.bearing = options.bearing
+    if (typeof options.pitch === 'number') this.pitch = options.pitch
+  }
+
   getCenter() {
     return { ...this.center }
   }
