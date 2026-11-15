@@ -7,6 +7,7 @@ import { TimelineDock } from '@/components/TimelineDock'
 import { AbstentionNotice } from '@/components/AbstentionNotice'
 import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
+import { PolygonPanel } from '@/components/PolygonPanel'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { useLayers } from '@/lib/use-layers'
@@ -58,6 +59,7 @@ function backendFailureReason(reason: unknown): string {
 export const ZOrder = Object.freeze({
   chips: 10,
   layerRail: 20,
+  polygonPanel: 25,
   evidence: 30,
   abstentionNotice: 40,
   timelineDock: 45,
@@ -122,7 +124,9 @@ function App() {
     const requestedBasemap = new URLSearchParams(search).get('basemap')
     if (requestedBasemap === 'google' || requestedBasemap === 'google-satellite') {
       const google = BASEMAP_ADAPTERS.find((adapter) => adapter.id === 'google-satellite')
+      // R-32: without a key the EOX adapter stays, and the region says why.
       if (google?.selectable()) store.setBasemapId('google-satellite')
+      else store.setBasemapKeyMissing(true)
     }
     const restored = polygonIdFromSearch(search, regionAdapter(loadedRegion))
     if (restored !== null) store.restorePolygon(restored)
@@ -366,6 +370,14 @@ function App() {
       <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
         <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
       </div>
+
+      {/* Block 5, R-40 and OD-03: the Polygon region sits at its own numbers at 1440 and 780.
+          At 360 it is not mounted at all, and the fields chip carries the class there. */}
+      {!narrowViewport && (
+        <div className="polygon-panel-anchor" style={{ zIndex: ZOrder.polygonPanel }}>
+          <PolygonPanel />
+        </div>
+      )}
 
       <div className="overlay anchor-top-left layer-chips" style={{ zIndex: ZOrder.chips }}>
         <div className="overlay-interactive top-chip brand-chip">

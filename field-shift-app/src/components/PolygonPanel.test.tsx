@@ -1,0 +1,262 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen, within } from '@testing-library/react'
+import { PolygonPanel } from './PolygonPanel'
+import { useMapStore } from '@/lib/map-store'
+import type { PolygonScene } from '@/lib/polygon-source'
+import { REGION_ADAPTERS } from '@/lib/regions'
+import { UNMAPPED_CLASS_COLOUR } from '@/lib/polygon-style'
+
+const usTiers = {
+  detail: { minzoom: 9, maxzoom: 14 },
+  overview: { minzoom: 6, maxzoom: 8 },
+  interactiveMinzoom: 11,
+}
+const usScene: PolygonScene = {
+  regionId: 'us',
+  mode: 'self-hosted',
+  classSource: 'cdl-year',
+  tiers: usTiers,
+  detailUrl: 'pmtiles:///data/polygons/us-38017-detail.pmtiles/{z}/{x}/{y}',
+  overviewUrl: 'pmtiles:///data/polygons/us-38017-overview.pmtiles/{z}/{x}/{y}',
+  failure: null,
+}
+const brScene: PolygonScene = {
+  regionId: 'br',
+  mode: 'self-hosted',
+  classSource: 'mbmode24',
+  tiers: { detail: { minzoom: 8, maxzoom: 12 }, overview: null, interactiveMinzoom: 10 },
+  detailUrl: 'pmtiles:///data/polygons/br-mt-detail.pmtiles/{z}/{x}/{y}',
+  overviewUrl: null,
+  failure: null,
+}
+
+function setStore(partial: Record<string, unknown>) {
+  useMapStore.setState({
+    regionId: 'us',
+    selectedPolygonId: null,
+    polygonMode: null,
+    polygonClass: null,
+    polygonClassYear: null,
+    polygonRaw: null,
+    polygonSourceError: null,
+    basemapFailed: false,
+    basemapKeyMissing: false,
+    basemapId: 'eox-s2cloudless-2024',
+    legendRows: [],
+    mapZoom: null,
+    chosenDate: '2026-11-12',
+    ...partial,
+  } as never)
+}
+
+beforeEach(() => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => new Response('', { status: 404 })),
+  )
+})
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+describe('the Polygon region landmark and heading (R-42, AC-34)', () => {
+  it('is a region named Polygon with a level two heading Selected polygon', () => {
+    setStore({ polygonMode: usScene })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    const heading = within(region).getByRole('heading', { level: 2 })
+    expect(heading.textContent).toBe('Selected polygon')
+  })
+
+  it('carries no interactive control', () => {
+    setStore({ polygonMode: usScene, selectedPolygonId: '381825001868504' })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(region.querySelectorAll('button, input, a, select, textarea, [tabindex]')).toHaveLength(0)
+  })
+})
+
+describe('the content order of R-39', () => {
+  it('prints heading, five readout rows, legend, provenance, source, credit, then the status lines', () => {
+    setStore({
+      polygonMode: brScene,
+      selectedPolygonId: 4437031,
+      polygonClass: { classId: 39, name: 'Soybean', hex: '#f5b3c8', unmapped: false },
+      polygonRaw: { classValue: 39, area: null },
+      legendRows: [{ classId: 39, name: 'Soybean', nameKey: null, hex: '#f5b3c8', unmapped: false }],
+      mapZoom: 9,
+      regionId: 'br',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    const text = region.textContent ?? ''
+    const order = [
+      'Selected polygon',
+      'Class',
+      'Area',
+      'Basis',
+      'Class year',
+      'Source',
+      'Soybean',
+      'Trazo3 mbMode, 2024, collection not verified, modelled',
+      'Trazo3 field boundaries, WRI and ASU (Grupp et al. 2026), CC BY 4.0',
+      'EOxCloudless by EOX IT Services GmbH, CC BY-NC-SA 4.0',
+      'Polygons from zoom 8',
+      'Select from zoom 10',
+    ]
+    let cursor = -1
+    for (const fragment of order) {
+      const index = text.indexOf(fragment, cursor + 1)
+      expect(index, `"${fragment}" must follow the previous line`).toBeGreaterThan(cursor)
+      cursor = index
+    }
+  })
+
+  it('prints the five readout rows in order as definition terms', () => {
+    setStore({ polygonMode: usScene, selectedPolygonId: '381825001868504', polygonRaw: { classValue: 5, area: 153.18667449 }, polygonClass: { classId: 5, name: 'Soybeans', hex: '#267000', unmapped: false } })
+    render(<PolygonPanel />)
+    const terms = screen.getAllByRole('term').map((node) => node.textContent)
+    expect(terms).toEqual(['Class', 'Area', 'Basis', 'Class year', 'Source'])
+    const values = screen.getAllByRole('definition').map((node) => node.textContent)
+    expect(values).toEqual(['Soybeans', '153.2 acres', 'retrieved', 'CDL 2025', REGION_ADAPTERS.us.sourceString])
+  })
+})
+
+describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
+  it('prints the failure line and neither zoom line when the United States has no build (AC-08, AC-05)', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: null, classSource: null, detailUrl: null, overviewUrl: null, failure: 'polygon.build_not_available' },
+    })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(screen.queryByText(/Polygons from zoom/)).toBeNull()
+    expect(screen.queryByText(/Select from zoom/)).toBeNull()
+  })
+
+  it('prints the source unavailable line for Brazil with neither mode answering', () => {
+    setStore({
+      regionId: 'br',
+      polygonMode: { ...brScene, tiers: null, classSource: null, detailUrl: null, failure: 'polygon.source_unavailable' },
+    })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygon source unavailable')).toBeTruthy()
+  })
+
+  it('prints exactly one zoom line over the lowest mounted tier, and the select line only below the interactive zoom (AC-09)', () => {
+    setStore({ polygonMode: usScene, mapZoom: 10 })
+    const { unmount } = render(<PolygonPanel />)
+    expect(screen.getAllByText(/^Polygons from zoom /)).toHaveLength(1)
+    expect(screen.getByText('Polygons from zoom 6')).toBeTruthy()
+    expect(screen.getByText('Select from zoom 11')).toBeTruthy()
+    unmount()
+    setStore({ polygonMode: usScene, mapZoom: 11 })
+    render(<PolygonPanel />)
+    expect(screen.queryByText(/Select from zoom/)).toBeNull()
+    expect(screen.getByText('Polygons from zoom 6')).toBeTruthy()
+  })
+
+  it('never prints a failure line while a tier is mounted and the source answers (R-07)', () => {
+    setStore({ polygonMode: brScene, mapZoom: 4, regionId: 'br' })
+    render(<PolygonPanel />)
+    expect(screen.queryByText('Polygon source unavailable')).toBeNull()
+    expect(screen.getByText('Polygons from zoom 8')).toBeTruthy()
+    expect(screen.getByText('Select from zoom 10')).toBeTruthy()
+  })
+
+  it('prints the Google key line when ?basemap=google was asked without a key (R-32)', () => {
+    setStore({ polygonMode: brScene, basemapKeyMissing: true, regionId: 'br' })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Google basemap needs an API key')).toBeTruthy()
+  })
+
+  it('prints the basemap line when a basemap tile failed (R-35)', () => {
+    setStore({ polygonMode: brScene, basemapFailed: true, regionId: 'br' })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Basemap unavailable')).toBeTruthy()
+  })
+
+  it('orders the five status lines failure, key, basemap, zoom, select (R-39)', () => {
+    setStore({
+      polygonMode: { ...brScene, failure: null },
+      basemapKeyMissing: true,
+      basemapFailed: true,
+      mapZoom: 9,
+      regionId: 'br',
+      polygonSourceError: 'polygon.source_unavailable',
+    })
+    render(<PolygonPanel />)
+    const lines = [
+      'Polygon source unavailable',
+      'Google basemap needs an API key',
+      'Basemap unavailable',
+      'Polygons from zoom 8',
+      'Select from zoom 10',
+    ]
+    const text = screen.getByRole('region', { name: 'Polygon' }).textContent ?? ''
+    let cursor = -1
+    for (const line of lines) {
+      const index = text.indexOf(line)
+      expect(index, line).toBeGreaterThan(cursor)
+      cursor = index
+    }
+  })
+})
+
+describe('the legend rows of R-37 and R-21', () => {
+  it('lists the classes in view and the class not mapped row', () => {
+    setStore({
+      polygonMode: brScene,
+      regionId: 'br',
+      legendRows: [
+        { classId: 15, name: 'Pasture', nameKey: null, hex: '#edde8e', unmapped: false },
+        { classId: null, name: null, nameKey: 'polygon.class_not_mapped', hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+      ],
+    })
+    render(<PolygonPanel />)
+    const list = screen.getByRole('list', { name: 'Classes in view' })
+    const items = within(list).getAllByRole('listitem').map((node) => node.textContent)
+    expect(items).toEqual(['Pasture', 'class not mapped'])
+  })
+
+  it('prints the empty text, and no rows, when the view holds no polygon', () => {
+    setStore({ polygonMode: usScene, legendRows: [] })
+    render(<PolygonPanel />)
+    expect(screen.getByText('No crop polygon in view')).toBeTruthy()
+    expect(screen.queryByRole('list', { name: 'Classes in view' })).toBeNull()
+  })
+})
+
+describe('the provenance, source and credit lines (R-33, R-38, AC-31)', () => {
+  it('prints exactly one provenance, one source and one credit line in the United States', () => {
+    setStore({ polygonMode: usScene, polygonClassYear: 2025, mapZoom: 11 })
+    render(<PolygonPanel />)
+    const text = screen.getByRole('region', { name: 'Polygon' }).textContent ?? ''
+    expect(text.split('CDL 2025, Crop Sequence Boundaries 2025 release, retrieved').length - 1).toBe(1)
+    expect(text.split(REGION_ADAPTERS.us.sourceString).length - 1).toBe(2)
+    expect(text.split('EOxCloudless by EOX IT Services GmbH, CC BY-NC-SA 4.0').length - 1).toBe(1)
+  })
+
+  it('prints one provenance line even with no class source, the failure line in addition (R-38)', () => {
+    setStore({ polygonMode: { ...usScene, tiers: null, classSource: null, failure: 'polygon.build_not_available' } })
+    render(<PolygonPanel />)
+    expect(screen.getByText('CDL 2025, Crop Sequence Boundaries 2025 release, retrieved')).toBeTruthy()
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+  })
+})
+
+describe('R-43: the Brazil area when the sidecar answers 404 (AC-35)', () => {
+  it('prints Area not in the class table and keeps the tile class name', async () => {
+    setStore({
+      polygonMode: brScene,
+      regionId: 'br',
+      selectedPolygonId: 4437031,
+      polygonRaw: { classValue: 39, area: null },
+      polygonClass: { classId: 39, name: 'Soybean', hex: '#f5b3c8', unmapped: false },
+    })
+    render(<PolygonPanel />)
+    expect(await screen.findByText('Area not in the class table')).toBeTruthy()
+    expect(screen.getAllByRole('definition')[0].textContent).toBe('Soybean')
+  })
+})
