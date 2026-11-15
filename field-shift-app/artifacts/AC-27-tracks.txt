@@ -1,0 +1,85 @@
+# AC-27 (R-33, R-34), the availability tracks
+
+Method: `npx vitest run` over the recorded declared-ranges and STAC fixtures, plus the real
+app in Chromium at 1440x900 against dev 127.0.0.1:5199 and backend 127.0.0.1:8001.
+
+## The Sentinel-2 track: 18 marks, 6 highlighted
+
+Recorded source: `artifacts/fixtures/stac-s2-2026-09-15-2026-11-14.json`, the Element84 Earth
+Search response for the field point (-55.27, -11.91), collection `sentinel-2-l2a`, window
+2026-09-15 to 2026-11-14. It was fetched on 2026-11-14 with:
+
+```
+POST https://earth-search.aws.element84.com/v1/search
+{"collections":["sentinel-2-l2a"],"intersects":{"type":"Point","coordinates":[-55.27,-11.91]},
+ "datetime":"2026-09-15T00:00:00Z/2026-11-14T23:59:59Z","limit":100}
+
+numberMatched = 18, numberReturned = 18
+scenes with eo:cloud_cover < 20 = 6
+  S2A_21LXG_20260919_0_L2A  0.054665
+  S2B_21LXG_20260922_0_L2A  5.712851
+  S2C_21LXG_20260927_0_L2A  3.771892
+  S2C_21LXG_20261007_0_L2A  10.462158
+  S2B_21LXG_20261012_0_L2A  0.000644
+  S2C_21LXG_20261017_0_L2A  12.020229
+sha256(fixture) = 6959749385f8484cf1af1159ad0e7dcd3062ee1c380cb7026822300495db2297
+```
+
+Disclosure: the spec names this fixture as a build prerequisite, but the file was not in the
+tree. This wave recorded it from the same public endpoint the fixture names, on 2026-11-14.
+The counts reproduce the spec's re-run (M-19): 18 marks, 6 under 20 percent cloud.
+
+Browser readout after expanding the two optical rows at 1440x900:
+
+```
+hls-l30 expanded row:
+  [data-track="sentinel2"] aria-label = "Sentinel-2 scenes"
+  [data-track-scene]                  = 18
+  [data-track-scene][data-highlight="true"] = 6
+hls-s30 expanded row:                 same 18 / 6
+the dock [data-timeline-dock]:        no Sentinel-2 track
+```
+
+```
+src/lib/availability.test.ts > carries 18 marks and highlights the 6 scenes under 20 percent cloud  PASS
+src/lib/availability.test.ts > keeps every scene inside the recorded window                        PASS
+src/components/AvailabilityTrack.test.tsx > carries 18 scene marks and highlights the 6 scenes ... PASS
+src/components/AvailabilityTrack.test.tsx > sits in the expanded row of hls-l30 and hls-s30,
+  not in the dock                                                                                  PASS
+```
+
+## The smap-l3 declared track: no mark on the gap day 2026-11-02
+
+The declared ranges of `smap-l3` in `artifacts/fixtures/gibs-declared-ranges-2026-11-14.json`
+end `2026-10-30/2026-11-01` and resume `2026-11-03/2026-11-11`; 2026-11-02 is the gap.
+
+```
+rail row smap-l3, expanded, [data-track-span] count = 18
+  last three spans = 2026-10-27..2026-10-28, 2026-10-30..2026-11-01, 2026-11-03..2026-11-11
+  covers 2026-11-02 = false
+  covers 2026-11-01 = true
+  covers 2026-11-03 = true
+dock primary track (smap-l3): spans = 18, covers 2026-11-02 = false
+```
+
+## ndvi-8day: no mark before its declared start
+
+```
+rail row ndvi-8day, expanded, [data-track-span] count = 5
+  earliest start = 2025-02-12
+  first span     = 2025-02-12..2025-08-21
+  any mark before 2025-02-12 = false
+```
+
+## vitest
+
+```
+src/lib/availability.test.ts                    6 tests PASS
+src/components/AvailabilityTrack.test.tsx       4 tests PASS
+src/components/TimelineDock.test.tsx > R-33 / AC-27: the primary track sits in the dock   PASS
+```
+
+The primary track is the first layer that is on in stack order, or `smap-l3` when none is on
+(R-33): `src/lib/timeline.test.ts > primaryLayerId` covers both branches. Marks are drawn
+only from the declared ranges; no mark is invented for a gap or for a date before
+`time_start` (R-34).

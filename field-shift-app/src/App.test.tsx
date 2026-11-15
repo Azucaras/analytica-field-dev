@@ -123,7 +123,8 @@ afterEach(() => {
   vi.unstubAllGlobals()
   translationTestState.useKeys = false
   window.localStorage.removeItem('fs.locale')
-  useMapStore.setState({ selectedFieldId: null })
+  useMapStore.setState({ selectedFieldId: null, chosenDate: null })
+  window.history.replaceState({}, '', '/')
 })
 
 describe('field map and rotation scenario selection', () => {
@@ -307,22 +308,23 @@ describe('field map and rotation scenario selection', () => {
     expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
   })
 
-  it('requests scenarios with the selected season', async () => {
+  it('requests scenarios without a season and keeps the fixture values when the date changes (R-30)', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
     const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem North/ }))
+    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
     await screen.findByRole('list', { name: 'Rotation scenarios' })
-    const seasonSelect = screen.getByRole('combobox', { name: 'Season' })
-    await user.click(seasonSelect)
-    const nextSeasonOption = await screen.findByRole('option', { name: '2024/25' })
-    fireEvent.pointerDown(nextSeasonOption, { pointerType: 'mouse' })
-    fireEvent.click(nextSeasonOption)
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    const requests = vi.mocked(fetch).mock.calls.map(([input]) => String(input))
-    expect(requests).toContain('http://localhost:8000/fields/mt-santa-carmem-01/scenarios?season=2024%2F25')
+    const scenarioRequest = 'http://localhost:8000/fields/mt-santa-carmem-01/scenarios'
+    expect(vi.mocked(fetch).mock.calls.map(([input]) => String(input))).toContain(scenarioRequest)
+
+    const before = vi.mocked(fetch).mock.calls.filter(([input]) => String(input).includes('/scenarios')).length
+    fireEvent.change(screen.getByLabelText('Go to date'), { target: { value: '2026-11-12' } })
+    const note = await screen.findByText('Fixture data for 2025/26, not for 2026/27')
+    expect(note).toBeTruthy()
+    expect(screen.getByText('0.28 m³/m³')).toBeTruthy()
+    expect(vi.mocked(fetch).mock.calls.filter(([input]) => String(input).includes('/scenarios'))).toHaveLength(before)
   })
 
   it('keeps the unconditional pairs mounted and retries only the field list after an HTTP error', async () => {
@@ -346,7 +348,9 @@ describe('field map and rotation scenario selection', () => {
     expect(screen.getByRole('region', { name: 'Field map' })).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Layers' })).toBeTruthy()
     expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-    expect(screen.getByRole('combobox', { name: 'Season' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Timeline' })).toBeTruthy()
+    expect(screen.queryByRole('combobox', { name: 'Season' })).toBeNull()
+    expect(document.querySelector('select')).toBeNull()
     expect(screen.getByRole('button', { name: 'Command' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Supporting data' })).toBeTruthy()
     expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
@@ -568,7 +572,8 @@ describe('block 3 wave 1: toggles and the single coverage readout', () => {
     expect(await screen.findByRole('region', { name: 'Field map' })).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Layers' })).toBeTruthy()
     expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-    expect(screen.getByRole('combobox', { name: 'Season' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Timeline' })).toBeTruthy()
+    expect(screen.queryByRole('combobox', { name: 'Season' })).toBeNull()
     expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
     expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
 
@@ -1070,5 +1075,97 @@ describe('block 3 gate: keyboard contract of the four controls (AC-32)', () => {
     expect(flipRow.focusAfterSpace).toBe('button:Charts for Current sequence')
     expect(flipRow.focusAfterSecondEnter).toBe('button:Details for Current sequence')
     expect(flipRow.focusAfterLetter).toBe('button:Details for Current sequence')
+  })
+})
+
+describe('block 4 wave 3: the timeline replaces the season control', () => {
+  const dateInput = () => screen.getByLabelText('Go to date') as HTMLInputElement
+
+  it('has no element named Season and no season select anywhere (AC-22, timeline half)', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByRole('region', { name: 'Timeline' })).toBeTruthy()
+    expect(document.querySelector('[aria-label="Season"]')).toBeNull()
+    expect(document.querySelector('select')).toBeNull()
+    expect(screen.queryByText('Season')).toBeNull()
+  })
+
+  it('opens at the axis end by default (AC-23)', async () => {
+    mockApi()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+    await waitFor(() => expect(dateInput().value).toBe('2026-11-14'))
+    expect(dateInput().min).toBe('2015-04-01')
+    expect(dateInput().max).toBe('2026-11-14')
+  })
+
+  it('opens at ?date=2026-11-12 and asks /layers for that date (AC-23)', async () => {
+    window.history.replaceState({}, '', '/?date=2026-11-12')
+    mockApi()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+    await waitFor(() => expect(dateInput().value).toBe('2026-11-12'))
+    const layerRequests = vi.mocked(fetch).mock.calls
+      .map(([input]) => new URL(String(input)))
+      .filter((url) => url.pathname === '/layers')
+    expect(layerRequests.some((url) => url.searchParams.get('date') === '2026-11-12')).toBe(true)
+  })
+
+  it('clamps a query before the axis and shows the polite limit message (AC-23)', async () => {
+    window.history.replaceState({}, '', '/?date=2015-03-01')
+    mockApi()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Timeline' })
+    await waitFor(() => expect(dateInput().value).toBe('2015-04-01'))
+    expect(screen.getByRole('status').textContent).toBe('Date limited to 2015-04-01')
+  })
+
+  it('renders none_in_lookback and the first axis day without inventing a date (AC-28)', async () => {
+    const payloads: Record<string, ReturnType<typeof layersResponse>> = {}
+    const noneInLookback = layersResponse('2025-01-15')
+    payloads['2025-01-15'] = {
+      ...noneInLookback,
+      layers: noneInLookback.layers.map((layer) => (layer.id === 'ndvi-8day'
+        ? { ...layer, status: 'none_in_lookback' as const, effective_date: null, age_days: null }
+        : layer)),
+    }
+    const firstAxisDay = layersResponse('2015-04-01')
+    payloads['2015-04-01'] = {
+      ...firstAxisDay,
+      layers: firstAxisDay.layers.map((layer) => (layer.id === 'smap-l3'
+        ? { ...layer, status: 'on_date' as const, effective_date: '2015-04-01', age_days: 0 }
+        : layer)),
+    }
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input))
+      if (url.pathname === '/layers') {
+        const date = url.searchParams.get('date') ?? ''
+        return { ok: true, status: 200, json: async () => payloads[date] } as Response
+      }
+      if (url.pathname === '/fields') {
+        return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2023/24', '2024/25', '2025/26'], default_season: '2025/26' }) } as Response
+      }
+      throw new Error(`Unexpected request: ${String(input)}`)
+    }))
+
+    window.history.replaceState({}, '', '/?date=2025-01-15')
+    const first = render(<App />)
+    await waitFor(() => expect((screen.getByLabelText('Go to date') as HTMLInputElement).value).toBe('2025-01-15'))
+    const ndvi = document.querySelector('.layer-entry[data-layer-id="ndvi-8day"]') as HTMLElement
+    await waitFor(() => expect(ndvi.textContent).toContain('no observation in lookback'))
+    expect(ndvi.querySelector('time')).toBeNull()
+    first.unmount()
+
+    window.history.replaceState({}, '', '/?date=2015-04-01')
+    // A page load starts with the default state: the store is fresh, no chosen date.
+    useMapStore.setState({ chosenDate: null })
+    render(<App />)
+    await waitFor(() => expect((screen.getByLabelText('Go to date') as HTMLInputElement).value).toBe('2015-04-01'))
+    const smap = document.querySelector('.layer-entry[data-layer-id="smap-l3"]') as HTMLElement
+    await waitFor(() => expect(smap.textContent).toContain('2015-04-01'))
   })
 })

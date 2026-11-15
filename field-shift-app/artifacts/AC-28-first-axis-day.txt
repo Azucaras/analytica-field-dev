@@ -1,0 +1,41 @@
+# AC-28 (R-34), ndvi-8day before its start and smap-l3 on the first axis day
+
+Method: the backend's own `GET /layers` answers against its recorded registry and the live
+upstream (a smoke check, recorded here), plus `npx vitest run` for the front's rendering of
+the two responses.
+
+Disclosure, stated plainly: AC-28's method in the spec is `tests with the recorded
+transport`, which is the backend walk. This card is front end only and may not touch
+`backend/`, so this wave did not add a backend unittest. What follows is (1) the running
+backend's real answer for the two pinned dates, recorded on 2026-11-14, and (2) a vitest test
+that the front renders those two answers without inventing a date. A backend unittest for
+these two dates is still owed; it belongs to a backend card.
+
+## 1. Backend answers, dev server 127.0.0.1:8001
+
+```
+GET /layers?date=2025-01-15                                  HTTP 200  23.95 s
+  ndvi-8day: status=none_in_lookback, effective_date=null, age_days=null,
+             time_start=2025-02-12, lookback_days=16
+  (the walk issues no request before time_start, which is why the answer is none_in_lookback)
+
+GET /layers?date=2015-04-01                                  HTTP 200  0.0009 s
+  smap-l3: status=on_date, effective_date=2015-04-01, age_days=0
+```
+
+The two responses are the oracle-shaped facts of AC-28: NDVI shows no tile before 2025-02-12,
+and SMAP resolves on its first axis day.
+
+## 2. Front rendering, jsdom
+
+```
+src/App.test.tsx > renders none_in_lookback and the first axis day without inventing a date
+  (AC-28)                                                                    PASS
+
+  chosen 2025-01-15: ndvi-8day row text contains "no observation in lookback"
+                     ndvi-8day row <time> element = absent (no invented date)
+  chosen 2015-04-01: smap-l3 row text contains "2015-04-01"
+```
+
+The row rendering is the R-24/R-26 rule already built in wave 2; this wave wires the chosen
+date that produces it.

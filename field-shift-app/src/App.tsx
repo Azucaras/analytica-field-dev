@@ -3,13 +3,14 @@ import { MapCanvas } from '@/components/MapCanvas'
 import { LayerRail } from '@/components/LayerRail'
 import { ScenarioCards, type RotationScenario } from '@/components/ScenarioCards'
 import { EvidencePanel, type EvidenceRow } from '@/components/EvidencePanel'
-import { SeasonSelect } from '@/components/SeasonSelect'
+import { TimelineDock } from '@/components/TimelineDock'
 import { AbstentionNotice } from '@/components/AbstentionNotice'
 import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { useLayers } from '@/lib/use-layers'
+import { seasonForDate } from '@/lib/timeline'
 import { t, translationKeyFor } from '@/strings'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
@@ -44,6 +45,7 @@ export const ZOrder = Object.freeze({
   layerRail: 20,
   evidence: 30,
   abstentionNotice: 40,
+  timelineDock: 45,
   scenarioCards: 50,
   controlStrip: 60,
   agentBar: 70,
@@ -67,8 +69,8 @@ function App() {
   const [scenarios, setScenarios] = useState<RotationScenario[]>([])
   const [scenarioState, setScenarioState] = useState<ScenarioResponse['state'] | null>(null)
   const [threshold, setThreshold] = useState<string | null>(null)
-  const [season, setSeason] = useState('2025/26')
-  const [seasons, setSeasons] = useState<string[]>([])
+  // R-30: the fixture's own season, so the panel can say when the derived season differs.
+  const [fixtureSeason, setFixtureSeason] = useState('2025/26')
   const [error, setError] = useState<string | null>(null)
   const [canRetryFields, setCanRetryFields] = useState(false)
   const [fieldsRequest, setFieldsRequest] = useState(0)
@@ -124,6 +126,21 @@ function App() {
     }))
   }, [scenarios])
 
+  // R-29 and R-31: the dock and the band read one chosen date and one derived season.
+  const chosenDate = useMapStore((state) => state.chosenDate ?? state.axis.default)
+  const derivedSeason = seasonForDate(chosenDate)
+  // The band draws the crops of the field's scenarios (Soybean, Corn and Cotton here).
+  const fieldCrops = useMemo(() => {
+    const seen = new Set<string>()
+    for (const scenario of scenarios) {
+      for (const crop of scenario.crops) seen.add(crop)
+    }
+    return [...seen]
+  }, [scenarios])
+  // R-30: the fixture scenario stays the fixture scenario, and the panel says which
+  // season its values belong to when the chosen date derives another one.
+  const showFixtureNote = selectedField !== null && derivedSeason !== fixtureSeason
+
   useEffect(() => {
     const controller = new AbortController()
     fetch(`${API_BASE}/fields`, { signal: controller.signal })
@@ -133,8 +150,7 @@ function App() {
       })
       .then((data) => {
         setFields(data.fields)
-        setSeasons(data.seasons)
-        setSeason(data.default_season)
+        setFixtureSeason(data.default_season)
         setError(null)
         setCanRetryFields(false)
       })
@@ -156,8 +172,9 @@ function App() {
     const controller = new AbortController()
     setIsLoadingScenarios(true)
     setError(null)
-    const query = new URLSearchParams({ season })
-    fetch(`${API_BASE}/fields/${selectedFieldId}/scenarios?${query.toString()}`, { signal: controller.signal })
+    // R-30: the scenario request carries no season. The fixture evidence rows have no
+    // season field, so a date change must not refetch or relabel their values.
+    fetch(`${API_BASE}/fields/${selectedFieldId}/scenarios`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new BackendHttpError(response.status)
         return response.json() as Promise<ScenarioResponse>
@@ -175,7 +192,7 @@ function App() {
       })
       .finally(() => setIsLoadingScenarios(false))
     return () => controller.abort()
-  }, [selectedFieldId, season])
+  }, [selectedFieldId])
 
   const handleRetryFields = useCallback(() => {
     setIsLoadingFields(true)
@@ -189,13 +206,6 @@ function App() {
     setThreshold(null)
     selectField(fieldId)
   }, [selectField])
-
-  const handleSeasonChange = useCallback((nextSeason: string) => {
-    setScenarios([])
-    setScenarioState(null)
-    setThreshold(null)
-    setSeason(nextSeason)
-  }, [])
 
   // R-40: at 360 opening one panel closes the other. Above 640 both may stay open (R-23).
   // The width is read at press time so a resize cannot leave the rule stale.
@@ -255,10 +265,6 @@ function App() {
           <span className="top-chip profile-avatar" aria-label={t('map.grower_profile')}>GM</span>
           <CommandToggle isOpen={command.isOpen} buttonRef={command.buttonRef} onToggle={handleToggleCommand} />
           <SupportingDataToggle isOpen={supportingData.isOpen} onToggle={handleToggleSupportingData} />
-          <label className="top-chip season-control">
-            <span>{t('season.label')}</span>
-            <SeasonSelect key={season} seasons={seasons} default_season={season} onChange={handleSeasonChange} />
-          </label>
         </div>
       </div>
 
@@ -290,25 +296,36 @@ function App() {
       </div>
 
       <div className="overlay anchor-bottom-left layer-cards" style={{ zIndex: ZOrder.scenarioCards }}>
-        <div className="overlay-interactive panel-surface scenario-anchor">
-          <div className="rotation-heading-row">
-            <div>
-              <p className="eyebrow">{t('map.plan_with_evidence')}</p>
-              <h2>{t('map.rotation_outlook')}</h2>
-            </div>
-            <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
-          </div>
-          <ScenarioCards
-            scenarios={scenarios}
-            state={scenarioState === 'abstained' ? null : scenarioState}
-            threshold={scenarioState === 'abstained' ? null : threshold}
-            isLoading={isLoadingFields || isLoadingScenarios}
-            emptyReason={isLoadingFields || isLoadingScenarios
-              ? null
-              : error ?? (!selectedFieldId
-                ? t('empty.select_field')
-                : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
+        <div className="bottom-left-column">
+          <TimelineDock
+            crops={fieldCrops}
+            location={selectedField?.location ?? null}
           />
+          <div className="overlay-interactive panel-surface scenario-anchor" style={{ zIndex: ZOrder.scenarioCards }}>
+            <div className="rotation-heading-row">
+              <div>
+                <p className="eyebrow">{t('map.plan_with_evidence')}</p>
+                <h2>{t('map.rotation_outlook')}</h2>
+              </div>
+              <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
+              {showFixtureNote && (
+                <p className="fixture-season-note">
+                  {t('timeline.fixture_data', { season: fixtureSeason, derived: derivedSeason })}
+                </p>
+              )}
+            </div>
+            <ScenarioCards
+              emptyReason={isLoadingFields || isLoadingScenarios
+                ? null
+                : error ?? (!selectedFieldId
+                  ? t('empty.select_field')
+                  : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
+              isLoading={isLoadingFields || isLoadingScenarios}
+              scenarios={scenarios}
+              state={scenarioState === 'abstained' ? null : scenarioState}
+              threshold={scenarioState === 'abstained' ? null : threshold}
+            />
+          </div>
         </div>
       </div>
 

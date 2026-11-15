@@ -1,0 +1,51 @@
+# AC-24 (R-29, R-30), the derived season and the fixture label
+
+Method: `npx vitest run` for `seasonForDate` and the panel label, plus the real app in
+Chromium at 1440x900 against dev 127.0.0.1:5199 and backend 127.0.0.1:8001.
+
+## seasonForDate, the four pinned dates (AC-24, first clause)
+
+```
+2015-04-01 -> 2014/15
+2025-06-30 -> 2024/25
+2025-07-01 -> 2025/26
+2026-11-12 -> 2026/27
+```
+
+The rule: a season starts on 1 July, so Y is the year of the most recent 1 July on or before
+the date, and the label is `Y/YY` with two digits after the slash.
+
+## The fixture label in the rotation panel (AC-24, second clause)
+
+The fixture's `default_season` is 2025/26 (from `GET /fields`). The panel keeps the fixture
+scenario values and prints the label when the derived season differs.
+
+Browser readouts:
+
+```
+chosen 2026-11-14 (axis default)  season 2026/27
+  .fixture-season-note            = "Fixture data for 2025/26, not for 2026/27"
+chosen 2026-11-12                 season 2026/27
+  .fixture-season-note            = "Fixture data for 2025/26, not for 2026/27"
+chosen 2025-11-10                 season 2025/26
+  .fixture-season-note            = absent (derived season equals the fixture season)
+chosen 2024-11-01                 season 2024/25
+  .fixture-season-note            = "Fixture data for 2025/26, not for 2024/25"
+```
+
+The Field 01 SMAP value does not move: the panel still prints `0.28 m³/m³` at 2026-11-12,
+and the scenario request is not repeated when the date changes (R-30).
+
+```
+src/App.test.tsx > requests scenarios without a season and keeps the fixture values when
+  the date changes (R-30)
+  scenario requests before the date change          = N
+  scenario requests after the change                = N
+  "Fixture data for 2025/26, not for 2026/27"       = present
+  "0.28 m³/m³"                                      = present              PASS
+src/lib/timeline.test.ts > returns the four pinned examples of the spec                  PASS
+```
+
+The label sits in the rotation panel header (a child of `.rotation-heading-row`, positioned
+absolutely inside the header's own padding) so it adds no height to the panel. The panel
+still measures 326.19 px and the dock still derives its top edge from it (R-36, note 1).
