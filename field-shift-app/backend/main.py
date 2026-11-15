@@ -7,7 +7,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import httpx
 from fastapi import Body, FastAPI, HTTPException, Query, Response
@@ -22,6 +22,25 @@ TILE_CACHE_DIR = Path(os.getenv("TILE_CACHE_DIR", str(BACKEND_DIR / ".tile-cache
 TILE_CACHE_TTL = timedelta(hours=24)
 GIBS_BASE_URL = "https://gibs.earthdata.nasa.gov/wmts/epsg3857/best"
 AXIS_START = date(2015, 4, 1)
+
+# Block 5, R-09: the two hosting modes per region. The polygon products are written by the
+# build cards beside the app (data/polygons), never by this route, and the United States
+# manifest of Table G is read here so the mode response and the app cannot disagree about a
+# zoom bound. `POLYGON_DIR` is the one configured path (Expected Interface).
+POLYGON_DIR = Path(os.getenv("POLYGON_DIR", str(BACKEND_DIR.parent / "data" / "polygons")))
+POLYGON_SOURCE_DIRECT_URL = (
+    "https://data.source.coop/wri-data-lab/trazofields/trazo3-fields/trazo3.pmtiles"
+)
+TABLE_G_KEYS = (
+    "schema_version",
+    "region",
+    "clip_box",
+    "detail_minzoom",
+    "detail_maxzoom",
+    "overview_minzoom",
+    "overview_maxzoom",
+    "interactive_minzoom",
+)
 
 
 def _layer(
@@ -134,7 +153,7 @@ COMMANDS: tuple[dict[str, Any], ...] = (
         "input_schema": {"type": "object", "properties": {"field_id": {"type": "string", "minLength": 1}}, "required": ["field_id"], "additionalProperties": False},
         "effect": "select_field",
         "idempotent": False,
-        "guard": "field_id must identify a field in the field list",
+        "guard": "field_id must identify a fixture field, a trazo: polygon id or a csb: field id",
     },
     {
         "name": "set_composition",
@@ -656,6 +675,69 @@ def get_tile(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+def _read_us_manifest() -> dict[str, Any]:
+    """Table G, read strictly. A missing key or a broken rule is a failed load, never a default."""
+    manifest_path = POLYGON_DIR / "us-38017.manifest.json"
+    if not manifest_path.exists():
+        raise HTTPException(status_code=503, detail="us-38017.manifest.json is absent")
+    with manifest_path.open(encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    if set(manifest) != set(TABLE_G_KEYS):
+        raise HTTPException(status_code=503, detail="the manifest does not carry the Table G keys")
+    if manifest["schema_version"] != "1" or manifest["region"] != "us":
+        raise HTTPException(status_code=503, detail="the manifest header is not the Table G header")
+    if manifest["clip_box"] != "-97.20,46.90,-97.14,46.96":
+        raise HTTPException(status_code=503, detail="the manifest clip_box is not the pilot box")
+    detail = manifest["detail_minzoom"]
+    if not isinstance(detail, int) or detail > 9:
+        raise HTTPException(status_code=503, detail="detail_minzoom must be an integer of at most 9")
+    if manifest["detail_maxzoom"] != 14:
+        raise HTTPException(status_code=503, detail="detail_maxzoom must be 14")
+    if manifest["overview_minzoom"] != detail - 3 or manifest["overview_maxzoom"] != detail - 1:
+        raise HTTPException(status_code=503, detail="the overview range is not derived from detail_minzoom")
+    if manifest["interactive_minzoom"] != detail + 2:
+        raise HTTPException(status_code=503, detail="interactive_minzoom must be detail_minzoom + 2")
+    return manifest
+
+
+@app.get("/polygons/mode")
+def polygon_mode(region: Literal["us", "br"] = Query(description="us or br")) -> dict[str, Any]:
+    """R-09: the one hosting mode read of a load, per region. No tile is read here.
+
+    The United States is self-hosted only and its zoom values are the manifest's (Table G),
+    so this response and the app cannot disagree. Brazil keeps the two modes of R-09: the
+    self-hosted extract when both files exist, the source-direct URL otherwise. Every load
+    reports `mbmode24` as the one class property (R-18), because the extract preserves it.
+    """
+    if region == "us":
+        manifest = _read_us_manifest()
+        return {
+            "region": "us",
+            "mode": "self-hosted",
+            "classProperty": None,
+            "class_property_pattern": "cdl{year}",
+            "class_year_range": [2018, 2025],
+            "detail_minzoom": manifest["detail_minzoom"],
+            "detail_maxzoom": manifest["detail_maxzoom"],
+            "overview_minzoom": manifest["overview_minzoom"],
+            "overview_maxzoom": manifest["overview_maxzoom"],
+            "interactive_minzoom": manifest["interactive_minzoom"],
+            "detail_file": "/data/polygons/us-38017-detail.pmtiles",
+            "overview_file": "/data/polygons/us-38017-overview.pmtiles",
+        }
+
+    detail = POLYGON_DIR / "br-mt-detail.pmtiles"
+    overview = POLYGON_DIR / "br-mt-overview.pmtiles"
+    self_hosted = detail.exists() and overview.exists()
+    return {
+        "region": "br",
+        "mode": "self-hosted" if self_hosted else "source-direct",
+        "classProperty": "mbmode24",
+        "detail_file": "/data/polygons/br-mt-detail.pmtiles" if self_hosted else POLYGON_SOURCE_DIRECT_URL,
+        "overview_file": "/data/polygons/br-mt-overview.pmtiles" if self_hosted else None,
+    }
 
 
 @app.get("/fields")
