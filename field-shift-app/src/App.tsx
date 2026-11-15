@@ -490,8 +490,9 @@ function App() {
           <CommandToggle isOpen={command.isOpen} buttonRef={command.buttonRef} onToggle={handleToggleCommand} />
           <SupportingDataToggle isOpen={supportingData.isOpen} onToggle={handleToggleSupportingData} />
         </div>
-        {/* The team's strip keeps exactly its four items; the analysis and language controls sit beside it. */}
-        <div className="overlay-interactive topbar-extra">
+        {/* The team's strip keeps exactly its four items; the analysis and language controls sit beside
+            it. At 360 there is no room, so they move into the rotation panel instead. */}
+        {!narrowViewport && <div className="overlay-interactive topbar-extra">
           <button
             ref={analysisToggleRef}
             type="button"
@@ -502,7 +503,7 @@ function App() {
             {t('analysis.toggle')}
           </button>
           <LocaleSwitch />
-        </div>
+        </div>}
       </div>
 
       {/* One notice node. At 360 it is the first box of the left stack; above 640 it
@@ -601,7 +602,12 @@ function App() {
               </button>
             </div>
           ) : null}
-          {isNarrow && <div className="enso-chip-slot enso-chip-inline"><EnsoChip enso={enso} /></div>}
+          {isNarrow && (
+            <div className="enso-chip-slot enso-chip-inline">
+              <EnsoChip enso={enso} />
+              {narrowViewport && <LocaleSwitch />}
+            </div>
+          )}
           <ClimateSignal climate={selectedFieldId ? climate : null} />
           <ScenarioCards
             collapsed={rotationCollapsed}

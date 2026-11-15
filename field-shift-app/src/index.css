@@ -1248,3 +1248,7 @@
 @media (max-width: 640px) {
   .topbar-extra { margin-left: 4px; gap: 2px; }
 }
+@media (max-width: 640px) {
+  .enso-chip-inline { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; }
+  .enso-chip-inline .locale-switch { flex: 0 0 auto; }
+}
