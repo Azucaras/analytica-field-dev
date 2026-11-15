@@ -7,6 +7,10 @@ import { NumbersView } from './NumbersView'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { recordedNumbersPayload, RECORDED_FIELD_ID } from '@/test/numbers-recorded'
 import { formatMetric, type NumbersPayload } from '@/lib/numbers'
+import offlineCapture from '../../artifacts/block6/numbers-offline-payload.json'
+
+/** The capture of the route with POWER unreachable (R-48, AC-47), as the offline surface sends it. */
+const OFFLINE = offlineCapture as unknown as NumbersPayload
 
 const field: FieldSummary = {
   id: 'mt-santa-carmem-01',
@@ -614,5 +618,102 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     expect(text).toContain(payload.sections.climate.source)
     expect(text).toContain('the reason was not recorded')
     expect(text).not.toContain('No value')
+  })
+
+  it('names the missing aggregate input and the POWER source when the section carries no aggregate object (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.climate.aggregates).toEqual({})
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const rows = [
+      ['rain_total', 'PRECTOTCORR'],
+      ['gdd10', 'T2M_MAX and T2M_MIN'],
+      ['gwetroot_mean', 'GWETROOT'],
+    ] as const
+    for (const [metric, input] of rows) {
+      const text = cellText(container, metric)
+      expect(text, metric).toContain('Not computed')
+      expect(text, metric).toContain(input)
+      expect(text, metric).toContain(payload.sections.climate.source)
+      expect(text, metric).toContain('ConnectError')
+      expect(text, metric).not.toContain('No value')
+    }
+  })
+
+  it('says the reason was not recorded for an absent aggregate, and still names its input and source (R-12, AC-11)', async () => {
+    const payload = recordedNumbersPayload()
+    const climate = { ...payload.sections.climate, aggregates: {}, error: null }
+    stubNumbersFetch({
+      ...payload,
+      gaps: payload.gaps.filter((gap) => gap.section !== 'climate'),
+      sections: { ...payload.sections, climate },
+    })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'gdd10')
+    expect(text).toContain('T2M_MAX and T2M_MIN')
+    expect(text).toContain('the reason was not recorded')
+    expect(text).toContain(climate.source)
+    expect(text).not.toContain('No value')
+  })
+
+  it('names the NDVI scene count and the Earth Search source when the capture sends a null count (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.ndvi.scene_count).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'ndvi_scene_count')
+    expect(text).toContain('NDVI scene count not read')
+    expect(text).toContain(payload.sections.ndvi.source)
+    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('names the NDVI clear scene count and the Earth Search source when the capture sends a null count (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.ndvi.clear_count).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'ndvi_clear_count')
+    expect(text).toContain('NDVI clear scene count not read')
+    expect(text).toContain(payload.sections.ndvi.source)
+    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('says the reason was not recorded for the NDVI scene count, and still names its input and source (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    delete (payload.sections.ndvi as { error?: string | null }).error
+    payload.gaps = payload.gaps.filter((gap) => gap.section !== 'ndvi')
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    for (const metric of ['ndvi_scene_count', 'ndvi_clear_count']) {
+      const text = cellText(container, metric)
+      expect(text, metric).toContain('NDVI')
+      expect(text, metric).toContain('the reason was not recorded')
+      expect(text, metric).toContain(payload.sections.ndvi.source)
+      expect(text, metric).not.toContain('No value')
+    }
+  })
+
+  it('fails the state cause closed to the not-recorded sentence when the register carries no state gap (R-12, AC-11)', async () => {
+    const payload = recordedNumbersPayload()
+    const gaps = payload.gaps.filter((gap) => !gap.cause.startsWith('state code'))
+    expect(gaps.some((gap) => gap.section === 'municipality' && gap.cause.includes('municipality code'))).toBe(true)
+    expect(gaps.some((gap) => gap.section === 'municipality' && gap.cause.includes('state code'))).toBe(false)
+    stubNumbersFetch({ ...payload, gaps })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'state_soy_ha')
+    expect(text).toContain('State value not read')
+    expect(text).toContain('the reason was not recorded')
+    expect(text).toContain(payload.sections.municipality.source)
+    // The municipal cause belongs to the municipal row, not to the state row.
+    expect(text).not.toContain('municipality code is unresolved')
+    expect(cellText(container, 'municipality_soy_ha')).toContain('municipality code is unresolved')
   })
 })

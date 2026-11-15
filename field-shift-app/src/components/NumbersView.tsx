@@ -62,7 +62,8 @@ const NO_GAPS: GapRow[] = []
  * one; otherwise the cause of the section's gap row, which is where the route records why the input
  * is missing; otherwise a sentence that says the reason was not recorded, so the text never falls
  * back to `No value`. `needle` picks the gap row of a section that records more than one cause: the
- * municipality section records the municipal cause and the state cause.
+ * municipality section records the municipal cause and the state cause. A per-row cause never
+ * borrows another row's, so when the needle finds no gap the row fails closed to that sentence.
  */
 function abstainReason(
   reason: string | null | undefined,
@@ -73,8 +74,9 @@ function abstainReason(
   const own = typeof reason === 'string' ? reason.trim() : ''
   if (own !== '') return own
   const sectionGaps = gaps.filter((gap) => gap.section === section)
-  const gap = (needle ? sectionGaps.find((entry) => entry.cause.toLowerCase().includes(needle)) : undefined)
-    ?? sectionGaps[0]
+  const gap = needle
+    ? sectionGaps.find((entry) => entry.cause.toLowerCase().includes(needle))
+    : sectionGaps[0]
   const cause = gap?.cause?.trim() ?? ''
   return cause === '' ? t('numbers.abstain.not_recorded') : cause
 }
@@ -254,11 +256,18 @@ export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: Clim
     { key: 'hot_days_median', metric: 'hot_days_median' },
   ]
   // R-19: an aggregate abstains with the valid and missing day counts its own payload object carries,
-  // and the parameter is the Table A input of that aggregate. A missing object means the section
-  // could not be read at all, and then the section error is the reason (R-12).
+  // and the parameter is the Table A input of that aggregate. An absent object means the section
+  // carries no aggregate at all: the row then names that input and the section source, with the
+  // section error or gap cause, or the sentence that says the reason was not recorded (R-12, AC-11).
   const abstainAggregate = (key: AggregateName) => {
     const aggregate = climate.aggregates[key]
-    if (!aggregate) return t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })
+    if (!aggregate) {
+      return t('numbers.abstain.aggregate_absent', {
+        parameter: AGGREGATE_INPUTS[key],
+        reason: abstainReason(climate.error, 'climate', gaps),
+        source: climate.source,
+      })
+    }
     return t('numbers.abstain.aggregate', {
       parameter: AGGREGATE_INPUTS[key],
       valid: aggregate.valid_days,
@@ -450,19 +459,24 @@ function SmapCard({ smap, gaps = NO_GAPS }: { smap: NumbersPayload['sections']['
   )
 }
 
-function NdviCard({ ndvi }: { ndvi: NumbersPayload['sections']['ndvi'] }) {
+function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['ndvi']; gaps?: GapRow[] }) {
   const plotted = ndvi.scenes.filter((scene) => scene.ndvi_mean !== null && !scene.partial)
+  // R-12, AC-11: a null count names the input it counts and the Earth Search source, with the
+  // section reason or the NDVI gap cause, or the sentence that says the reason was not recorded.
+  const countReason = abstainReason(ndvi.reason, 'ndvi', gaps)
+  const abstainSceneCount = t('numbers.abstain.ndvi_scene_count', { reason: countReason, source: ndvi.source })
+  const abstainClearCount = t('numbers.abstain.ndvi_clear_count', { reason: countReason, source: ndvi.source })
   return (
     <Card id="ndvi" title={t('numbers.card.ndvi')} source={ndvi.source} asOf={ndvi.as_of} basis="retrieved">
       <p className="numbers-cell-statement">{t('numbers.ndvi.source')}</p>
       <dl className="numbers-rows">
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_scene_count')}</dt>
-          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={abstainSceneCount} /></dd>
         </div>
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_clear_count')}</dt>
-          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={abstainClearCount} /></dd>
         </div>
       </dl>
       {plotted.length === 0 && (
@@ -906,7 +920,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
           <ClimateCard climate={s.climate} window={payload.query.window} gaps={payload.gaps} />
           <WaterCard water={s.water_balance} />
           <SmapCard smap={s.smap} gaps={payload.gaps} />
-          <NdviCard ndvi={s.ndvi} />
+          <NdviCard ndvi={s.ndvi} gaps={payload.gaps} />
           <SoilCard soil={s.soil} />
           <RotationCard rotation={s.rotation} />
           <MunicipalCard municipal={s.municipality} gaps={payload.gaps} />
