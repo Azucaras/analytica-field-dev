@@ -1,0 +1,125 @@
+{
+ "cdl_reference": {
+  "note": "Read only for the CDL code and the CDL spelling of each crop name.",
+  "sha256": "8b5cec2ff965a2d1f7f1205111b3a0fbe3cce5ed82cb0ef6a446ae304fe0b699",
+  "url": "https://pdi.scinet.usda.gov/image/rest/services/CDL_WM/ImageServer/rasterAttributeTable?f=json"
+ },
+ "grain": "state",
+ "region": {
+  "country": "US",
+  "county": "Cass",
+  "county_fips": "38017",
+  "note": "The source is per state. Cass County is named because the pilot is Cass County; the window is the North Dakota window, not a Cass County window.",
+  "state": "North Dakota",
+  "state_code_rma": "38"
+ },
+ "response": {
+  "bytes": 15890054,
+  "pages": 146,
+  "sha256": "688b2db2039c7300538b0bfaaf02c754e615795d9fa372bd7a478cd3c22cbda6",
+  "url": "https://www.nass.usda.gov/sites/default/files/Statistics_by_State/North_Dakota/Publications/Annual_Statistical_Bulletin/2025/ND-Annual-Bulletin25.pdf"
+ },
+ "retrieved": "2026-11-14",
+ "rows": [
+  {
+   "cdl_code": 1,
+   "cdl_name": "Corn",
+   "crop": "Corn",
+   "crop_source_string": "Corn for grain",
+   "most_active_md": {
+    "end": "05-28",
+    "start": "05-02"
+   },
+   "most_active_text": "May 2 to May 28",
+   "season": "annual",
+   "source_record": {
+    "end_column": "(end)",
+    "pdf_page": 22,
+    "printed_page": 20,
+    "row_label": "Corn for grain",
+    "start_column": "(begin)",
+    "table": "Usual Planting and Harvesting Dates by Crop - North Dakota: 20-Year Average"
+   },
+   "window_end_md": "06-04",
+   "window_end_text": "June 4",
+   "window_start_md": "04-26",
+   "window_start_text": "April 26"
+  },
+  {
+   "cdl_code": 5,
+   "cdl_name": "Soybeans",
+   "crop": "Soybeans",
+   "crop_source_string": "Soybeans",
+   "most_active_md": {
+    "end": "06-03",
+    "start": "05-14"
+   },
+   "most_active_text": "May 14 to June 3",
+   "season": "annual",
+   "source_record": {
+    "end_column": "(end)",
+    "pdf_page": 22,
+    "printed_page": 20,
+    "row_label": "Soybeans",
+    "start_column": "(begin)",
+    "table": "Usual Planting and Harvesting Dates by Crop - North Dakota: 20-Year Average"
+   },
+   "window_end_md": "06-11",
+   "window_end_text": "June 11",
+   "window_start_md": "05-07",
+   "window_start_text": "May 7"
+  },
+  {
+   "cdl_code": 23,
+   "cdl_name": "Spring Wheat",
+   "crop": "Spring wheat",
+   "crop_source_string": "Wheat, spring",
+   "most_active_md": {
+    "end": "05-25",
+    "start": "04-24"
+   },
+   "most_active_text": "April 24 to May 25",
+   "season": "annual",
+   "source_record": {
+    "end_column": "(end)",
+    "pdf_page": 22,
+    "printed_page": 20,
+    "row_label": "Wheat, spring",
+    "start_column": "(begin)",
+    "table": "Usual Planting and Harvesting Dates by Crop - North Dakota: 20-Year Average"
+   },
+   "window_end_md": "06-03",
+   "window_end_text": "June 3",
+   "window_start_md": "04-16",
+   "window_start_text": "April 16"
+  },
+  {
+   "cdl_code": 31,
+   "cdl_name": "Canola",
+   "crop": "Canola",
+   "crop_source_string": null,
+   "empty_reason": "The source holds no row for this crop: the North Dakota table lists 16 crops and canola is not one of them.",
+   "most_active_md": null,
+   "season": "annual",
+   "source_record": {
+    "end_column": "(end)",
+    "pdf_page": 22,
+    "printed_page": 20,
+    "row_label": null,
+    "start_column": "(begin)",
+    "table": "Usual Planting and Harvesting Dates by Crop - North Dakota: 20-Year Average"
+   },
+   "window_end_md": null,
+   "window_start_md": null
+  }
+ ],
+ "season_dimension": "none",
+ "source_id": "nass-nd-bulletin-2025",
+ "window_definition": {
+  "basis": "20 years of historical crop progress estimates, stated in the table note of page 20",
+  "begin": "about 5 percent of the crop planted",
+  "end": "about 95 percent of the crop planted",
+  "most_active": "the source's most active column, published in this bulletin without a percentage definition; the 2010 edition of the same handbook describes the most active range as 15 to 85 percent planted, and that edition could not be opened in this card",
+  "stated_where": "the 5 percent and 95 percent definitions are stated in the introduction of NASS Agricultural Handbook 628 (1997 edition, read in this card); the 2025 bulletin restates only the 20 year basis"
+ }
+}
