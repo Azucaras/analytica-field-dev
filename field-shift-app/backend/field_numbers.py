@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 
 import aggregates as agg
 import water_balance as wb
-from sources import mapbiomas, power, sentinel2, soilgrids
+from sources import mapbiomas, power, sentinel2, sidra, soilgrids
 
 AXIS_START = date(2015, 4, 1)
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -40,6 +40,7 @@ LIFETIME = {
     "power_normals": timedelta(days=30),
     "stac_search": timedelta(hours=12),
     "soilgrids": timedelta(days=30),
+    "sidra": timedelta(hours=24),
 }
 POWER_URL_NAME = "https://power.larc.nasa.gov/api/temporal/daily/point"
 
@@ -188,6 +189,9 @@ class FieldRef:
     field_id: str
     region: str | None
     kind: str  # "fixture" or "polygon"
+    # The fixture entry's own `location` text (block 4 R-31). A polygon id carries no location in
+    # this route's request, so it is None and no state is read from it.
+    location: str | None = None
 
 
 def resolve_field(field_id: str, fixture_fields: list[dict[str, Any]]) -> FieldRef:
@@ -201,7 +205,7 @@ def resolve_field(field_id: str, fixture_fields: list[dict[str, Any]]) -> FieldR
     entry = next((item for item in fixture_fields if item.get("id") == field_id), None)
     if entry is None:
         raise NumbersError(404, "Field not found")
-    return FieldRef(field_id, entry.get("region"), "fixture")
+    return FieldRef(field_id, entry.get("region"), "fixture", entry.get("location"))
 
 
 # --- geometry (R-50, the request checks of R-46) --------------------------------------
@@ -581,20 +585,37 @@ def _smap(ctx: Context, gaps: list) -> tuple[dict, list]:
 # --- NDVI (R-27 to R-30) -----------------------------------------------------------------
 
 NDVI_SOURCE = "Element84 Earth Search, collection sentinel-2-l2a, assets B04, B08 and SCL"
+# R-29 names the best valid fraction, which is the highest `valid_fraction` over the scenes. A
+# `valid_fraction` needs the B04, B08 and SCL zonal statistic, which needs the COG reader of OD-01.
+# Until that reader exists the honest value is null, and the reason beside it names the producer.
+NO_READER_REASON = ("not computed: the B04, B08 and SCL zonal statistic needs the cloud optimised "
+                    "GeoTIFF reader of OD-01, which is not approved, so no scene carries a "
+                    "valid_fraction and there is no best valid fraction")
+NO_WINDOW_REASON = "not computed: no search window, so no scene was searched and no valid_fraction exists"
+NO_CLIMATE_REASON = ("not computed: the search window is unknown because the climate source is "
+                     "unavailable, so no scene was searched and no valid_fraction exists")
 
 
 def _ndvi(ctx: Context, window: agg.Window | None, gaps: list, climate: dict[str, Any]) -> tuple[dict, list]:
     section: dict[str, Any] = {"state": "abstained", **_section_base(NDVI_SOURCE, None, None, basis="retrieved",
                                                                     resolution="10 m"),
-                               "scene_count": None, "clear_count": None, "scenes": []}
+                               "scene_count": None, "clear_count": None, "scenes": [],
+                               # Table E requires `assets`. The search fills it from the item's own
+                               # red, nir and scl assets; it stays an empty list when no search ran,
+                               # so the key is never missing and no asset is written by hand.
+                               "assets": [],
+                               "best_valid_fraction": None,
+                               "best_valid_fraction_reason": NO_READER_REASON}
     names = ["ndvi_scene_count", "ndvi_clear_count", "ndvi_mean", "ndvi_valid_fraction"]
     if window is None:
         if climate.get("state") == "unavailable":
-            section.update(state="unavailable", error="search window unknown: climate source unavailable")
+            section.update(state="unavailable", error="search window unknown: climate source unavailable",
+                           best_valid_fraction_reason=NO_CLIMATE_REASON)
             gaps.append(_gap("ndvi", "search window unknown: the climate source is unavailable, so the 42 day "
                              "window that bounds the search cannot be set", NDVI_SOURCE, "window unknown",
                              ctx.chosen.isoformat()))
         else:
+            section["best_valid_fraction_reason"] = NO_WINDOW_REASON
             gaps.append(_gap("ndvi", "no window to search: no consolidated rain day before the chosen date",
                              NDVI_SOURCE, "no window", ctx.chosen.isoformat()))
         rows = [_row(n, None, as_of=None, source=NDVI_SOURCE, fetched_at=None) for n in names]
@@ -617,8 +638,13 @@ def _ndvi(ctx: Context, window: agg.Window | None, gaps: list, climate: dict[str
     section.update(_section_base(NDVI_SOURCE, window.end.isoformat(), sourced, basis="retrieved", resolution="10 m"))
     section["scene_count"] = len(scenes)
     section["clear_count"] = sentinel2.clear_count(scenes)
+    # Table E, ndvi row: the three assets the section reads, taken from the items the search returned.
+    section["assets"] = sentinel2.asset_roles(scenes)
+    # Table E's scene entry carries the two pixel counts beside the mean and the fraction. Both need
+    # the same zonal statistic, so both are null while OD-01 is open, never a made up count.
     section["scenes"] = [{"id": s["id"], "date": s["date"], "cloud_cover": s["cloud_cover"],
-                          "ndvi_mean": None, "valid_fraction": None, "partial": None} for s in scenes]
+                          "ndvi_mean": None, "valid_fraction": None, "kept_pixels": None,
+                          "polygon_pixels": None, "partial": None} for s in scenes]
     gaps.append(_gap("ndvi", f"the B04, B08 and SCL zonal statistic needs a cloud optimised GeoTIFF reader that "
                      f"is not approved, so no valid_fraction is computed; {section['clear_count']} of "
                      f"{section['scene_count']} scenes are below 20 percent cloud",
@@ -698,27 +724,99 @@ def _rotation(ctx: Context, gaps: list) -> tuple[dict, list]:
 # --- municipal context (R-37, R-38) ------------------------------------------------------
 
 MUNICIPAL_SOURCE = "IBGE SIDRA table 1612, API v3, variable 109, category 2713"
+# Table E and AC-36: the state row prints labelled as a state total that is not this field.
+STATE_ROW_LABEL = "state total, not this field"
+SIDRA_YEARS = f"{sidra.YEARS.start} to {sidra.YEARS.stop - 1}"
 
 
 def resolve_municipality(ctx: Context) -> tuple[str | None, str | None]:
-    """The IBGE municipal join is CO-B6-06 and is not built. Nothing is inferred from a name or a centroid."""
-    return None, None
+    """The IBGE municipal join is CO-B6-06 and is not built, and no municipality code is inferred
+    from a name, a centroid or the region adapter (R-38). The state code is a different fact: it is
+    read from the field's own `location` text through the IBGE state table, the read block 4 R-31
+    documents for this fixture data (`Santa Carmem, Mato Grosso` gives UF `MT`, code `51`).
+    """
+    if ctx.field.region != "br":
+        return None, None
+    return None, sidra.state_code(ctx.field.location)
+
+
+def _newest_sidra_year(values: dict[int, int | None]) -> tuple[int, int] | None:
+    """The newest reference year with a planted area, so a missing year never blanks the row (R-38)."""
+    for year in sorted(values, reverse=True):
+        value = values[year]
+        if value is not None:
+            return year, value
+    return None
 
 
 def _municipal(ctx: Context, gaps: list) -> tuple[dict, list]:
     code, state_code = resolve_municipality(ctx)
     section: dict[str, Any] = {"state": "abstained", **_section_base(MUNICIPAL_SOURCE, None, None, basis="retrieved",
                                                                     resolution="the municipality")}
-    section.update(municipality=None)
+    # Table E requires `municipality`, `state` and `share`. The section's own `state` key is the state
+    # token of R-45, so Table E's state object is carried as `state_row`: one key cannot hold both,
+    # and the worked response of the spec repeats `state` twice in the same object because of it.
+    section.update(municipality=None, state_row=None, share=None, reason=None, state_reason=None)
     names = ["municipality_soy_ha", "state_soy_ha", "polygon_share"]
     if code is None:
-        gaps.append(_gap("municipality", "municipality code is unresolved for this field: the IBGE municipal join "
-                         "is not built, so the municipal row and the share abstain", MUNICIPAL_SOURCE, "unresolved",
-                         None, "CO-B6-06"))
+        if ctx.field.region == "us":
+            reason = ("municipality code is unresolved for this field: SIDRA table 1612 is an IBGE "
+                      "product and carries no United States municipality")
+        else:
+            reason = ("municipality code is unresolved for this field: the IBGE municipal join is not built, "
+                      "so the municipal row and the share abstain")
+        section["reason"] = reason
+        gaps.append(_gap("municipality", reason, MUNICIPAL_SOURCE, "unresolved", None, "CO-B6-06"))
     if state_code is None:
-        gaps.append(_gap("municipality", "state code is unresolved for this field, so the state total does not print",
-                         MUNICIPAL_SOURCE, "unresolved", None, "CO-B6-06"))
-    rows = [_row(n, None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None) for n in names]
+        if ctx.field.region == "us":
+            cause = ("the state row does not print: SIDRA table 1612 is an IBGE product and carries no "
+                     "United States state")
+        else:
+            cause = ("the state row does not print: this field carries no IBGE state code, and no state "
+                     "is inferred from a centroid or the region adapter")
+        section["state_reason"] = cause
+        gaps.append(_gap("municipality", cause, MUNICIPAL_SOURCE, "unresolved", None, "CO-B6-06"))
+        rows = [_row(n, None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None) for n in names]
+        return section, rows
+    try:
+        sourced = _sourced("sidra", f"N3,{state_code}", ctx.now,
+                           lambda: _http_json("GET", sidra.url("N3", state_code)))
+        values = sidra.parse(sourced.payload, state_code, sidra.YEARS)
+        name = sidra.locality_name(sourced.payload, state_code)
+    except SourceFailure as failure:
+        _unavailable(section, failure, "municipality", MUNICIPAL_SOURCE, None, gaps)
+        section["state_reason"] = f"the state row does not print: {failure.cause}"
+        rows = [_row(n, None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None) for n in names]
+        return section, rows
+    except (KeyError, ValueError, TypeError, AttributeError, LookupError) as error:
+        section.update(state="abstained", error="malformed SIDRA response")
+        section["state_reason"] = f"the state row does not print: malformed SIDRA response ({type(error).__name__})"
+        gaps.append(_gap("municipality", "malformed SIDRA response", MUNICIPAL_SOURCE, "malformed", None))
+        rows = [_row(n, None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None) for n in names]
+        return section, rows
+    newest = _newest_sidra_year(values)
+    if newest is None:
+        cause = (f"the state row does not print: SIDRA table 1612 carries no soy planted area for "
+                 f"state {state_code} in {SIDRA_YEARS}")
+        section["state_reason"] = cause
+        gaps.append(_gap("municipality", cause, MUNICIPAL_SOURCE, "absent", None))
+        rows = [_row(n, None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None) for n in names]
+        return section, rows
+    year, soy_ha = newest
+    absent = sorted(y for y, value in values.items() if value is None)
+    if absent:
+        gaps.append(_gap("municipality",
+                         f"the state row prints {year}: SIDRA carries no value for "
+                         f"{', '.join(str(y) for y in absent)}",
+                         MUNICIPAL_SOURCE, "absent", f"{year}-12-31"))
+    # Table B2: the `as_of` of an annual statistic is the last day of its reference year.
+    as_of = f"{year}-12-31"
+    section.update(_section_base(MUNICIPAL_SOURCE, as_of, sourced, basis="retrieved", resolution="the municipality"))
+    section["state_row"] = {"code": state_code, "name": name, "year": year,
+                            "soy_ha": _fmt("state_soy_ha", soy_ha), "label": STATE_ROW_LABEL}
+    rows = [_row("municipality_soy_ha", None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None),
+            _row("state_soy_ha", soy_ha, as_of=as_of, source=MUNICIPAL_SOURCE, fetched_at=sourced.fetched_at),
+            _row("polygon_share", None, as_of=None, source=MUNICIPAL_SOURCE, fetched_at=None)]
     return section, rows
 
 

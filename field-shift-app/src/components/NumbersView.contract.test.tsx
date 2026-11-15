@@ -172,6 +172,22 @@ describe('D5: a rotation section whose crop lists are null abstains instead of i
   })
 })
 
+describe('Table E: the municipality state row (t_c9ad213a)', () => {
+  it('prints the SIDRA state total labelled while the municipal row abstains (R-38, AC-37)', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+
+    const card = container.querySelector<HTMLElement>('[data-card="municipal"]')
+    expect(card, 'municipal card').not.toBeNull()
+    expect(card?.textContent).toContain('12,788,611')
+    expect(card?.textContent).toContain('state total, not this field')
+    expect(card?.textContent).toMatch(/IBGE municipal join is not built/)
+    expect(card?.querySelector('[data-metric="state_soy_ha"]')).not.toBeNull()
+  })
+})
+
 describe('the smoke test the four defects needed', () => {
   it('mounts the seven cards, the provenance table and the gap register from the recorded payload', async () => {
     const payload = recordedNumbersPayload()

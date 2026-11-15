@@ -678,6 +678,8 @@
           "cloud_cover": 39.868569,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -686,6 +688,8 @@
           "cloud_cover": 100.0,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -694,6 +698,8 @@
           "cloud_cover": 76.163906,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -702,6 +708,8 @@
           "cloud_cover": 21.503684,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -710,6 +718,8 @@
           "cloud_cover": 52.440995,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -718,6 +728,8 @@
           "cloud_cover": 90.797496,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -726,6 +738,8 @@
           "cloud_cover": 44.110003,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -734,6 +748,8 @@
           "cloud_cover": 72.757596,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -742,6 +758,8 @@
           "cloud_cover": 12.020229,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -750,6 +768,8 @@
           "cloud_cover": 0.000644,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -758,6 +778,8 @@
           "cloud_cover": 53.172672,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -766,6 +788,8 @@
           "cloud_cover": 10.462158,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         },
         {
@@ -774,9 +798,18 @@
           "cloud_cover": 100.0,
           "ndvi_mean": null,
           "valid_fraction": null,
+          "kept_pixels": null,
+          "polygon_pixels": null,
           "partial": null
         }
-      ]
+      ],
+      "assets": [
+        "B04",
+        "B08",
+        "SCL"
+      ],
+      "best_valid_fraction": null,
+      "best_valid_fraction_reason": "not computed: the B04, B08 and SCL zonal statistic needs the cloud optimised GeoTIFF reader of OD-01, which is not approved, so no scene carries a valid_fraction and there is no best valid fraction"
     },
     "soil": {
       "state": "ok",
@@ -835,12 +868,22 @@
     "municipality": {
       "state": "abstained",
       "source": "IBGE SIDRA table 1612, API v3, variable 109, category 2713",
-      "as_of": null,
+      "as_of": "2025-12-31",
       "basis": "retrieved",
       "resolution": "the municipality",
-      "fetched_at": null,
+      "fetched_at": "2026-11-15T03:00:00Z",
       "cached": false,
-      "municipality": null
+      "municipality": null,
+      "state_row": {
+        "code": "51",
+        "name": "Mato Grosso",
+        "year": 2025,
+        "soy_ha": 12788611,
+        "label": "state total, not this field"
+      },
+      "share": null,
+      "reason": "municipality code is unresolved for this field: the IBGE municipal join is not built, so the municipal row and the share abstain",
+      "state_reason": null
     },
     "fragment": {
       "state": "abstained",
@@ -1841,14 +1884,14 @@
     {
       "metric": "state_soy_ha",
       "label": "numbers.state_soy_ha",
-      "value": null,
+      "value": 12788611,
       "unit": "ha",
       "basis": "retrieved",
-      "as_of": null,
+      "as_of": "2025-12-31",
       "source": "IBGE SIDRA table 1612, API v3, variable 109, category 2713",
       "resolution": "the state",
       "route": "api",
-      "fetched_at": null
+      "fetched_at": "2026-11-15T03:00:00Z"
     },
     {
       "metric": "polygon_share",
@@ -1891,14 +1934,6 @@
     {
       "section": "municipality",
       "cause": "municipality code is unresolved for this field: the IBGE municipal join is not built, so the municipal row and the share abstain",
-      "source": "IBGE SIDRA table 1612, API v3, variable 109, category 2713",
-      "status": "unresolved",
-      "date": null,
-      "remediation": "CO-B6-06"
-    },
-    {
-      "section": "municipality",
-      "cause": "state code is unresolved for this field, so the state total does not print",
       "source": "IBGE SIDRA table 1612, API v3, variable 109, category 2713",
       "status": "unresolved",
       "date": null,
