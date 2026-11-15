@@ -40,9 +40,10 @@ import {
   classPropertyFor,
   paintedClassYear,
 } from '@/lib/polygon-style'
-import { classIdFrom } from '@/lib/polygon-legend'
+import { classIdFrom, legendRowsForMap } from '@/lib/polygon-legend'
 import { commandFieldId, featureStateCall } from '@/lib/polygon-selection'
 import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, type Box } from '@/lib/polygon-tooltip'
+import { attributionCreditName, collapseAttributionControl, nameAttributionToggle, rawFeatureFrom } from '@/lib/polygon-readout'
 import { runCommand } from '@/lib/commands'
 import { PolygonTooltip } from '@/components/PolygonTooltip'
 import { t } from '@/strings'
@@ -324,6 +325,9 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       // R-01 and R-03: the camera starts at the active region's default view of Table A.
       center: initialRegion.defaultView.center,
       zoom: initialRegion.defaultView.zoom,
+      // R-33: one attribution control. MapLibre would add its own default one otherwise, a second
+      // toggle beside ours. The custom control still collects the style's sources' credits.
+      attributionControl: false,
     })
     mapRef.current = map
     ;(window as unknown as { __fsMap?: unknown }).__fsMap = map
@@ -335,6 +339,9 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     })
     attributionRef.current = control
     map.addControl(control, 'bottom-right')
+    // OD-04: the compact button's accessible name carries both short credits (AC-27).
+    nameAttributionToggle(containerRef.current, attributionCreditName(activeBasemapAdapter(), initialRegion))
+    collapseAttributionControl(containerRef.current)
     attributionKeyRef.current = `${useMapStore.getState().basemapId}|${initialRegion.id}`
     // Sources and layers are dropped by every setStyle(), so they are (re)added here, idempotently.
     map.on('style.load', () => {
@@ -487,7 +494,38 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     const control = new AttributionControl({ compact: true, customAttribution: attributionText(basemapAdapter, region) })
     attributionRef.current = control
     map.addControl(control, 'bottom-right')
+    nameAttributionToggle(containerRef.current, attributionCreditName(basemapAdapter, region))
+    collapseAttributionControl(containerRef.current)
   }, [mapReady, basemapId, regionId, basemapAdapter, region])
+
+  // R-12 and R-37: the zoom the zoom and select lines read, and the legend rows of the classes
+  // in view. Both are read only, so the map's own behaviour is unchanged. The legend is read at
+  // idle, after the tiles of the view have rendered, and again whenever the scene or the class
+  // property changes. Nothing is read before the fill layer exists.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map) return
+    const publishZoom = () => useMapStore.getState().setMapZoom(map.getZoom())
+    const publishLegend = () => {
+      const store = useMapStore.getState()
+      const scene = store.polygonMode
+      if (!scene?.tiers || !map.getLayer(POLYGON_FILL_LAYER_ID)) {
+        store.setLegendRows([])
+        return
+      }
+      const active = regionAdapter(store.regionId)
+      const property = classPropertyFor(active, chosenDateOf(store), scene.classSource ?? undefined)
+      store.setLegendRows(legendRowsForMap(map, active, property))
+    }
+    publishZoom()
+    publishLegend()
+    map.on('zoom', publishZoom)
+    map.on('idle', publishLegend)
+    return () => {
+      map.off('zoom', publishZoom)
+      map.off('idle', publishLegend)
+    }
+  }, [mapReady, polygonScene, regionId, chosenDate])
 
   // R-11 and R-35: a tile or source that fails keeps everything else on screen and sets the
   // reason line the region prints; no cached or substitute tile is served.
@@ -543,7 +581,10 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         (feature) => String(feature.id ?? feature.properties?.[region.idProperty]) === String(store.selectedPolygonId),
       )
       if (!match) return
-      store.setPolygonClass(classDisplay(region, classIdFrom(region, match.properties, property)))
+      store.setPolygonClass(
+        classDisplay(region, classIdFrom(region, match.properties, property)),
+        rawFeatureFrom(region, match.properties, property),
+      )
       store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
     }
     syncSelectedClass()

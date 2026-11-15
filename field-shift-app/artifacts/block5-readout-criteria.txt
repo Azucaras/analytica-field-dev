@@ -1,0 +1,99 @@
+Block 5 card 3: readout, Polygon region and licence surfaces
+Branch block5/readout-licence, base block5/map-polys (PR #9, head 7b4f15d). Not merged.
+Spec: specs/bloco-5-poligonos-de-cultura.md, revision 5, freeze digest ebc94342f57071cfea25d3074e392f73427b51a94286b2372ebc98c8458bea61
+
+Evidence files (this folder):
+  block5-readout-tsc.txt        tsc -b --noEmit, exit 0
+  block5-readout-vitest.txt     vitest run, 34 files, 349 tests, green
+  block5-readout-build.txt      npm run build, exit 0, vite 945 ms, 4.6 s wall
+  baseline-vitest.txt           the map card branch before this card: 32 files, 308 tests
+  baseline-build.txt            the map card branch build before this card
+  red-readout-vitest.txt        RED run: the two new test files before the modules existed
+  block5-readout-browser-run.txt   rectangle table at 1440x900, 780x900, 360x640; BR; Google key line
+  block5-readout-live-checks.txt   zoom lines (AC-09), reduced motion (AC-37), text scan (AC-41), resize (AC-39)
+
+Criteria in this card, status against the spec text:
+
+AC-21 readout rows, five rows in order                      PASS in both regions for the rows that the data allows
+  vitest: src/lib/polygon-readout.test.ts, src/components/PolygonPanel.test.tsx
+  browser US (pilot 381825001868504): Soybeans | 153.2 acres | retrieved | CDL 2025 | Source
+  browser BR (4437031): Pasture | Area not in the class table | modelled | mbMode 2024, collection not verified | Source
+  NOT VERIFIED: the BR "22.4 ha" branch live. GET /polygons/br/{id} is not on any branch yet (PR #8 has no route),
+  so the live BR area is the honest absence text. The 22.4 ha branch is tested with a recorded sidecar response only.
+
+AC-09 zoom line and select line                               PASS (US live), BR vitest only
+  browser US zoom 11: "Polygons from zoom 3" only; zoom 7 and 4: plus "Select from zoom 8" (live-checks file)
+  vitest BR: "Polygons from zoom 8", "Select from zoom 10" below 10
+  NOT VERIFIED live for BR below zoom 10.
+
+AC-27 attribution behaviour                                   PASS at 360x640 and 1440x900 (live)
+  margin 0px on the compact control, all widths (browser)
+  collapsed button at 360x640: x 328 to 352, y 408 to 432, 24 by 24 px (right 352 and bottom 432 exact)
+  one control only: MapLibre's default control disabled (attributionControl false)
+  accessible name carries the EOX short credit and the region source string (browser, both regions)
+  one press opens it; the exact EOX string and the region source string are in the DOM (browser, US and BR)
+  the Table F short credit is visible in the Polygon region at 1440x900 and 780x900 (browser)
+  style credit preserved: "OpenFreeMap ... OpenStreetMap" is in the control text (browser)
+  NOTE: the layer rail covers a 12 by 24 px corner of the collapsed button at 1440 and 780 (rail is block 4's box)
+
+AC-31 provenance, source and credit lines                     PASS at 1440x900 (US and BR), 780x900 (US)
+  one provenance line, one credit line; the source string appears in the readout Source row and in the source line
+  (the spec's own rule R-25 and R-39 print it in both places)
+
+AC-32 content order, status order, internal scroll             PASS
+  vitest order test (heading, rows, legend, provenance, source, credit, status lines)
+  browser DOM order US and BR; region scrolls inside its box (scrollHeight 400 vs clientHeight 188 at 1440)
+  page does not grow (pageScroll equals viewport at 780 and 360)
+
+AC-33 rectangles and stacking                                 PASS for geometry, stacking by code only
+  table in block5-readout-browser-run.txt: region 22/260/320x190 (1440), 22/260/202.8x130 (780), not mounted (360)
+  zero overlap with fields panel, dock, rotation panel, rail, top strip, brand, nav control, right column (open and closed)
+  stacking: polygonPanel 25 between layerRail 20 and evidence 30 (browser shows 25 and 20; evidence not mounted when closed)
+
+AC-34 landmark, heading, no control                           PASS
+  role region named Polygon; level 2 heading "Selected polygon"; zero buttons, links or inputs (vitest and browser)
+
+AC-35 absence texts                                           PARTIAL
+  vitest: Area not in the class table with the tile class kept; No CDL class for 2025 for absent or null cdl
+  NOT VERIFIED: the rule that the last known legend rows persist marked with the failure line when the source fails
+  at runtime is not exercised by a test
+
+AC-36 strings from the catalog                                PASS
+  full suite includes the App literal scan (scanVisibleUi) green; new strings are in en.ts; class and Table F
+  strings carry data-dynamic-content, the convention the scan already exempts
+
+AC-37 reduced motion                                          PARTIAL
+  browser: region computed transition-duration 0s under prefers-reduced-motion: reduce
+  NOT VERIFIED here: the polygon layers' transition values (set by the map card's paint, not re-measured)
+
+AC-38 imports and diff                                        PASS
+  no block 5 module imports CommandToggle, SupportingDataToggle, EvidencePanel or AgentBar (grep, empty)
+  diff touches App.tsx, MapCanvas.tsx, index.css, map-store.ts, strings/en.ts (wiring only) and new block 5 files
+
+AC-39 resize                                                  PASS for the selection and the camera
+  browser 1440 to 360 to 1440: region unmounts at 360 without clearing ?polygon=; remounts with the same class and
+  area; zoom stays 11
+  NOT VERIFIED: the region's scroll offset and the adapter across the resize
+
+AC-40 source strings                                          PASS for the lines; the control at 360 checked for US and BR
+  US 91 character string in the region source line at 1440, 780 and in the control text after a press at 360
+  BR 67 character string in the control text after a press (browser)
+
+AC-41 no climate, soil, season or coverage in the region      FAIL on the rotation heading (block 3 component, not this card)
+  region text scan: no forbidden terms (US, live-checks)
+  FAIL: the rotation heading prints the season chip "2025/26 season" with a polygon selected. It is
+  src/components/ScenarioCards.tsx line 57 (class season-chip), which block 5 may not edit (R-46, R-26).
+  Needs a decision: a block 3 card, or an amendment that scopes the chip to fixture fields.
+
+Criteria NOT claimed by this card (owned by the map card or later cards): AC-01 to AC-08, AC-10 to AC-20 (except
+the readout and region parts above), AC-22 to AC-26, AC-28 to AC-29, AC-30 (pan add and remove not exercised),
+AC-06, AC-08.
+
+Spec conflict found while implementing (flagged, not smoothed):
+  R-21 says an absent or null cdl{Y} prints "No CDL class for {Y}" in the United States and 0 prints "class not mapped".
+  AC-17 says a null cdl{Y} prints "class not mapped". This card implements R-21 (absent and null print the year text).
+  The spec must pick one; the implementation follows the requirement text.
+
+Other spec finding, flagged:
+  R-38 requires exactly one provenance line whenever the region is mounted, and the failure line in addition to it.
+  With no class source loaded, the Brazil line falls back to mbmode24, the only class source this block ships (R-18).

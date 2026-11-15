@@ -230,6 +230,8 @@ export const en = {
   'polygon.basemap_unavailable': 'Basemap unavailable',
   'polygon.google_key_missing': 'Google basemap needs an API key',
   'polygon.legend_empty': 'No crop polygon in view',
+  'polygon.legend_label': 'Classes in view',
+  'polygon.readout_label': 'Polygon readout',
   'polygon.rows.class': 'Class',
   'polygon.rows.area': 'Area',
   'polygon.rows.basis': 'Basis',

@@ -1,0 +1,12 @@
+## AC-09 zoom lines, US, 1440x900, pinned polygon 381825001868504
+  zoom=11 status=['Polygons from zoom 3'] class=['Soybeans', '153.2 acres'] selected_in_url=True
+  zoom=7 status=['Polygons from zoom 3', 'Select from zoom 8'] class=['Soybeans', '153.2 acres'] selected_in_url=True
+  zoom=4 status=['Polygons from zoom 3', 'Select from zoom 8'] class=['Soybeans', '153.2 acres'] selected_in_url=True
+## AC-37 reduced motion (emulated)
+  region computed transition-duration = 0s
+## AC-41 text scan (US region, zoom 11, polygon selected)
+  forbidden-term hits: []
+  region text: Selected polygon | Class | Soybeans | Area | 153.2 acres | Basis | retrieved | Class year | CDL 2025 | Source | Crop Sequence Boundaries (USDA NASS and ERS), public domain; CDL (USDA NASS), public domain | Corn | Soybeans | Sunflower | Spring Wheat | Sugarbeets | Dry Beans | Developed/Open Space | CDL 2025, Crop Sequence Boundaries 2025 release, retrieved | Crop Sequence Boundaries (USDA NASS and ERS), public domain; CDL (USDA NASS), public domain | EOxCloudless by EOX IT Services GmbH, CC BY-NC-SA 4.0 | Polygons from zoom 3
+## AC-39 resize 1440 -> 360 -> 1440
+  at 360: region mounted=False url_keeps_polygon=True zoom=11
+  back at 1440: region mounted=True class=['Soybeans', '153.2 acres'] url_keeps_polygon=True zoom=11
