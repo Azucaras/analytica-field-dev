@@ -607,7 +607,10 @@ function MunicipalCard({ municipal, gaps = NO_GAPS }: { municipal: NumbersPayloa
   // R-12: the municipal row and the share carry the municipal cause of the gap register, and the
   // state row carries the state cause, because the section records both and they are not the same.
   const municipalReason = abstainReason(municipal.reason, 'municipality', gaps, 'municipal')
-  const stateReason = abstainReason(municipal.reason, 'municipality', gaps, 'state')
+  // R-12: the state row names its own input and cause. The payload carries `state_reason` for exactly
+  // this row, so the municipal reason must not leak into it; when `state_reason` and every state gap
+  // are absent the clause falls back to the sentence that says the reason was not recorded.
+  const stateReason = abstainReason(municipal.state_reason, 'municipality', gaps, 'state')
   const municipality = municipal.municipality
   const stateRow = municipal.state_row ?? null
   return (

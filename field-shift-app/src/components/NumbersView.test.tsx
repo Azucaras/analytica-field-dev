@@ -349,18 +349,24 @@ describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R
     }
   })
 
-  it('prints the two municipal rows as abstentions when the section abstains (R-07, R-12, R-38, AC-06)', async () => {
+  // Revision 3 of the block 6 spec names the state total `state_row`, so with the recorded payload the
+  // municipal row abstains while the state row prints the SIDRA total with its own label. These two
+  // facts are asserted separately, because printing the total is not an abstention.
+  it('prints the municipal row as an abstention and the state row as the labelled total (R-07, R-12, R-38, AC-06, AC-37)', async () => {
     const payload = recordedNumbersPayload()
     expect(payload.sections.municipality.municipality).toBeNull()
+    expect(payload.sections.municipality.state_row?.soy_ha).toBe(12788611)
     stubNumbersFetch(payload)
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const municipal = container.querySelector('[data-card="municipal"]') as HTMLElement
-    for (const metric of ['municipality_soy_ha', 'state_soy_ha']) {
-      const cell = municipal.querySelector<HTMLElement>(`[data-metric="${metric}"]`)
-      expect(cell, metric).not.toBeNull()
-      expect(cell?.textContent).toMatch(/^(Municipal|State) value not read: /)
-    }
+    const municipalCell = municipal.querySelector<HTMLElement>('[data-metric="municipality_soy_ha"]')
+    expect(municipalCell).not.toBeNull()
+    expect(municipalCell?.textContent).toMatch(/^Municipal value not read: /)
+    const stateCell = municipal.querySelector<HTMLElement>('[data-metric="state_soy_ha"]')
+    expect(stateCell).not.toBeNull()
+    expect(stateCell?.textContent).toContain('12,788,611')
+    expect(municipal.textContent).toContain('state total, not this field')
   })
 
   it('renders each provenance row in the table with its basis label (R-08, AC-07)', async () => {
@@ -566,14 +572,26 @@ describe('abstention texts name the missing input, its source and its cause (R-1
 
   it('prints the state abstention with the SIDRA source and the state gap cause, not the municipal one', async () => {
     const payload = recordedNumbersPayload()
-    stubNumbersFetch(payload)
+    // The recorded payload now carries the state total, so this test builds the case the clause is
+    // about: no state total and a state gap in the register, which the fixture no longer produces.
+    const municipalGap = payload.gaps.find((gap) => gap.section === 'municipality')!
+    const stateGap = { ...municipalGap, cause: 'state code is unresolved for this field: the IBGE state lookup returned no row' }
+    const payloadWithStateGap = {
+      ...payload,
+      gaps: [...payload.gaps, stateGap],
+      sections: {
+        ...payload.sections,
+        municipality: { ...payload.sections.municipality, state_row: null, state_reason: null },
+      },
+    }
+    stubNumbersFetch(payloadWithStateGap)
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const text = cellText(container, 'state_soy_ha')
     expect(text).toContain('State value not read')
     expect(text).toContain(payload.sections.municipality.source)
-    expect(text).toContain(gapCause(payload, 'municipality', 'state code'))
-    expect(text).not.toContain(gapCause(payload, 'municipality', 'municipality code'))
+    expect(text).toContain(gapCause(payloadWithStateGap, 'municipality', 'state code'))
+    expect(text).not.toContain(gapCause(payloadWithStateGap, 'municipality', 'municipality code'))
     expect(text).not.toContain('No value')
   })
 
@@ -582,7 +600,16 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     const reason = 'the SIDRA municipal request answered with no row for this code'
     stubNumbersFetch({
       ...payload,
-      sections: { ...payload.sections, municipality: { ...payload.sections.municipality, reason } },
+      sections: {
+        ...payload.sections,
+        municipality: {
+          ...payload.sections.municipality,
+          reason,
+          // The state row reads its own reason field, so an explicit section reason reaches it too.
+          state_reason: reason,
+          state_row: null,
+        },
+      },
     })
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
@@ -705,7 +732,11 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     const gaps = payload.gaps.filter((gap) => !gap.cause.startsWith('state code'))
     expect(gaps.some((gap) => gap.section === 'municipality' && gap.cause.includes('municipality code'))).toBe(true)
     expect(gaps.some((gap) => gap.section === 'municipality' && gap.cause.includes('state code'))).toBe(false)
-    stubNumbersFetch({ ...payload, gaps })
+    stubNumbersFetch({
+      ...payload,
+      gaps,
+      sections: { ...payload.sections, municipality: { ...payload.sections.municipality, state_row: null } },
+    })
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const text = cellText(container, 'state_soy_ha')
