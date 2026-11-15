@@ -672,41 +672,9 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     }
   }, [mapReady, selectedPolygonId, polygonScene, regionId])
 
-  // Block 6, R-02: while the numbers surface is open the map screen is `display: none`. The
-  // camera is read before the surface opens, and on close `map.resize()` runs once and the
-  // camera is restored if the resize moved it, so the centre, zoom, bearing and pitch are the
-  // values they had before opening.
-  const numbersOpen = useMapStore((state) => state.numbersOpen)
-  const calendarOpen = useMapStore((state) => state.calendarOpen)
-  const recordOpen = useMapStore((state) => state.recordOpen)
-  // Block 7, R-02: the two surfaces of this block hide the map screen the same way, so the camera is
-  // read before either opens and `map.resize()` runs once when the last one closes.
-  const surfaceOpen = numbersOpen || calendarOpen || recordOpen
-  const cameraBeforeNumbersRef = useRef<{ center: [number, number]; zoom: number; bearing: number; pitch: number } | null>(null)
-  useEffect(() => {
-    const map = mapRef.current
-    if (!mapReady || !map) return
-    if (surfaceOpen) {
-      const center = map.getCenter()
-      cameraBeforeNumbersRef.current = {
-        center: [center.lng, center.lat],
-        zoom: map.getZoom(),
-        bearing: map.getBearing(),
-        pitch: map.getPitch(),
-      }
-      return
-    }
-    const before = cameraBeforeNumbersRef.current
-    if (before === null) return
-    cameraBeforeNumbersRef.current = null
-    map.resize()
-    const center = map.getCenter()
-    const moved = center.lng !== before.center[0] || center.lat !== before.center[1]
-      || map.getZoom() !== before.zoom || map.getBearing() !== before.bearing || map.getPitch() !== before.pitch
-    if (moved) {
-      map.jumpTo({ center: before.center, zoom: before.zoom, bearing: before.bearing, pitch: before.pitch })
-    }
-  }, [numbersOpen, mapReady])
+  // Block 6 revision 5 R-02 and block 5.5: the map is never hidden by a panel, so opening or
+  // closing one needs no camera restore and no `map.resize()` call. The guard that used to
+  // read the camera before a surface opened and restored it on close was removed here.
 
   // R-19, R-20, R-22, R-27: hover, the tooltip, the cursor and the press.
   useEffect(() => {

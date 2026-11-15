@@ -1,8 +1,10 @@
 /**
- * Block 6: the `Field numbers` region (R-01 to R-06, R-07 to R-13, R-21 to R-25, R-30, R-41,
- * R-42, R-44). It is a full viewport view that the App mounts as a sibling of the map screen,
- * while the map screen is `display: none` (R-02). It prints what the payload says and nothing
- * else: every printed number reads its basis from its own provenance row (R-08, R-09).
+ * Block 6 revision 5: the `Field numbers` panel of the map screen (R-01 to R-06, R-07 to R-13,
+ * R-21 to R-25, R-30, R-41, R-42, R-44). It is a panel body inside the map screen's panel host:
+ * the map stays visible and interactive while it is open, no element of the map screen reads
+ * `display: none`, and opening or closing the panel calls no `map.resize()`. The landmark and the
+ * level two heading belong to the host. It prints what the payload says and nothing else: every
+ * printed number reads its basis from its own provenance row (R-08, R-09).
  */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { chosenDateOf, useMapStore, type FieldSummary } from '@/lib/map-store'

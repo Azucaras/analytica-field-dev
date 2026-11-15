@@ -175,7 +175,7 @@ describe('the Field numbers panel (block 6 revision 5 R-01, R-05, AC-01, AC-02)'
     expect(within(panel).getByText('Gap register')).toBeTruthy()
   })
 
-  it('calls no map.resize when the panel opens or closes (R-02)', async () => {
+  it('calls map.resize zero times in any of the four panel states, and keeps the camera (AC-02)', async () => {
     window.history.replaceState({}, '', '/?region=br')
     installFetch()
     const user = userEvent.setup()
@@ -187,11 +187,29 @@ describe('the Field numbers panel (block 6 revision 5 R-01, R-05, AC-01, AC-02)'
     map.center = { lng: -55.27, lat: -11.91 }
     map.zoom = 11.5
     const resizes = map.resizeCalls
-    await user.click(screen.getByRole('button', { name: 'Field numbers' }))
-    await user.click(screen.getByRole('button', { name: 'Field numbers' }))
+    const camera = () => ({ center: map.getCenter(), zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch() })
+    const before = camera()
+
+    // Block 6 revision 5 R-02 and AC-02: the map is never hidden, so no panel state may resize it.
+    // The four buttons are pressed once each, which opens and then closes every panel in turn.
+    const buttons = [
+      'Expand Rotation outlook',
+      'Field numbers',
+      'Planting calendar',
+      'Field record',
+    ]
+    for (const name of buttons) {
+      const button = screen.getByRole('button', { name })
+      await user.click(button)
+      await waitFor(() => expect(document.querySelector('[data-panel-host]')).toBeTruthy())
+      expect(map.resizeCalls).toBe(resizes)
+      expect(camera()).toEqual(before)
+      await user.click(button)
+      await waitFor(() => expect(document.querySelector('[data-panel-host]')).toBeNull())
+      expect(map.resizeCalls).toBe(resizes)
+      expect(camera()).toEqual(before)
+    }
     expect(map.resizeCalls).toBe(resizes)
-    expect(map.getCenter()).toEqual({ lng: -55.27, lat: -11.91 })
-    expect(map.getZoom()).toBe(11.5)
   })
 })
 
