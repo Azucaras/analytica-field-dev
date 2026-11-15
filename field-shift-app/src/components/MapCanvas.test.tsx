@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useShellStore } from '@/shell/shell-store'
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useMapStore } from '@/lib/map-store'
@@ -111,23 +112,17 @@ function mockApi() {
 }
 
 /** Expands the Fields panel and waits until the field list is in state. */
-async function expandFields(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByRole('button', { name: 'Fields' }))
-  const row = await waitFor(() => {
-    const found = document.getElementById('fields-chip-row')
-    expect(found).toBeTruthy()
-    return found as HTMLElement
-  })
-  await waitFor(() => expect(within(row).getAllByRole('button')).toHaveLength(2))
+async function expandFields(_user: ReturnType<typeof userEvent.setup>) {
+  // The fields panel is open by default; wait for its two buttons.
+  const list = await screen.findByRole('group', { name: /your fields/i })
+  await waitFor(() => expect(within(list).getAllByRole('button')).toHaveLength(2))
 }
 
 async function expectSelectedFieldUi() {
   expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01')
-  // Exactly one chip is pressed: the collapsed header chip, or the row chip when the
-  // panel is open. Both read the same name.
   await waitFor(() => {
-    const pressed = [...document.querySelectorAll('button.field-chip[aria-pressed="true"]')]
-    expect(pressed.map((chip) => chip.textContent)).toEqual(['Santa Carmem North'])
+    const pressed = [...document.querySelectorAll('.fs-field-item[aria-pressed="true"]')]
+    expect(pressed.map((item) => item.textContent)).toEqual(['Santa Carmem North'])
   })
   expect(screen.getByText('86% data coverage')).toBeTruthy()
   const list = screen.getByRole('list', { name: 'Rotation scenarios' })
@@ -136,6 +131,7 @@ async function expectSelectedFieldUi() {
 }
 
 beforeEach(() => {
+  useShellStore.getState().reset()
   // Block 5 defaults the region to the United States (R-01) and lists only the active
   // region's fixtures (R-24), so these fixture flows run with Brazil active.
   window.history.replaceState({}, '', '/?region=br')

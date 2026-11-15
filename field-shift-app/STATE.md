@@ -18,11 +18,12 @@ Atualizado em 2026-11-15. O histórico detalhado de cada etapa está no git e na
 | Bloco 9 | El Niño e evidência climática real no mapa; talhões 04 (RS) e 05 (BA) | fechado em 2026-11-14 |
 | Bloco 10 | Análise completa do Field Phase na mesma página; português por padrão; previsão Meteomatics | fechado em 2026-11-14 |
 | Bloco 11 | Estados Unidos: McLean (IL) e Lubbock (TX), talhões 06 e 07 | fechado em 2026-11-15, com NASS e Meteomatics dos condados |
+| Bloco 12 | Tela em grade com registro de painéis: nada mais flutua sobre o mapa | fechado em 2026-11-15 |
 
 Os blocos 9 a 11 foram feitos na branch `exp_vass` com os números 4 a 6 e renumerados ao entrar na `main`, que já
 tinha blocos 4 a 8 da equipe.
 
-Testes depois da integração com a `main` da equipe: front-end 364, backend 45, pipeline 167, `tsc` e build sem erro.
+Testes depois do bloco 12: front-end 336, backend 45, pipeline 167, `tsc` e build sem erro. O front-end tinha 364; os 48 testes de posição dos blocos 2 a 5 deram lugar a 21 testes da grade e do registro.
 
 ## Aprovações
 
@@ -34,6 +35,7 @@ Testes depois da integração com a `main` da equipe: front-end 364, backend 45,
 - 2026-11-14: "I want you to apply all the features down below, using this project as a basis" (bloco 10)
 - 2026-11-15: "Eu gostaria que você fizesse isso tudo até agora só que com dados integrados dos estados unidos, a mesma maneira, eu também gostaria que você retirasse o cheiro de ia que o projeto está no momento." (bloco 11 e revisão de texto)
 - 2026-11-15: "Sim, integre" (integração da `exp_vass` com a `main` da equipe)
+- 2026-11-15: "Refazer a base", na branch `integracao-exp_vass` (bloco 12)
 - As aprovações dos blocos 4 a 8 da equipe estão nas próprias specs.
 
 ## Decisões que valem para o projeto todo
@@ -43,6 +45,8 @@ Testes depois da integração com a `main` da equipe: front-end 364, backend 45,
 - Bases de um valor: observado, recuperado, reportado (estatística oficial), modelado e inserido.
 - Brasil usa o ano-safra de julho a junho; os EUA usam o ano hídrico de outubro a setembro.
 - A análise do município fica num painel na mesma página, não em outro endereço.
+- Todo recurso novo da tela do mapa é um painel registrado em `src/shell/panels.tsx`; nenhum painel se posiciona
+  sobre o mapa (bloco 12).
 - As specs dos blocos 1 a 8 estão congeladas com hash e não foram reescritas.
 - A região dos EUA da equipe é Cass County (ND); os talhões-piloto de McLean e Lubbock aparecem na mesma região.
 
@@ -59,5 +63,5 @@ Testes depois da integração com a `main` da equipe: front-end 364, backend 45,
 - Os talhões de Cass County não têm código de município no pipeline, então a linha climática deles diz
   "indisponível". Pôr Cass County (FIPS 38017) no pipeline resolveria, e ele fica no norte, onde o El Niño
   costuma deixar o inverno mais seco.
-- Pendências antigas do bloco 3: o botão `Command` sem o preenchimento primário, a régua de camadas coberta a
-  360 px, a atribuição do mapa no meio da tela a 360 px, tipografia de 7 a 9 px e contraste de rótulos secundários.
+- O estado aberto ou fechado dos painéis não é lembrado entre recargas.
+- O SMAP é um produto de 9 km; uma camada na escala do talhão (HLS de 30 m, por exemplo) seria outro trabalho.

@@ -169,7 +169,7 @@ export function TimelineDock({
             type="date"
             value={chosenDate}
           />
-          <span className="timeline-age" data-dynamic-content>{primaryAge ?? primaryEntry?.status ?? ''}</span>
+          <span className="timeline-age" data-dynamic-content>{primaryAge ?? (primaryEntry ? t(`layers.status.${primaryEntry.status}`) : '')}</span>
           <span className="timeline-season" data-dynamic-content data-season-label>{season}</span>
           <span className="timeline-crop-class">{t('timeline.no_crop_class')}</span>
         </div>

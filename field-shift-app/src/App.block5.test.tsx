@@ -1,5 +1,6 @@
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useShellStore } from '@/shell/shell-store'
 import App from './App'
 import { useMapStore } from '@/lib/map-store'
 import { layersResponse } from '@/test/api-fixtures'
@@ -73,6 +74,7 @@ function installFetch() {
 }
 
 beforeEach(() => {
+  useShellStore.getState().reset()
   MapStub.reset()
   useMapStore.setState({
     regionId: 'us',
@@ -108,8 +110,8 @@ describe('the region parameter (R-01, R-03, AC-01)', () => {
     render(<App />)
     await waitFor(() => expect(useMapStore.getState().regionId).toBe('br'))
     expect(window.location.search).toContain('region=br')
-    // The Brazil fixture list is the active region's, so its chip mounts.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Fields' })).toBeTruthy())
+    // The Brazil fixture list is the active region's, so its fields are listed.
+    expect(await screen.findByRole('button', { name: 'Santa Carmem North' })).toBeTruthy()
   })
 })
 
@@ -133,7 +135,7 @@ describe('the polygon selection in the app (R-23, R-24, R-28, AC-19, AC-20, AC-2
     expect(useMapStore.getState().selectedFieldId).toBeNull()
 
     const chip = screen.getByRole('button', { name: 'Soybean' })
-    expect(chip.textContent).toBe('Soybean')
+    expect(chip.textContent).toContain('Soybean')
     expect(chip.getAttribute('aria-pressed')).toBe('true')
 
     // R-26 and AM-07: no coverage percentage for a polygon.

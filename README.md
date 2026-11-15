@@ -4,7 +4,8 @@ Field Shift helps a farmer decide which crop rotation to plant this season, give
 tracking for 2026. It was built for the NASA Space Apps Challenge 2026, *Field Shift: Adapting Farms with NASA
 Data*.
 
-The app opens on a map of fields. Pick one and you see the current ENSO state, how much rain has fallen since the
+The app opens on a map of fields, with its panels around the map and a column of buttons on the left that
+opens and closes each one. Pick a field and you see the current ENSO state, how much rain has fallen since the
 season started compared with normal and with past strong El Nino years, and the rotation options for that field.
 The **Análise** button opens the full analysis for the field's municipality or county: forecasts, ranked rotations
 with the arithmetic behind each score, yield history by crop, vegetation, land use and slope.

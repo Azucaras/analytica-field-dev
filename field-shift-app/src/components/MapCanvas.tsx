@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import {
   AttributionControl,
   Map as MapLibre,
@@ -138,11 +138,24 @@ function ensureRaster(
       id: layerId,
       type: 'raster',
       source: sourceId,
-      paint: { 'raster-opacity': 0 },
+      // A coarse product (SMAP is 9 km) is drawn as hard squares: smoothing it would suggest
+      // detail the measurement does not have.
+      paint: { 'raster-opacity': 0, ...(resolutionMetres(entry.resolution) >= 1000 ? { 'raster-resampling': 'nearest' as const } : {}) },
     }, firstSymbolLayer?.id)
   }
   return created
 }
+
+/** Metres in a layer's resolution label (`9 km`, `250 m`, `about 11 km`); 0 when it cannot be read. */
+export function resolutionMetres(label: string): number {
+  const match = label.match(/([\d.]+)\s*(km|m)\b/i)
+  if (!match) return 0
+  const value = Number(match[1])
+  return match[2].toLowerCase() === 'km' ? value * 1000 : value
+}
+
+const FIELD_LINE = '#d5e86c'
+const FIELD_LINE_SELECTED = '#ffd31a'
 
 function ensureFieldBoundaries(map: MapLibreMap, fields: FieldSummary[]) {
   for (const field of fields) {
@@ -150,15 +163,50 @@ function ensureFieldBoundaries(map: MapLibreMap, fields: FieldSummary[]) {
     if (!map.getSource(id)) {
       map.addSource(id, { type: 'geojson', data: field.boundary })
     }
+    if (!map.getLayer(`${id}-fill`)) {
+      map.addLayer({
+        id: `${id}-fill`,
+        type: 'fill',
+        source: id,
+        paint: { 'fill-color': FIELD_LINE, 'fill-opacity': 0.18 },
+      })
+    }
     if (!map.getLayer(id)) {
       map.addLayer({
         id,
         type: 'line',
         source: id,
-        paint: { 'line-color': '#d5e86c', 'line-width': 2 },
+        paint: { 'line-color': FIELD_LINE, 'line-width': 2 },
       })
     }
   }
+}
+
+/** The selected field gets a brighter, thicker outline and a stronger fill. */
+function highlightField(map: MapLibreMap, fields: FieldSummary[], selectedId: string | null) {
+  for (const field of fields) {
+    const id = `boundary-${field.id}`
+    const selected = field.id === selectedId
+    if (map.getLayer(id)) {
+      map.setPaintProperty(id, 'line-color', selected ? FIELD_LINE_SELECTED : FIELD_LINE)
+      map.setPaintProperty(id, 'line-width', selected ? 3.5 : 2)
+    }
+    if (map.getLayer(`${id}-fill`)) map.setPaintProperty(`${id}-fill`, 'fill-opacity', selected ? 0.3 : 0.18)
+  }
+}
+
+/** West, south, east and north of a field outline. */
+export function fieldBounds(boundary: FieldSummary['boundary']): [number, number, number, number] | null {
+  const points: number[][] = []
+  const walk = (node: unknown) => {
+    if (Array.isArray(node) && typeof node[0] === 'number') points.push(node as number[])
+    else if (Array.isArray(node)) node.forEach(walk)
+  }
+  walk((boundary as { coordinates?: unknown } | null)?.coordinates)
+  if (points.length === 0) return null
+  const lons = points.map((point) => point[0])
+  const lats = points.map((point) => point[1])
+  return [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)]
 }
 
 /**
@@ -394,11 +442,20 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     ensureFieldBoundaries(mapRef.current, fields)
-  }, [fields, mapReady])
+    highlightField(mapRef.current, fields, selectedField?.id ?? null)
+  }, [fields, mapReady, selectedField])
 
+  // A picked field fills the view: fields range from 150 m (Cass County) to a whole county
+  // square, so one fixed zoom would leave some of them as dots.
   useEffect(() => {
-    if (!mapReady || !mapRef.current || !selectedField || !didSetInitialFieldRef.current) return
-    mapRef.current.flyTo({ center: selectedField.center, zoom: 11, duration: 500 })
+    const map = mapRef.current
+    if (!mapReady || !map || !selectedField || !didSetInitialFieldRef.current) return
+    const bounds = fieldBounds(selectedField.boundary)
+    if (bounds && typeof map.fitBounds === 'function') {
+      map.fitBounds(bounds, { padding: 80, maxZoom: 15, duration: 500 })
+    } else {
+      map.flyTo({ center: selectedField.center, zoom: 11, duration: 500 })
+    }
   }, [selectedField, mapReady])
 
   useEffect(() => {
@@ -830,15 +887,38 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   return (
     <section className="map-panel" role="region" aria-label={t('map.field_map')}>
       <div ref={containerRef} className="map-canvas" aria-label={t('map.satellite_map_label')} />
-      <div className="map-overlay" aria-hidden="true">
-        <span className="map-live-dot" />
-        <span>{t('map.satellite_layer')}</span>
-      </div>
+      <ActiveLayersNote />
       {children}
       {tooltip && <PolygonTooltip left={tooltip.left} text={tooltip.text} top={tooltip.top} />}
       <CompareOverlay chosenDate={chosenDate} />
       <OfflineOverlay />
     </section>
+  )
+}
+
+/**
+ * Names the layers drawn on the map with their pixel size, and warns when a pixel is larger
+ * than a field at the current zoom, so a coarse product is not read as field detail.
+ */
+function ActiveLayersNote() {
+  const catalog = useMapStore((state) => state.catalog)
+  const on = useMapStore((state) => state.on)
+  const zoom = useMapStore((state) => state.mapZoom)
+  const active = catalog.filter((entry) => on[entry.id])
+  if (active.length === 0) return null
+  return (
+    <div className="map-overlay map-layers-note" role="status">
+      {active.map((entry) => {
+        const coarse = resolutionMetres(entry.resolution) >= 1000 && (zoom ?? 0) >= 9
+        return (
+          <p key={entry.id}>
+            <span className="map-live-dot" aria-hidden="true" />
+            <span>{t('map.layer_pixel', { name: t(entry.labelKey ?? entry.label), resolution: entry.resolution })}</span>
+            {coarse ? <span className="map-layers-coarse">{t('map.layer_coarse')}</span> : null}
+          </p>
+        )
+      })}
+    </div>
   )
 }
 
@@ -854,8 +934,35 @@ function CompareOverlay({ chosenDate }: { chosenDate: string }) {
   const sideA = decisions[active.id]?.date ?? chosenDate
   const sideB = decisions[`${active.id}${COMPARE_DECISION_SUFFIX}`]?.date ?? pair.date ?? ''
 
+  // Dragging anywhere on the handle moves the split; the range input under it keeps the keyboard contract.
+  const dragFrom = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const overlay = event.currentTarget.parentElement
+    if (!overlay) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    const move = (clientX: number) => {
+      const box = overlay.getBoundingClientRect()
+      if (box.width <= 0) return
+      setCompareDivider(active.id, Math.min(1, Math.max(0, (clientX - box.left) / box.width)))
+    }
+    move(event.clientX)
+    const target = event.currentTarget
+    const onMove = (next: PointerEvent) => move(next.clientX)
+    const onUp = () => {
+      target.removeEventListener('pointermove', onMove)
+      target.removeEventListener('pointerup', onUp)
+      target.removeEventListener('pointercancel', onUp)
+    }
+    target.addEventListener('pointermove', onMove)
+    target.addEventListener('pointerup', onUp)
+    target.addEventListener('pointercancel', onUp)
+  }
+
   return (
     <div className="compare-overlay">
+      <div aria-hidden="true" className="compare-line" onPointerDown={dragFrom} style={{ left: `${pair.divider * 100}%` }}>
+        <span className="compare-handle">⇆</span>
+      </div>
       <span className="compare-side compare-side-a" data-dynamic-content>
         {t('layers.compare_side', { date: sideA, age: ageText(sideA, chosenDate) })}
       </span>

@@ -1,0 +1,293 @@
+/*
+ * The field map shell. The screen is a grid: a top bar, the map in the middle, an optional
+ * column on each side and an optional drawer under the map. Panels live in those cells and
+ * never float over the map, so a new panel cannot cover another one.
+ */
+
+:root {
+  --fs-left-width: 280px;
+  --fs-right-width: 320px;
+  --fs-topbar-height: 52px;
+  --fs-rail-width: 76px;
+  --fs-bottom-max: 36vh;
+  --fs-bg: #f3f5f0;
+  --fs-surface: #ffffff;
+  --fs-border: #e1e6dc;
+  --fs-text: #1f2b22;
+  --fs-muted: #5f6b5b;
+  --fs-accent: #4f6f34;
+  --fs-accent-soft: #eef4e4;
+  --fs-warn-bg: #fcf6e8;
+  --fs-warn-text: #7a5a1c;
+}
+
+/* The old full-screen overlay rules pinned #root and the map to the viewport; the grid owns that now. */
+.fs-shell {
+  display: grid;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  grid-template-columns: var(--fs-rail-width) var(--fs-left, 0px) minmax(0, 1fr) var(--fs-right, 0px);
+  grid-template-rows: var(--fs-topbar-height) minmax(0, 1fr) auto;
+  grid-template-areas:
+    "top top top top"
+    "rail left map right"
+    "rail left bottom right";
+  background: var(--fs-bg);
+  color: var(--fs-text);
+  font-size: 13px;
+}
+
+.fs-topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--fs-border);
+  background: var(--fs-surface);
+}
+.fs-topbar-start { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1 1 auto; overflow: hidden; }
+.fs-topbar-end { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.fs-shell .brand { flex: 0 0 auto; font-size: 18px; text-shadow: none; }
+.fs-shell .brand-mark { background: var(--fs-accent-soft); }
+.fs-shell .brand-mark i { background: var(--fs-accent); }
+
+/* The ENSO chip shortens as the bar narrows instead of pushing the toolbar off screen. */
+.fs-topbar .enso-chip { flex-wrap: nowrap; max-width: none; overflow: hidden; font-size: 12px; white-space: nowrap; text-shadow: none; }
+@media (max-width: 1100px) { .fs-topbar .enso-issued, .fs-topbar .enso-index { display: none; } }
+@media (max-width: 900px) { .fs-topbar .enso-chip .basis-label { display: none; } }
+
+/* The panel rail: one button per panel, in registry order. It grows downward as panels are added. */
+.fs-rail { grid-area: rail; display: flex; min-height: 0; flex-direction: column; gap: 4px; overflow-y: auto; padding: 8px 6px; border-right: 1px solid var(--fs-border); background: var(--fs-surface); }
+.fs-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fs-muted);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+}
+.fs-tool svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.fs-tool:hover { background: var(--fs-bg); color: var(--fs-text); }
+.fs-tool[aria-pressed="true"] { border-color: #cfdcbd; background: var(--fs-accent-soft); color: var(--fs-accent); }
+.fs-tool:focus-visible, .fs-tab:focus-visible, .fs-button:focus-visible, .fs-icon-button:focus-visible, .fs-panel-toggle:focus-visible {
+  outline: 2px solid var(--fs-accent);
+  outline-offset: 2px;
+}
+
+.fs-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #cfdcbd;
+  border-radius: 8px;
+  background: var(--fs-accent-soft);
+  color: var(--fs-accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.fs-button:hover { background: #e3edd5; }
+.fs-shell .analysis-toggle { min-height: 0; }
+.fs-shell .locale-option { min-width: 32px; min-height: 32px; font-size: 12px; }
+
+.fs-link { padding: 0; border: 0; background: transparent; color: var(--fs-accent); font-weight: 600; text-decoration: underline; cursor: pointer; }
+.fs-muted { margin: 0; color: var(--fs-muted); font-size: 12px; }
+.fs-stack { display: grid; gap: 10px; min-width: 0; }
+.fs-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.fs-empty { display: grid; gap: 8px; justify-items: start; }
+
+/* Slots. Each slot scrolls on its own; the page never scrolls. */
+.fs-slot { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; background: var(--fs-bg); }
+.fs-slot-left { grid-area: left; border-right: 1px solid var(--fs-border); }
+.fs-slot-right { grid-area: right; border-left: 1px solid var(--fs-border); }
+.fs-slot-bottom { grid-area: bottom; max-height: var(--fs-bottom-max); border-top: 1px solid var(--fs-border); }
+
+.fs-map { grid-area: map; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.fs-map > .map-panel { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; }
+.fs-map-notice { position: absolute; z-index: 5; top: 10px; left: 50%; width: min(520px, calc(100% - 24px)); transform: translateX(-50%); }
+.fs-map-notice > * { margin: 0; box-shadow: 0 4px 16px rgb(29 48 16 / 14%); }
+
+/* A panel: a header that collapses it, a close button, and a body that holds the feature. */
+.fs-panel, .fs-sheet {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  flex-direction: column;
+  border: 1px solid var(--fs-border);
+  border-radius: 10px;
+  background: var(--fs-surface);
+  box-shadow: 0 1px 2px rgb(29 48 16 / 6%);
+}
+.fs-panel-header { display: flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 4px 0 2px; }
+.fs-panel[data-state="open"] .fs-panel-header { border-bottom: 1px solid #eef1ea; }
+.fs-panel-heading { flex: 1 1 auto; min-width: 0; margin: 0; font-size: 13px; font-weight: 700; }
+.fs-panel-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fs-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.fs-panel-toggle > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-panel-icon { width: 16px; height: 16px; flex: 0 0 auto; color: var(--fs-accent); }
+.fs-panel-chevron { width: 16px; height: 16px; margin-left: auto; flex: 0 0 auto; color: var(--fs-muted); transition: transform .15s; }
+.fs-panel[data-state="collapsed"] .fs-panel-chevron { transform: rotate(-90deg); }
+.fs-icon-button { display: inline-grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 8px; background: transparent; color: var(--fs-muted); cursor: pointer; }
+.fs-icon-button:hover { background: var(--fs-bg); color: var(--fs-text); }
+.fs-icon-button svg { width: 16px; height: 16px; }
+.fs-panel-body { min-width: 0; padding: 12px; }
+.fs-panel-failed { display: grid; gap: 6px; color: var(--fs-warn-text); }
+.fs-panel-failed p { margin: 0; }
+
+/* The field list. */
+.fs-field-list { display: grid; gap: 4px; }
+.fs-field-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fs-text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.fs-field-item:hover { background: var(--fs-bg); }
+.fs-field-item.is-selected { border-color: #cfdcbd; background: var(--fs-accent-soft); font-weight: 700; }
+.fs-field-dot { width: 10px; height: 10px; flex: 0 0 auto; border: 2px solid #b6c94a; border-radius: 3px; background: rgb(213 232 108 / 35%); }
+.fs-field-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-field-tag { margin-left: auto; padding: 1px 6px; border-radius: 4px; background: #f4efe4; color: #7d6a42; font-size: 11px; font-weight: 600; white-space: nowrap; }
+
+/* Existing feature components, sized for a panel instead of a floating overlay. */
+.fs-shell .panel-surface { border: 0; border-radius: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.fs-shell .layer-rail { position: static; width: auto; max-width: none; max-height: none; overflow: visible; padding: 0; border: 0; background: transparent; box-shadow: none; gap: 10px; }
+.fs-shell .layer-presets button { padding: 6px 10px; font-size: 12px; }
+.fs-shell .layer-entries { gap: 10px; }
+.fs-shell .layer-entry { gap: 4px; padding-bottom: 10px; border-bottom: 1px solid #eef1ea; font-size: 12px; }
+.fs-shell .layer-entry:last-child { border-bottom: 0; }
+.fs-shell .layer-entry-head { gap: 4px; }
+.fs-shell .layer-entry-trigger, .fs-shell .layer-entry-switch { min-width: 36px; min-height: 36px; }
+.fs-shell .layer-entry-name { font-size: 13px; }
+.fs-shell .layer-entry-metadata, .fs-shell .layer-entry-status { font-size: 11px; }
+.fs-shell .layer-options { padding: 6px 0 0 40px; }
+.fs-shell .layer-control { font-size: 11px; }
+.fs-shell .layer-move button, .fs-shell .layer-pin, .fs-shell .layer-compare, .fs-shell .layer-latest { min-width: 36px; min-height: 36px; font-size: 12px; }
+.fs-shell .layer-control input[type="range"], .fs-shell .layer-control input[type="date"] { min-height: 36px; }
+
+.fs-shell .polygon-panel { min-height: 0; max-height: none; overflow: visible; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: 12px; }
+.fs-shell .polygon-heading { display: none; }
+
+.fs-shell .timeline-dock { position: static; width: auto; height: auto; max-height: none; padding: 0; overflow: visible; }
+.fs-shell .timeline-row { height: auto; min-height: 40px; }
+.fs-shell .timeline-age, .fs-shell .timeline-season { font-size: 12px; }
+.fs-shell .timeline-crop-class { font-size: 11px; }
+.fs-shell .timeline-date-limit { position: static; margin-top: 4px; font-size: 11px; }
+.fs-shell .timeline-window-label, .fs-shell .timeline-band-empty { font-size: 10px; }
+
+.fs-shell .scenario-panel { padding: 0; border: 0; background: transparent; }
+.fs-shell .scenario-list { grid-auto-columns: minmax(260px, 1fr); gap: 10px; padding-bottom: 4px; }
+.fs-shell .scenario-card { padding: 12px; }
+.fs-shell .scenario-kicker { font-size: 10px; }
+.fs-shell .scenario-card h3 { font-size: 14px; }
+.fs-shell .current-badge { font-size: 10px; }
+.fs-shell .scenario-facts dt, .fs-shell .scenario-facts dd { font-size: 12px; }
+.fs-shell .scenario-facts { grid-template-columns: minmax(0, 1fr); }
+.fs-shell .scenario-facts div { grid-template-columns: 76px minmax(0, 1fr); }
+.fs-shell .visual-caption { font-size: 10px; }
+.fs-shell .smap-value, .fs-shell .smap-empty-label, .fs-shell .smap-readout, .fs-shell .crop-readout, .fs-shell .crop-bar-label { font-size: 11px; }
+.fs-shell .basis-label { font-size: 10px; }
+.fs-shell .field-coverage-pill { padding: 4px 10px; font-size: 12px; }
+.fs-shell .abstention-notice, .fs-shell .error-notice { margin: 0; font-size: 12px; }
+
+.fs-shell .climate-signal { padding: 0; }
+.fs-shell .climate-signal-heading { font-size: 11px; }
+.fs-shell .climate-bars { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.fs-shell .climate-bar-label { font-size: 12px; }
+.fs-shell .climate-bar-value { font-size: 12px; }
+.fs-shell .climate-bar-track { height: 6px; }
+
+.fs-shell .evidence-panel { border: 0; background: transparent; }
+.fs-shell .evidence-panel table { font-size: 11px; }
+.fs-shell .climate-note, .fs-shell .climate-flag, .fs-shell .climate-evidence-note { font-size: 10px; }
+
+.fs-shell .agent-command label { min-width: 0; flex: 1 1 140px; font-size: 12px; }
+.fs-shell .agent-command input, .fs-shell .agent-command button, .fs-shell .agent-command p { font-size: 12px; }
+
+/* MapLibre controls sit in the map cell's own corners. */
+.fs-map .maplibregl-ctrl-attrib { font-size: 10px; }
+
+/* Phone: the map fills the screen above a tab bar; one panel opens in a sheet between them. */
+.fs-shell[data-layout="phone"] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--fs-topbar-height) minmax(0, 1fr) auto auto;
+  grid-template-areas: "top" "map" "sheet" "tabs";
+}
+.fs-shell[data-layout="phone"] .fs-topbar { gap: 8px; padding: 0 10px; }
+.fs-shell[data-layout="phone"] .brand { font-size: 16px; }
+.fs-sheet { grid-area: sheet; max-height: 52vh; margin: 0; border-width: 1px 0 0; border-radius: 12px 12px 0 0; overflow: hidden; }
+.fs-sheet .fs-panel-header { border-bottom: 1px solid #eef1ea; }
+.fs-sheet .fs-panel-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.fs-tabbar { grid-area: tabs; display: flex; gap: 2px; overflow-x: auto; padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--fs-border); background: var(--fs-surface); }
+.fs-tab {
+  display: flex;
+  min-width: 64px;
+  flex: 1 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fs-muted);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.fs-tab svg { width: 18px; height: 18px; }
+.fs-tab[aria-pressed="true"] { background: var(--fs-accent-soft); color: var(--fs-accent); }
+.fs-shell[data-layout="phone"] .scenario-list { grid-auto-columns: minmax(240px, 86%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-panel-chevron { transition: none; }
+}
+
+/* Map notes: which layers are drawn and how big their pixel is. */
+.fs-map .map-layers-note { position: absolute; z-index: 4; top: 10px; left: 10px; right: auto; bottom: auto; display: grid; gap: 4px; max-width: min(420px, calc(100% - 70px)); padding: 6px 10px; transform: none; border: 1px solid var(--fs-border); border-radius: 8px; background: rgb(255 255 255 / 92%); color: var(--fs-text); font-size: 12px; font-weight: 600; text-shadow: none; pointer-events: none; }
+.fs-map .map-layers-note p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
+.fs-map .map-layers-coarse { padding: 1px 6px; border-radius: 4px; background: var(--fs-warn-bg); color: var(--fs-warn-text); font-size: 11px; }
+
+/* Compare: a full-height line with a handle; the range input under it is for the keyboard only. */
+.fs-map .compare-overlay { z-index: 3; }
+.fs-map .compare-side { top: auto; bottom: 34px; font-size: 12px; font-weight: 600; }
+.fs-map .compare-line { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: #fff; box-shadow: 0 0 0 1px rgb(31 43 34 / 35%); cursor: ew-resize; pointer-events: auto; touch-action: none; }
+.fs-map .compare-line::before { content: ""; position: absolute; top: 0; bottom: 0; left: -12px; width: 27px; }
+.fs-map .compare-handle { position: absolute; top: 50%; left: 50%; display: grid; width: 34px; height: 34px; place-items: center; transform: translate(-50%, -50%); border: 2px solid #fff; border-radius: 50%; background: var(--fs-accent); color: #fff; font-size: 16px; box-shadow: 0 2px 8px rgb(0 0 0 / 30%); }
+.fs-map .compare-divider { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
+.fs-map .compare-overlay:has(.compare-divider:focus-visible) .compare-handle { outline: 3px solid #ffd31a; outline-offset: 2px; }

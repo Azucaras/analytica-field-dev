@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import type { ZodType } from 'zod'
 import { useMapStore } from './map-store'
+import { openPanel } from '@/shell/shell-store'
+import { PANEL_IDS } from '@/shell/panel-ids'
 
 export const COMMAND_EFFECTS = [
   'select_field',
@@ -71,7 +73,8 @@ const commands: CommandDefinition<string, ZodType>[] = [
   {
     name: 'open_panel',
     label: 'Open a panel',
-    schema: z.object({ panel: z.enum(['scenarios', 'evidence']) }).strict(),
+    // Any panel the shell has registered; `scenarios` is kept as the older name of `rotations`.
+    schema: z.object({ panel: z.enum([...PANEL_IDS, 'scenarios']) }).strict(),
     effect: 'open_panel',
     idempotent: true,
     guard: 'panel must be one of the available workspace panels',
@@ -106,7 +109,8 @@ export function runCommand(name: string, input: unknown): unknown {
       store.setComposition(arguments_.preset as 'map' | 'satellite' | 'satellite-with-labels')
       break
     case 'open_panel':
-      store.openPanel(arguments_.panel as 'scenarios' | 'evidence')
+      store.openPanel(arguments_.panel as string)
+      openPanel(arguments_.panel === 'scenarios' ? 'rotations' : arguments_.panel as string)
       break
     case 'apply_filter':
       store.applyFilter(arguments_.filter as 'all' | 'ranked' | 'abstained')

@@ -38,6 +38,22 @@ tempo, os polígonos de cultura e a região dos EUA em Cass County (Dakota do No
 de safra deu lugar à linha do tempo da equipe e o `pt-BR.ts` ganhou as 91 chaves novas dela. Também foram
 corrigidas duas falhas de teste que só aconteciam no Windows.
 
+## Uma tela que aceita recursos novos
+
+Os painéis da tela do mapa se posicionavam sozinhos por coordenadas fixas, e por isso se sobrepunham, cobriam o
+mapa e tinham letras de 7 a 9 px. Isso já acontecia na `main` da equipe. Agora a tela é uma grade: barra
+superior, uma coluna de botões à esquerda, colunas laterais, uma gaveta abaixo do mapa e o mapa livre no meio. No
+celular, um painel por vez abre embaixo do mapa.
+
+Cada recurso é um painel registrado em `field-shift-app/src/shell/panels.tsx`. Para incluir um recurso novo basta
+escrever o componente e acrescentar uma entrada nessa lista; o botão, o lugar na tela e a aba do celular saem
+dela. Um painel com erro mostra a própria mensagem sem derrubar o resto. O passo a passo está em
+`field-shift-app/README.md`.
+
+Na mesma mudança: os talhões de Cass County deixaram de mostrar chaves de tradução cruas e o mapa enquadra o
+talhão escolhido; o SMAP aparece em pixels nítidos com o tamanho do pixel indicado; o divisor do comparar virou
+uma linha com alça que se arrasta.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.

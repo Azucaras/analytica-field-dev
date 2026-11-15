@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { en } from '@/strings/en'
 import { t, translationKeyFor } from '@/strings'
+import { cropLabel, tOr } from '@/strings/labels'
 import { CropHistoryBars } from './CropHistoryBars'
 import { SMAP_SCALE_MAX, SmapBar } from './SmapBar'
 import type { EvidenceRow, RotationScenario } from './ScenarioCards'
@@ -12,8 +13,21 @@ function rowFor(rows: EvidenceRow[], layer: string): EvidenceRow | undefined {
   return rows.find((row) => row.layer === layer)
 }
 
+/**
+ * The heading comes from the catalog when the fixture names a known scenario. A scenario the
+ * catalog does not know (the CSB records of each US field) is named by its own crops.
+ */
 function scenarioHeading(scenario: RotationScenario): string {
-  return t(translationKeyFor(scenario.name) ?? `scenarios.name.${scenario.id}`)
+  const known = translationKeyFor(scenario.name)
+  if (known) return t(known)
+  return tOr(`scenarios.name.${scenario.id}`, scenario.crops.map(cropLabel).join(' → ') || scenario.name)
+}
+
+/** One fact of the card: the catalog text when there is one, the fixture's own sentence otherwise. */
+function fact(scenario: RotationScenario, field: 'why' | 'evidence' | 'benefit' | 'gap' | 'risk'): string {
+  const known = translationKeyFor(scenario[field])
+  if (known) return t(known)
+  return tOr(`scenarios.fixture.${scenario.id}.${field}`, scenario[field])
 }
 
 export function RotationFlipCard({ scenario }: { scenario: RotationScenario }) {
@@ -24,7 +38,7 @@ export function RotationFlipCard({ scenario }: { scenario: RotationScenario }) {
   const cropHistory = rowFor(scenario.evidence_rows, CROP_HISTORY_LAYER)
   const kicker = scenario.is_current
     ? t('scenarios.current_sequence')
-    : t('scenarios.option', { crops: scenario.crops.map((crop) => t(`common.crop.${crop.toLowerCase()}`)).join(' / ') })
+    : t('scenarios.option', { crops: scenario.crops.map(cropLabel).join(' / ') })
   // The accessible name states the face currently on screen, not the destination.
   // The front face shows the charts, the back face shows the details.
   const flipName = showsCharts
@@ -59,11 +73,11 @@ export function RotationFlipCard({ scenario }: { scenario: RotationScenario }) {
         />
         {showsCharts ? (
           <dl className="scenario-facts">
-            <div><dt>{t('scenarios.why')}</dt><dd>{t(translationKeyFor(scenario.why) ?? `scenarios.fixture.${scenario.id}.why`)}</dd></div>
-            <div><dt>{t('scenarios.evidence')}</dt><dd>{t(translationKeyFor(scenario.evidence) ?? `scenarios.fixture.${scenario.id}.evidence`)}</dd></div>
-            <div><dt>{t('scenarios.benefit')}</dt><dd>{t(translationKeyFor(scenario.benefit) ?? `scenarios.fixture.${scenario.id}.benefit`)}</dd></div>
-            <div><dt>{t('scenarios.gap')}</dt><dd>{t(translationKeyFor(scenario.gap) ?? `scenarios.fixture.${scenario.id}.gap`)}</dd></div>
-            <div><dt>{t('scenarios.risk')}</dt><dd>{t(translationKeyFor(scenario.risk) ?? `scenarios.fixture.${scenario.id}.risk`)}</dd></div>
+            <div><dt>{t('scenarios.why')}</dt><dd>{fact(scenario, 'why')}</dd></div>
+            <div><dt>{t('scenarios.evidence')}</dt><dd>{fact(scenario, 'evidence')}</dd></div>
+            <div><dt>{t('scenarios.benefit')}</dt><dd>{fact(scenario, 'benefit')}</dd></div>
+            <div><dt>{t('scenarios.gap')}</dt><dd>{fact(scenario, 'gap')}</dd></div>
+            <div><dt>{t('scenarios.risk')}</dt><dd>{fact(scenario, 'risk')}</dd></div>
           </dl>
         ) : (
           <div className="flip-visuals">

@@ -1,15 +1,11 @@
-import { t, translationKeyFor } from '@/strings'
+import { t } from '@/strings'
+import { cropLabel } from '@/strings/labels'
 import type { EvidenceRow } from './ScenarioCards'
 
 type CropHistoryBarsProps = {
   crops: string[]
   basis?: EvidenceRow['basis']
   asOf?: string
-}
-
-function cropLabel(crop: string): string {
-  const key = translationKeyFor(crop)
-  return key ? t(key) : crop
 }
 
 export function CropHistoryBars({ crops, basis, asOf }: CropHistoryBarsProps) {

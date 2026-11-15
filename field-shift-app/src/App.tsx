@@ -1,44 +1,22 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { MapCanvas } from '@/components/MapCanvas'
-import { LayerRail } from '@/components/LayerRail'
-import { ScenarioCards, type RotationScenario } from '@/components/ScenarioCards'
-import { EvidencePanel, type EvidenceRow } from '@/components/EvidencePanel'
-import { TimelineDock } from '@/components/TimelineDock'
-import { AbstentionNotice } from '@/components/AbstentionNotice'
-import { FieldsPanel } from '@/components/FieldsPanel'
-import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
-import { PolygonPanel } from '@/components/PolygonPanel'
-import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { EnsoChip } from '@/components/EnsoChip'
 import { LocaleSwitch } from '@/components/LocaleSwitch'
-import { useLocaleStore } from '@/strings/locale-store'
 import { SheetBoundary } from '@/analysis/SheetBoundary'
-import { ClimateSignal } from '@/components/ClimateSignal'
-import { ensoSchema, fieldClimateSchema, loadParsed, type EnsoState, type FieldClimate, type Loadable } from '@/lib/climate'
-import { useMapStore, type FieldSummary } from '@/lib/map-store'
+import { useLocaleStore } from '@/strings/locale-store'
+import { useMapStore } from '@/lib/map-store'
 import { useLayers } from '@/lib/use-layers'
-import { seasonForDate } from '@/lib/timeline'
-import {
-  regionAdapter,
-  regionFromSearch,
-  searchWithRegion,
-} from '@/lib/regions'
+import { regionAdapter, regionFromSearch, searchWithRegion } from '@/lib/regions'
 import { BASEMAP_ADAPTERS } from '@/lib/basemap-adapters'
-import { unmappedClassColour } from '@/lib/polygon-style'
-import { polygonIdFromSearch, searchWithPolygon, commandFieldId } from '@/lib/polygon-selection'
-import {
-  COMPACT_QUERY,
-  NARROW_QUERY,
-  isCompactViewport,
-  isNarrowViewport,
-  useMediaMatch,
-} from '@/lib/viewport'
-import { t, translationKeyFor } from '@/strings'
+import { polygonIdFromSearch, searchWithPolygon } from '@/lib/polygon-selection'
+import { PHONE_QUERY, useMediaMatch } from '@/lib/viewport'
+import { AppDataProvider, useAppData } from '@/shell/app-data'
+import { Shell } from '@/shell/Shell'
+import { PANELS } from '@/shell/panels'
+import { t } from '@/strings'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
-
-// The Field Phase analysis is a sheet on this page, loaded on first open so the
-// HUD bundle does not carry Recharts. Its state lives in the hash, #analise/<IBGE code>.
+// The analysis is a sheet on this page, loaded on first open so the map bundle does not
+// carry Recharts. Its state lives in the hash, #analise/<IBGE code or FIPS>.
 const AnalysisSheet = lazy(() => import('@/analysis/AnalysisPage'))
 const ANALYSIS_HASH = /^#analise(?:\/(\d+))?$/
 
@@ -57,101 +35,11 @@ function writeAnalysisHash(state: AnalysisState) {
   window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${next}`)
 }
 
-type FieldResponse = { fields: FieldSummary[]; seasons: string[]; default_season: string }
-type ScenarioResponse = {
-  field_id: string
-  season: string
-  state: 'ranked' | 'abstained'
-  threshold: string | null
-  coverage: number | null
-  scenarios: RotationScenario[]
-}
-
-class BackendHttpError extends Error {
-  readonly status: number
-
-  constructor(status: number) {
-    super(`HTTP ${status}`)
-    this.status = status
-  }
-}
-
-function backendFailureReason(reason: unknown): string {
-  return reason instanceof BackendHttpError
-    ? t('empty.backend_http_error', { status: reason.status })
-    : t('empty.backend_unreachable')
-}
-
-export const ZOrder = Object.freeze({
-  chips: 10,
-  layerRail: 20,
-  polygonPanel: 25,
-  evidence: 30,
-  abstentionNotice: 40,
-  timelineDock: 45,
-  scenarioCards: 50,
-  controlStrip: 60,
-  agentBar: 70,
-})
-
-function App() {
-  // Subscribing re-renders the whole HUD when the language switch changes.
-  useLocaleStore((state) => state.locale)
-  const selectedFieldId = useMapStore((state) => state.selectedFieldId)
-  const selectField = useMapStore((state) => state.selectField)
+/** Reads `?region=`, `?basemap=` and `?polygon=` once, then keeps region and polygon in the URL. */
+function useUrlState() {
   const regionId = useMapStore((state) => state.regionId)
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
-  const polygonClass = useMapStore((state) => state.polygonClass)
-  const command = useCommandToggle()
-  const supportingData = useSupportingDataToggle()
-  const [fields, setFields] = useState<FieldSummary[]>([])
-  const [mapTile, setMapTile] = useState<{ z: number; x: number; y: number } | null>(null)
-  const [scenarios, setScenarios] = useState<RotationScenario[]>([])
-  const [scenarioState, setScenarioState] = useState<ScenarioResponse['state'] | null>(null)
-  const [threshold, setThreshold] = useState<string | null>(null)
-  // R-30: the fixture's own season, so the panel can say when the derived season differs.
-  const [fixtureSeason, setFixtureSeason] = useState('2025/26')
-  const [error, setError] = useState<string | null>(null)
-  const [canRetryFields, setCanRetryFields] = useState(false)
-  const [fieldsRequest, setFieldsRequest] = useState(0)
-  const [isLoadingFields, setIsLoadingFields] = useState(true)
-  const [isLoadingScenarios, setIsLoadingScenarios] = useState(false)
-  // The ENSO chip and the climate line load on their own; a failure here never sets
-  // `error`, so the rest of the screen behaves exactly as without them.
-  const [enso, setEnso] = useState<Loadable<EnsoState>>({ status: 'loading' })
-  const [climate, setClimate] = useState<Loadable<FieldClimate> | null>(null)
-  // The top strip has no free room at 360, so below 640 px the ENSO chip
-  // renders at the top of the rotation panel instead of beside the brand. One mount only.
-  const [isNarrow, setIsNarrow] = useState(isNarrowViewport)
-  const [analysis, setAnalysis] = useState<AnalysisState>(analysisFromHash)
-  const analysisToggleRef = useRef<HTMLButtonElement | null>(null)
-  const noticeRef = useRef<HTMLDivElement | null>(null)
-  const [noticeHeight, setNoticeHeight] = useState(0)
-  // Which right edge panel was opened last. The transition into 360 keeps it
-  // and closes the other; leaving 360 never reopens anything.
-  const lastRightPanelRef = useRef<'command' | 'supporting' | null>(null)
 
-  // R-40, R-51, R-52: the two block 4 toggle states. Each takes the default of the width
-  // the app loads at, once, and is never re-derived: a resize keeps the value the user's
-  // last press set, and only a reload returns the default.
-  const [timelineExpanded, setTimelineExpanded] = useState(() => !isNarrowViewport())
-  const [rotationCollapsed, setRotationCollapsed] = useState(() => isCompactViewport())
-  // Structure only, never state (R-40): the timeline toggle is mounted at 360 and 780, and
-  // at 360 it is the region's first control rather than the region's sibling (R-46).
-  const compactViewport = useMediaMatch(COMPACT_QUERY)
-  const narrowViewport = useMediaMatch(NARROW_QUERY)
-  // R-35 and R-36: the dock's top edge follows the rotation panel's measured top edge, so
-  // the 8 px gap and the y 450 floor are kept without hard-coding either panel height.
-  const rotationPanelRef = useRef<HTMLDivElement | null>(null)
-  const [rotationTop, setRotationTop] = useState<number | null>(null)
-
-  // Block 4: one `/layers` request per chosen date and viewport tile feeds both the rail
-  // and the map (R-14, R-24). The rail no longer fetches on its own.
-  useLayers(mapTile)
-
-  // R-01, R-23 and R-32: the load reads `?region=`, `?basemap=` and `?polygon=` once. The
-  // region is never chosen by a visible control, the basemap stays EOX without a Google key,
-  // and a `?polygon=` that does not resolve in the active region clears the selection.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const search = window.location.search
@@ -161,7 +49,7 @@ function App() {
     const requestedBasemap = new URLSearchParams(search).get('basemap')
     if (requestedBasemap === 'google' || requestedBasemap === 'google-satellite') {
       const google = BASEMAP_ADAPTERS.find((adapter) => adapter.id === 'google-satellite')
-      // R-32: without a key the EOX adapter stays, and the region says why.
+      // Without a key the EOX basemap stays, and the polygon panel says why.
       if (google?.selectable()) store.setBasemapId('google-satellite')
       else store.setBasemapKeyMissing(true)
     }
@@ -170,10 +58,7 @@ function App() {
     else if (store.selectedPolygonId !== null) store.clearPolygonSelection()
   }, [])
 
-  // R-03 and R-23: the URL is the only record of the region and the polygon selection, so it
-  // is rewritten with `history.replaceState` and never with a navigation or local storage.
-  // The effect reads the store rather than the render snapshot, so the first write after the
-  // mount read above cannot momentarily drop `?region=` or `?polygon=`.
+  // The URL is the only record of the region and the polygon, rewritten without a navigation.
   useEffect(() => {
     if (typeof window === 'undefined') return
     const store = useMapStore.getState()
@@ -186,485 +71,111 @@ function App() {
       window.history.replaceState(null, '', `${window.location.pathname}${next}${window.location.hash}`)
     }
   }, [regionId, selectedPolygonId])
+}
 
-  // R-24 and AM-10: only the fixture fields of the active region are listed or drawn, so a
-  // Brazil chip never appears on a United States map. Before the CSB fixture exists the
-  // United States list is empty, which is the honest state.
-  const regionFields = useMemo(
-    () => fields.filter((field) => regionAdapter(regionId).fixtureIds.includes(field.id) || field.region === regionId),
-    [fields, regionId],
+function Brand() {
+  return (
+    <a aria-label={t('map.field_map_home')} className="brand" href="/">
+      <span aria-hidden="true" className="brand-mark"><i /><i /><i /></span>
+      <span>{t('map.brand')}{t('map.brand_accent')}</span>
+    </a>
   )
+}
 
-  // A field whose coverage is not measured has no scenarios, and still shows why.
-  const showsAbstention = Boolean(
-    scenarioState === 'abstained' && threshold && (scenarios.length > 0 || threshold === 'coverage_not_measured'),
+function FieldMap({ analysisOpen, onToggleAnalysis, toggleRef }: {
+  analysisOpen: boolean
+  onToggleAnalysis: () => void
+  toggleRef: RefObject<HTMLButtonElement | null>
+}) {
+  const { fields, selectedField, enso, error } = useAppData()
+  const [mapTile, setMapTile] = useState<{ z: number; x: number; y: number } | null>(null)
+  const phone = useMediaMatch(PHONE_QUERY)
+  // One `/layers` request per chosen date and viewport tile feeds both the layer panel and the map.
+  useLayers(mapTile)
+
+  return (
+    <Shell
+      end={(
+        <>
+          <button
+            aria-expanded={analysisOpen}
+            className="fs-button analysis-toggle"
+            onClick={onToggleAnalysis}
+            ref={toggleRef}
+            type="button"
+          >
+            {t('analysis.toggle')}
+          </button>
+          <LocaleSwitch />
+        </>
+      )}
+      map={<MapCanvas fields={fields} onTileChange={setMapTile} selectedField={selectedField} />}
+      notice={error ? <p className="error-notice" role="alert">{error}</p> : null}
+      panels={PANELS}
+      start={(
+        <>
+          <Brand />
+          {!phone && <EnsoChip enso={enso} />}
+        </>
+      )}
+    />
   )
-  const hasNotice = Boolean(error || showsAbstention)
+}
 
-  // R-35, R-36: the rotation panel's top edge is the only anchor the dock needs. It is
-  // measured, not assumed, because a collapsed panel's height is its header and a
-  // resized viewport moves it.
-  useLayoutEffect(() => {
-    const node = rotationPanelRef.current
-    if (!node) return
-    const next = node.getBoundingClientRect().top
-    setRotationTop((current) => (current === null || Math.abs(current - next) > 0.1 ? next : current))
-  })
-
-  useEffect(() => {
-    const node = rotationPanelRef.current
-    if (!node || typeof ResizeObserver === 'undefined') return
-    const measure = () => {
-      setRotationTop((current) => {
-        const next = node.getBoundingClientRect().top
-        return current === null || Math.abs(current - next) > 0.1 ? next : current
-      })
-    }
-    const observer = new ResizeObserver(measure)
-    observer.observe(node)
-    window.addEventListener('resize', measure)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', measure)
-    }
-  }, [rotationCollapsed])
-
-  // The status notice and the right edge column are separate fixed overlays, so the
-  // 8 px gap is kept by measuring the notice, not by nesting it. The measure
-  // runs after every render, because a viewport change can rewrap the notice without
-  // dispatching a resize event.
-  useLayoutEffect(() => {
-    const node = noticeRef.current
-    const next = node ? node.getBoundingClientRect().height : 0
-    setNoticeHeight((current) => (Math.abs(current - next) > 0.5 ? next : current))
-  })
-
-  useEffect(() => {
-    const node = noticeRef.current
-    if (!node || typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => {
-      setNoticeHeight((current) => {
-        const next = node.getBoundingClientRect().height
-        return Math.abs(current - next) > 0.5 ? next : current
-      })
-    })
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [hasNotice])
-
-  const selectedField = useMemo(
-    () => regionFields.find((field) => field.id === selectedFieldId) ?? null,
-    [regionFields, selectedFieldId],
-  )
-  // R-28: the chip's class comes from the table through the store, never from the catalog, and
-  // an unresolved or unmapped class draws the unmapped colour.
-  const selectedPolygonChip = useMemo(
-    () => (selectedPolygonId === null
-      ? null
-      : {
-        fieldId: commandFieldId(regionAdapter(regionId), selectedPolygonId),
-        name: polygonClass?.name ?? null,
-        hex: polygonClass?.hex ?? unmappedClassColour(),
-      }),
-    [selectedPolygonId, polygonClass, regionId],
-  )
-  // Every evidence row is presented from its own fields. The layer name is
-  // the fixture string through its catalog key; the basis label comes from the row's
-  // own `basis` in EvidencePanel. No state outside the row can relabel it.
-  const evidenceRows = useMemo<EvidenceRow[]>(() => {
-    const selectedScenario = scenarios.find((scenario) => scenario.is_current) ?? scenarios[0]
-    return (selectedScenario?.evidence_rows ?? []).map((row) => ({
-      ...row,
-      layer: t(translationKeyFor(row.layer) ?? row.layer),
-    }))
-  }, [scenarios])
-
-  // R-29 and R-31: the dock and the band read one chosen date and one derived season.
-  const chosenDate = useMapStore((state) => state.chosenDate ?? state.axis.default)
-  const derivedSeason = seasonForDate(chosenDate)
-  // The band draws the crops of the field's scenarios (Soybean, Corn and Cotton here).
-  const fieldCrops = useMemo(() => {
-    const seen = new Set<string>()
-    for (const scenario of scenarios) {
-      for (const crop of scenario.crops) seen.add(crop)
-    }
-    return [...seen]
-  }, [scenarios])
-  // R-30: the fixture scenario stays the fixture scenario, and the panel says which
-  // season its values belong to when the chosen date derives another one.
-  const showFixtureNote = selectedField !== null && derivedSeason !== fixtureSeason
-
-  useEffect(() => {
-    const controller = new AbortController()
-    fetch(`${API_BASE}/fields`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new BackendHttpError(response.status)
-        return response.json() as Promise<FieldResponse>
-      })
-      .then((data) => {
-        setFields(data.fields)
-        setFixtureSeason(data.default_season)
-        setError(null)
-        setCanRetryFields(false)
-      })
-      .catch((reason: unknown) => {
-        if (reason instanceof DOMException && reason.name === 'AbortError') return
-        setFields([])
-        setScenarios([])
-        setScenarioState(null)
-        setThreshold(null)
-        setError(backendFailureReason(reason))
-        setCanRetryFields(true)
-      })
-      .finally(() => setIsLoadingFields(false))
-    return () => controller.abort()
-  }, [fieldsRequest])
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-    const query = window.matchMedia(NARROW_QUERY)
-    const handleChange = (event: MediaQueryListEvent) => setIsNarrow(event.matches)
-    query.addEventListener('change', handleChange)
-    return () => query.removeEventListener('change', handleChange)
-  }, [])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    loadParsed(`${API_BASE}/climate/enso`, ensoSchema, controller.signal)
-      .then(setEnso)
-      .catch(() => {})
-    return () => controller.abort()
-  }, [])
-
-  useEffect(() => {
-    if (!selectedFieldId) return
-    const controller = new AbortController()
-    setClimate({ status: 'loading' })
-    loadParsed(`${API_BASE}/fields/${selectedFieldId}/climate`, fieldClimateSchema, controller.signal)
-      .then(setClimate)
-      .catch(() => {})
-    return () => controller.abort()
-  }, [selectedFieldId])
-
-  const climateEvidence = useMemo(() => {
-    if (climate?.status !== 'ready') return null
-    const { municipality, rows } = climate.data
-    return { municipality: `${municipality.name_official} (${municipality.uf})`, rows }
-  }, [climate])
-
-  useEffect(() => {
-    if (!selectedFieldId) return
-    const controller = new AbortController()
-    setIsLoadingScenarios(true)
-    setError(null)
-    // R-30: the scenario request carries no season. The fixture evidence rows have no
-    // season field, so a date change must not refetch or relabel their values.
-    fetch(`${API_BASE}/fields/${selectedFieldId}/scenarios`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new BackendHttpError(response.status)
-        return response.json() as Promise<ScenarioResponse>
-      })
-      .then((data) => {
-        setScenarios(data.scenarios)
-        setScenarioState(data.state)
-        setThreshold(data.threshold)
-      })
-      .catch((reason: unknown) => {
-        if (reason instanceof DOMException && reason.name === 'AbortError') return
-        setScenarios([])
-        setScenarioState(null)
-        setError(backendFailureReason(reason))
-      })
-      .finally(() => setIsLoadingScenarios(false))
-    return () => controller.abort()
-  }, [selectedFieldId])
-
-  const handleRetryFields = useCallback(() => {
-    setIsLoadingFields(true)
-    setFieldsRequest((request) => request + 1)
-  }, [])
-
-  const handleSelectField = useCallback((fieldId: string) => {
-    if (fieldId === useMapStore.getState().selectedFieldId) return
-    setScenarios([])
-    setScenarioState(null)
-    setThreshold(null)
-    selectField(fieldId)
-  }, [selectField])
-
-  // R-40: at 360 opening one panel closes the other. Above 640 both may stay open (R-23).
-  // The width is read at press time so a resize cannot leave the rule stale.
-  const handleToggleTimeline = useCallback(() => {
-    setTimelineExpanded((current) => !current)
-  }, [])
-
-  const handleToggleRotation = useCallback(() => {
-    setRotationCollapsed((current) => !current)
-  }, [])
-
-  const handleToggleCommand = useCallback(() => {
-    const willOpen = !command.isOpen
-    if (isNarrowViewport() && willOpen) supportingData.close()
-    if (willOpen) lastRightPanelRef.current = 'command'
-    command.toggle()
-  }, [command, supportingData])
-
-  const handleToggleSupportingData = useCallback(() => {
-    const willOpen = !supportingData.isOpen
-    if (isNarrowViewport() && willOpen) command.close()
-    if (willOpen) lastRightPanelRef.current = 'supporting'
-    supportingData.toggle()
-  }, [command, supportingData])
-
-  // The one resize transition that changes a toggle state. When the viewport
-  // becomes 360 while both panels are open, the panel opened last stays and the older
-  // one closes. Both closes are programmatic, so neither pulls focus (the command
-  // form's close skips its focus restore), and focus stays where it was.
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-    const query = window.matchMedia(NARROW_QUERY)
-    const handleChange = (event: MediaQueryListEvent) => {
-      if (!event.matches || !command.isOpen || !supportingData.isOpen) return
-      if (lastRightPanelRef.current === 'supporting') command.close()
-      else supportingData.close()
-    }
-    query.addEventListener('change', handleChange)
-    return () => query.removeEventListener('change', handleChange)
-  }, [command.isOpen, supportingData.isOpen, command.close, supportingData.close])
-
-  // Opening the analysis follows the selected field's municipality; the sheet's own
-  // picker may move to another municipality without changing the selected field.
-  const openAnalysis = useCallback((code: number | null) => {
-    setAnalysis({ open: true, code })
-  }, [])
+function App() {
+  // Subscribing re-renders the whole screen when the language switch changes.
+  useLocaleStore((state) => state.locale)
+  useUrlState()
+  const [analysis, setAnalysis] = useState<AnalysisState>(analysisFromHash)
+  const analysisToggleRef = useRef<HTMLButtonElement | null>(null)
+  const openAnalysis = useCallback((code: number | null) => setAnalysis({ open: true, code }), [])
   const closeAnalysis = useCallback(() => {
     setAnalysis((current) => ({ ...current, open: false }))
     analysisToggleRef.current?.focus()
   }, [])
   const selectAnalysisCode = useCallback((code: number) => setAnalysis({ open: true, code }), [])
 
-  useEffect(() => {
-    writeAnalysisHash(analysis)
-  }, [analysis])
-
+  useEffect(() => { writeAnalysisHash(analysis) }, [analysis])
   useEffect(() => {
     const onHashChange = () => setAnalysis(analysisFromHash())
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const shellStyle = {
-    '--fs-notice-block': `${hasNotice ? noticeHeight + 8 : 0}px`,
-    ...(rotationTop === null ? {} : { '--fs-rotation-top': `${rotationTop}px` }),
-  } as CSSProperties
-
   return (
-    <main className="app-shell" style={shellStyle}>
-      <MapCanvas fields={regionFields} selectedField={selectedField} onTileChange={setMapTile} />
-      <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
-        <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
-      </div>
-
-      {/* Block 5, R-40 and OD-03: the Polygon region sits at its own numbers at 1440 and 780.
-          At 360 it is not mounted at all, and the fields chip carries the class there. */}
-      {!narrowViewport && (
-        <div className="polygon-panel-anchor" style={{ zIndex: ZOrder.polygonPanel }}>
-          <PolygonPanel />
-        </div>
-      )}
-
-      <div className="overlay anchor-top-left layer-chips" style={{ zIndex: ZOrder.chips }}>
-        <div className="overlay-interactive top-chip brand-chip">
-          <a className="brand" href="/" aria-label={t('map.field_map_home')}>
-            <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
-            <span>{t('map.brand')}{t('map.brand_accent')}</span>
-          </a>
-        </div>
-        {!isNarrow && <div className="overlay-interactive enso-chip-slot"><EnsoChip enso={enso} /></div>}
-      </div>
-
-      <div className="overlay anchor-top-right layer-controls" style={{ zIndex: ZOrder.controlStrip }}>
-        <div className="overlay-interactive topbar-meta">
-          <span className="top-chip workspace-label">{t('map.field_intelligence')}</span>
-          <span className="top-chip profile-avatar" aria-label={t('map.grower_profile')}>GM</span>
-          <CommandToggle isOpen={command.isOpen} buttonRef={command.buttonRef} onToggle={handleToggleCommand} />
-          <SupportingDataToggle isOpen={supportingData.isOpen} onToggle={handleToggleSupportingData} />
-        </div>
-        {/* The team's strip keeps exactly its four items; the analysis and language controls sit beside
-            it. At 360 there is no room, so they move into the rotation panel instead. */}
-        {!narrowViewport && <div className="overlay-interactive topbar-extra">
-          <button
-            ref={analysisToggleRef}
-            type="button"
-            className="top-chip analysis-toggle"
-            aria-expanded={analysis.open}
-            onClick={() => (analysis.open ? closeAnalysis() : openAnalysis(selectedField?.municipality_code ?? null))}
-          >
-            {t('analysis.toggle')}
-          </button>
-          <LocaleSwitch />
-        </div>}
-      </div>
-
-      {/* One notice node. At 360 it is the first box of the left stack; above 640 it
-          sits at right 22, top 60 and the right edge column starts 8 px below it. */}
-      <div className="left-stack">
-        {hasNotice && (
-          <div className="overlay anchor-notice layer-notice" style={{ zIndex: ZOrder.abstentionNotice }}>
-            <div ref={noticeRef} className="overlay-interactive panel-surface notice-anchor">
-              {error && <p className="error-notice" role="alert">{error}</p>}
-              {showsAbstention && threshold && <AbstentionNotice threshold={threshold} />}
-            </div>
-          </div>
-        )}
-
-        <div className="overlay anchor-left field-list-anchor layer-chips" style={{ zIndex: ZOrder.chips }}>
-          <FieldsPanel
-            fields={regionFields}
-            selectedFieldId={selectedFieldId}
-            isLoading={isLoadingFields}
-            error={error}
-            canRetry={canRetryFields}
-            onSelectField={handleSelectField}
-            onRetry={handleRetryFields}
-            selectedPolygon={selectedPolygonChip}
-          />
-        </div>
-      </div>
-
-      {/* Block 4 wave 4: the dock is its own anchor at z 45, between the abstention notice
-          (40) and the rotation panel (50). It is fixed, so at 780 its 8 px gap and the
-          y 450 floor are both kept while block 3's panel boxes do not move. */}
-      <div className="overlay anchor-timeline-dock" style={{ zIndex: ZOrder.timelineDock }}>
-        <TimelineDock
-          crops={fieldCrops}
-          location={selectedField?.location ?? null}
-          expanded={timelineExpanded}
-          onToggle={handleToggleTimeline}
-          showToggle={compactViewport}
-          toggleInside={narrowViewport && timelineExpanded}
-        />
-      </div>
-
-      <div className="overlay anchor-bottom-left layer-cards" style={{ zIndex: ZOrder.scenarioCards }}>
-        <div
-          ref={rotationPanelRef}
-          className="overlay-interactive panel-surface scenario-anchor"
-          data-collapsed={rotationCollapsed ? 'true' : 'false'}
-          data-rotation-panel
-          style={{ zIndex: ZOrder.scenarioCards }}
-        >
-          <div className="rotation-heading-row">
-            <div className="rotation-heading-copy">
-              <div>
-                <p className="eyebrow">{t('map.plan_with_evidence')}</p>
-                <h2>{t('map.rotation_outlook')}</h2>
-              </div>
-              {/* R-48: native button, name states the action, 44 by 44 px, focus stays. */}
-              <button
-                aria-expanded={!rotationCollapsed}
-                aria-label={t(rotationCollapsed ? 'rotation.expand' : 'rotation.collapse')}
-                className="rotation-collapse-toggle"
-                onClick={handleToggleRotation}
-                type="button"
-              >
-                <svg aria-hidden="true" focusable="false" height="14" viewBox="0 0 14 14" width="14">
-                  <path
-                    d={rotationCollapsed ? 'M2 5l5 5 5-5' : 'M2 9l5-5 5 5'}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                  />
-                </svg>
-              </button>
-            </div>
-            {/* AM-07 and R-26: a polygon has no coverage measurement, so the pill is unmounted
-                while a polygon is the selected field rather than printing a 0 percent. */}
-            {selectedPolygonId === null && (
-              <span className="field-coverage-pill"><span className="coverage-dot" />{selectedField && selectedField.coverage === null
-                ? t('map.coverage_not_measured')
-                : t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
-            )}
-            {showFixtureNote && (
-              <p className="fixture-season-note">
-                {t('timeline.fixture_data', { season: fixtureSeason, derived: derivedSeason })}
-              </p>
-            )}
-          </div>
-          {selectedField?.municipality_code ? (
-            <div className="analysis-link-row">
-              <button
-                type="button"
-                className="analysis-link"
-                onClick={() => openAnalysis(selectedField.municipality_code ?? null)}
-              >
-                {t('analysis.open')}
-              </button>
-            </div>
-          ) : null}
-          {isNarrow && (
-            <div className="enso-chip-slot enso-chip-inline">
-              <EnsoChip enso={enso} />
-              {narrowViewport && <LocaleSwitch />}
-            </div>
-          )}
-          <ClimateSignal climate={selectedFieldId ? climate : null} />
-          <ScenarioCards
-            collapsed={rotationCollapsed}
-            emptyReason={isLoadingFields || isLoadingScenarios
-              ? null
-              : error ?? (!selectedFieldId
-                ? t('empty.select_field')
-                : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
-            isLoading={isLoadingFields || isLoadingScenarios}
-            scenarios={scenarios}
-            state={scenarioState === 'abstained' ? null : scenarioState}
-            threshold={scenarioState === 'abstained' ? null : threshold}
-          />
-        </div>
-      </div>
-
-      {(command.isOpen || supportingData.isOpen) && (
-        <div className="overlay anchor-right-column">
-          <div className="right-column-stack">
-            {command.isOpen && (
-              <div className="overlay-interactive panel-surface agent-anchor layer-agent" style={{ zIndex: ZOrder.agentBar }}>
-                <AgentBar
-                  draft={command.draft}
-                  commandNameInputRef={command.commandNameInputRef}
-                  onDraftChange={command.updateDraft}
-                />
-              </div>
-            )}
-            {supportingData.isOpen && (
-              <div
-                id={SUPPORTING_DATA_PANEL_ID}
-                className="overlay-interactive panel-surface evidence-anchor layer-evidence"
-                style={{ zIndex: ZOrder.evidence }}
-              >
-                <EvidencePanel
-                  rows={evidenceRows}
-                  climate={climateEvidence}
-                  isLoading={isLoadingFields || isLoadingScenarios}
-                  emptyReason={isLoadingFields || isLoadingScenarios
-                    ? null
-                    : error ?? (evidenceRows.length === 0 ? t('evidence.empty_hint') : null)}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+    <AppDataProvider openAnalysis={openAnalysis}>
+      <AnalysisAwareMap
+        analysis={analysis}
+        closeAnalysis={closeAnalysis}
+        openAnalysis={openAnalysis}
+        toggleRef={analysisToggleRef}
+      />
       {analysis.open && (
         <SheetBoundary onClose={closeAnalysis}>
           <Suspense fallback={null}>
-            <AnalysisSheet code={analysis.code} onSelectCode={selectAnalysisCode} onClose={closeAnalysis} />
+            <AnalysisSheet code={analysis.code} onClose={closeAnalysis} onSelectCode={selectAnalysisCode} />
           </Suspense>
         </SheetBoundary>
       )}
-    </main>
+    </AppDataProvider>
+  )
+}
+
+/** The analysis button opens the selected field's municipality; it needs the field data, so it sits inside the provider. */
+function AnalysisAwareMap({ analysis, closeAnalysis, openAnalysis, toggleRef }: {
+  analysis: AnalysisState
+  closeAnalysis: () => void
+  openAnalysis: (code: number | null) => void
+  toggleRef: RefObject<HTMLButtonElement | null>
+}) {
+  const { selectedField } = useAppData()
+  return (
+    <FieldMap
+      analysisOpen={analysis.open}
+      onToggleAnalysis={() => (analysis.open ? closeAnalysis() : openAnalysis(selectedField?.municipality_code ?? null))}
+      toggleRef={toggleRef}
+    />
   )
 }
 
 export default App
-

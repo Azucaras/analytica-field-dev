@@ -37,6 +37,8 @@ type ScenarioCardsProps = {
    * because the collapsed panel's height is that measured header.
    */
   collapsed?: boolean
+  /** False drops the heading block when a panel frame already titles the list. */
+  showHeading?: boolean
 }
 
 export function ScenarioCards({
@@ -46,16 +48,21 @@ export function ScenarioCards({
   isLoading = false,
   emptyReason,
   collapsed = false,
+  showHeading = true,
 }: ScenarioCardsProps) {
   return (
-    <section className="scenario-panel" aria-labelledby="scenario-title">
-      <div className="section-heading">
+    <section
+      className="scenario-panel"
+      aria-labelledby={showHeading ? 'scenario-title' : undefined}
+      aria-label={showHeading ? undefined : t('scenarios.title')}
+    >
+      {showHeading && <div className="section-heading">
         <div>
           <p className="eyebrow">{t('scenarios.rotation_planning')}</p>
           <h2 id="scenario-title">{t('scenarios.title')}</h2>
         </div>
         <span className="season-chip">{t('scenarios.season', { season: '2025/26' })}</span>
-      </div>
+      </div>}
       {collapsed ? null : (
         <>
           {state === 'abstained' && threshold !== null && (

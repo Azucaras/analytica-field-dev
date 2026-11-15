@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useShellStore } from '@/shell/shell-store'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useMapStore } from '@/lib/map-store'
@@ -115,6 +116,7 @@ function mockApi({ ensoFails = false, climateFails = false } = {}) {
 }
 
 beforeEach(() => {
+  useShellStore.getState().reset()
   // The app opens on the United States; these cases use the Brazilian fields, so Brazil is active.
   window.history.replaceState({}, '', '/?region=br')
   useMapStore.setState({ regionId: 'br', selectedFieldId: null })
@@ -129,13 +131,8 @@ afterEach(() => {
 })
 
 async function selectField(user: ReturnType<typeof userEvent.setup>, name: RegExp) {
-  await user.click(await screen.findByRole('button', { name: 'Fields' }))
-  const row = await waitFor(() => {
-    const element = document.getElementById('fields-chip-row')
-    expect(element).toBeTruthy()
-    return element as HTMLElement
-  })
-  await user.click(await within(row).findByRole('button', { name }))
+  const list = await screen.findByRole('group', { name: /your fields/i })
+  await user.click(await within(list).findByRole('button', { name }))
 }
 
 describe('climate, pilot fields and the analysis sheet on the whole screen', () => {
@@ -146,13 +143,14 @@ describe('climate, pilot fields and the analysis sheet on the whole screen', () 
     await selectField(user, /Field 04/)
 
     expect(await screen.findByText('Ranking withheld: coverage not measured.')).toBeTruthy()
-    const panel = document.querySelector('.scenario-anchor') as HTMLElement
+    const panel = document.querySelector('.fs-panel[data-panel="rotations"]') as HTMLElement
     expect(within(panel).getByText('Coverage not measured')).toBeTruthy()
     expect(await within(panel).findByText('No rotation scenarios are available for this field.')).toBeTruthy()
     expect(panel.textContent).not.toContain('%')
-    expect(document.querySelector('.field-chip-synthetic')?.textContent).toBe('synthetic field')
-    // The climate line for the pilot municipality is on screen with its own name.
-    expect(await within(panel).findByRole('region', { name: /Climate signal, Tupanciret/ })).toBeTruthy()
+    expect(document.querySelector('.fs-field-tag')?.textContent).toBe('synthetic field')
+    // The climate line for the pilot municipality is on screen, in its own panel, with its own name.
+    const climatePanel = document.querySelector('.fs-panel[data-panel="climate"]') as HTMLElement
+    expect(await within(climatePanel).findByRole('region', { name: /Climate signal, Tupanciret/ })).toBeTruthy()
   })
 
   it('a failing ENSO endpoint shows the literal and leaves the field list working', async () => {
@@ -196,7 +194,7 @@ describe('climate, pilot fields and the analysis sheet on the whole screen', () 
       if (/^(?:\d+(?:\.\d+)?%?|\d+(?:\.\d+)?\s*[A-Za-z³⁄/%]+|\d{4}[-/]\d{2}(?:[-/]\d{2})?|https?:\/\/\S+|GM|[·/]+|\d+)$/.test(text)) return
       literals.push(text)
     }
-    for (const node of document.querySelectorAll('.climate-signal *, .climate-evidence *, .enso-chip *, .field-chip-synthetic')) {
+    for (const node of document.querySelectorAll('.climate-signal *, .climate-evidence *, .enso-chip *, .fs-field-tag')) {
       if (node.closest('[data-dynamic-content]')) continue
       for (const child of node.childNodes) {
         if (child.nodeType !== Node.TEXT_NODE) continue
@@ -234,10 +232,10 @@ describe('climate, pilot fields and the analysis sheet on the whole screen', () 
     mockApi()
     const user = userEvent.setup()
     render(<App />)
-    expect(await screen.findByRole('button', { name: 'Talhões' })).toBeTruthy()
+    expect(await screen.findAllByRole('button', { name: 'Talhões' })).not.toHaveLength(0)
     expect(screen.getByRole('button', { name: 'Dados de apoio' })).toBeTruthy()
     await user.click(screen.getByRole('button', { name: 'EN' }))
-    expect(await screen.findByRole('button', { name: 'Fields' })).toBeTruthy()
+    expect(await screen.findAllByRole('button', { name: 'Fields' })).not.toHaveLength(0)
     expect(localStorage.getItem('fs.locale')).toBe('en')
     useLocaleStore.setState({ locale: 'en' })
   })

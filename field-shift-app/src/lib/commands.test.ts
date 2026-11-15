@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { commandInputSchema, listCommands, runCommand } from './commands'
 import { useMapStore } from './map-store'
+import { useShellStore } from '@/shell/shell-store'
 
 afterEach(() => {
   useMapStore.setState({
@@ -43,12 +44,16 @@ describe('command registry', () => {
     }
   })
 
-  it('accepts only scenarios and evidence for open_panel', () => {
+  it('opens any registered panel, and scenarios as the older name of rotations', () => {
     runCommand('open_panel', { panel: 'evidence' })
     expect(useMapStore.getState().openPanelName).toBe('evidence')
+    expect(useShellStore.getState().states.evidence).toBe('open')
 
     runCommand('open_panel', { panel: 'scenarios' })
-    expect(useMapStore.getState().openPanelName).toBe('scenarios')
+    expect(useShellStore.getState().states.rotations).toBe('open')
+
+    runCommand('open_panel', { panel: 'layers' })
+    expect(useShellStore.getState().states.layers).toBe('open')
   })
 
   it('rejects the withdrawn constraints panel with a schema failure', () => {

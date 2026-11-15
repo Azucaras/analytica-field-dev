@@ -1,12 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { useMapStore } from '@/lib/map-store'
 import { en } from './strings/en'
 import { layersResponse } from '@/test/api-fixtures'
-import App, { ZOrder } from './App'
+import App from './App'
+import { AppDataProvider } from '@/shell/app-data'
+import { Shell } from '@/shell/Shell'
+import { definePanel } from '@/shell/registry'
+import { useShellStore } from '@/shell/shell-store'
+import { PANELS } from '@/shell/panels'
+import { PANEL_IDS } from '@/shell/panel-ids'
+import { Sprout } from 'lucide-react'
 
 function scanVisibleUi(root: ParentNode) {
   const catalogKeys = new Set(Object.keys(en))
@@ -21,7 +26,7 @@ function scanVisibleUi(root: ParentNode) {
     literalStrings.add(text)
   }
 
-  for (const node of root.querySelectorAll('.app-shell *')) {
+  for (const node of root.querySelectorAll('.fs-shell *')) {
     if (node.closest('[data-dynamic-content]')) continue
     for (const child of node.childNodes) {
       if (child.nodeType !== Node.TEXT_NODE) continue
@@ -29,7 +34,7 @@ function scanVisibleUi(root: ParentNode) {
       if (text) inspect(text)
     }
   }
-  for (const node of root.querySelectorAll('.app-shell [aria-label], .app-shell [placeholder], .app-shell [title]')) {
+  for (const node of root.querySelectorAll('.fs-shell [aria-label], .fs-shell [placeholder], .fs-shell [title]')) {
     if (node.closest('[data-dynamic-content]')) continue
     for (const attribute of ['aria-label', 'placeholder', 'title']) {
       const text = node.getAttribute(attribute)?.trim()
@@ -57,6 +62,7 @@ vi.mock('maplibre-gl', () => ({
     addSource = vi.fn()
     addLayer = vi.fn()
     flyTo = vi.fn()
+    fitBounds = vi.fn()
     on = vi.fn()
     remove = vi.fn()
     getSource = vi.fn(() => null)
@@ -146,6 +152,7 @@ beforeEach(() => {
   // so they run with Brazil active, which `?region=` is the only way to choose.
   window.history.replaceState({}, '', '/?region=br')
   useMapStore.setState({ regionId: 'br', selectedFieldId: null, chosenDate: null })
+  useShellStore.getState().reset()
 })
 
 afterEach(() => {
@@ -157,155 +164,141 @@ afterEach(() => {
   window.history.replaceState({}, '', '/')
 })
 
-describe('field map and rotation scenario selection', () => {
-  async function expandFields(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(await screen.findByRole('button', { name: 'Fields' }))
-    return await waitFor(() => {
-      const row = document.getElementById('fields-chip-row')
-      expect(row).toBeTruthy()
-      return row as HTMLElement
-    })
-  }
 
+const rail = (id: string) => document.querySelector(`.fs-rail [data-tool="${id}"]`) as HTMLButtonElement
+const panel = (id: string) => document.querySelector(`.fs-panel[data-panel="${id}"]`) as HTMLElement | null
+
+async function fieldList() {
+  return await screen.findByRole('group', { name: /your fields|map\.your_fields/i })
+}
+
+async function pickField(user: ReturnType<typeof userEvent.setup>, name: RegExp | string) {
+  const list = await fieldList()
+  await user.click(await within(list).findByRole('button', { name }))
+}
+
+function stubPhone(matches: boolean) {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: matches && query.includes('760px'),
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }))
+}
+
+describe('the shell: a rail of panels around the map', () => {
+  it('registers every panel id the agent command knows, and no other', () => {
+    expect(PANELS.map((entry) => entry.id).sort()).toEqual([...PANEL_IDS].sort())
+  })
+
+  it('puts the map in its own cell and each default panel in its slot', async () => {
+    mockApi()
+    render(<App />)
+
+    expect(await screen.findByRole('region', { name: 'Field map' })).toBeTruthy()
+    const slotOf = (id: string) => panel(id)?.closest('[data-slot-name]')?.getAttribute('data-slot-name')
+    await waitFor(() => expect(panel('fields')).toBeTruthy())
+    expect(slotOf('fields')).toBe('left')
+    expect(slotOf('climate')).toBe('left')
+    expect(slotOf('polygon')).toBe('left')
+    expect(slotOf('layers')).toBe('right')
+    expect(slotOf('timeline')).toBe('bottom')
+    expect(slotOf('rotations')).toBe('bottom')
+    // Closed by default: no frame, and the rail button is not pressed.
+    expect(panel('evidence')).toBeNull()
+    expect(panel('command')).toBeNull()
+    expect(rail('evidence').getAttribute('aria-pressed')).toBe('false')
+    // No panel is a floating overlay on the map.
+    expect(document.querySelector('.fs-map .fs-panel')).toBeNull()
+  })
+
+  it('lists one rail button per panel, in the order of the panel list', async () => {
+    mockApi()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Field map' })
+    const ids = [...document.querySelectorAll('.fs-rail [data-tool]')].map((node) => node.getAttribute('data-tool'))
+    expect(ids).toEqual([...PANELS].sort((a, b) => a.order - b.order).map((entry) => entry.id))
+  })
+
+  it('collapses a panel to its header, closes it, and reopens it from the rail', async () => {
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await fieldList()
+    const header = within(panel('fields') as HTMLElement).getByRole('button', { name: 'Fields', expanded: true })
+    await user.click(header)
+    expect(panel('fields')?.getAttribute('data-state')).toBe('collapsed')
+    expect(screen.queryByRole('group', { name: /your fields/i })).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Close Fields' }))
+    expect(panel('fields')).toBeNull()
+    expect(rail('fields').getAttribute('aria-pressed')).toBe('false')
+
+    await user.click(rail('fields'))
+    expect(await fieldList()).toBeTruthy()
+    expect(rail('fields').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('a panel that throws shows its own message and leaves the others working', async () => {
+    mockApi()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const Broken = () => { throw new Error('boom') }
+    const panels = [
+      definePanel({ id: 'broken', titleKey: 'fields.trigger', icon: Sprout, slot: 'left', order: 1, defaultState: 'open', Component: Broken }),
+      definePanel({ id: 'fine', titleKey: 'layers.navigation', icon: Sprout, slot: 'right', order: 2, defaultState: 'open', Component: () => <p>still here</p> }),
+    ]
+    render(
+      <AppDataProvider openAnalysis={() => {}}>
+        <Shell end={null} map={<div />} panels={panels} start={null} />
+      </AppDataProvider>,
+    )
+
+    expect((await screen.findByRole('alert')).textContent).toContain('This panel could not be shown.')
+    expect(screen.getByText('still here')).toBeTruthy()
+  })
+
+  it('on a phone shows a tab bar and opens one panel at a time in a sheet', async () => {
+    stubPhone(true)
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await screen.findByRole('region', { name: 'Field map' })
+    expect(document.querySelector('.fs-rail')).toBeNull()
+    expect(document.querySelector('.fs-slot')).toBeNull()
+    const tabs = document.querySelector('.fs-tabbar') as HTMLElement
+    expect(tabs).toBeTruthy()
+
+    await user.click(within(tabs).getByRole('button', { name: 'Layers' }))
+    expect(document.querySelector('.fs-sheet')?.getAttribute('data-panel')).toBe('layers')
+    await user.click(within(tabs).getByRole('button', { name: 'Fields' }))
+    expect(document.querySelector('.fs-sheet')?.getAttribute('data-panel')).toBe('fields')
+    expect(document.querySelectorAll('.fs-sheet')).toHaveLength(1)
+    await user.click(within(tabs).getByRole('button', { name: 'Fields' }))
+    expect(document.querySelector('.fs-sheet')).toBeNull()
+  })
+})
+
+describe('fields, scenarios and evidence', () => {
   it('scans rendered interface text for untranslated literals when t returns keys', async () => {
     translationTestState.useKeys = true
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(await screen.findByRole('button', { name: 'fields.trigger' }))
-    const row = await waitFor(() => {
-      const found = document.getElementById('fields-chip-row')
-      expect(found).toBeTruthy()
-      return found as HTMLElement
-    })
-    await user.click(within(row).getByRole('button', { name: 'map.field.mt-santa-carmem-03' }))
+    await pickField(user, 'map.field.mt-santa-carmem-03')
     await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
-    await user.click(screen.getByRole('button', { name: 'agent.command' }))
-    await user.click(screen.getByRole('button', { name: 'evidence.supporting_data' }))
+    await user.click(rail('command'))
+    await user.click(rail('evidence'))
     const { literalStrings, missingTranslationKeys } = scanVisibleUi(document)
     expect(missingTranslationKeys).toEqual([])
     expect(literalStrings).toEqual([])
-  })
-
-  it('renders the Field map region at the root route', async () => {
-    mockApi()
-    render(<App />)
-
-    expect(await screen.findByRole('region', { name: 'Field map' })).toBeTruthy()
-  })
-
-  it('renders top chips without panel surface classes', async () => {
-    mockApi()
-    render(<App />)
-
-    expect(await screen.findByText('FIELD INTELLIGENCE')).toBeTruthy()
-    const chips = document.querySelectorAll('.top-chip')
-    expect(chips.length).toBeGreaterThan(0)
-    for (const chip of chips) {
-      expect([...chip.classList].some((className) => /surface/i.test(className))).toBe(false)
-    }
-  })
-
-  it('renders the fullscreen map behind pointer-transparent overlay anchors', async () => {
-    mockApi()
-    render(<App />)
-
-    expect(await screen.findByRole('region', { name: 'Field map' })).toBeTruthy()
-    expect(document.querySelector('.map-panel .map-canvas')).toBeTruthy()
-
-    const overlays = document.querySelectorAll('.app-shell > .overlay')
-    expect(overlays.length).toBeGreaterThan(0)
-    for (const overlay of overlays) {
-      expect(overlay.classList.contains('overlay')).toBe(true)
-      const interactiveChild = overlay.querySelector('.overlay-interactive')
-      expect(interactiveChild?.classList.contains('overlay-interactive')).toBe(true)
-    }
-    // A fresh load now always selects the first field, so the list settles on its three
-    // rotation cards instead of the old one-child "select a field" empty state.
-    await waitFor(() => expect(document.querySelectorAll('.scenario-list .scenario-card[role="option"]')).toHaveLength(3))
-  })
-
-  it('keeps the HUD anchors and the fixed layer sequence', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem South/ }))
-    await screen.findByRole('status')
-
-    const anchors = [
-      '.anchor-top-left',
-      '.anchor-left.field-list-anchor',
-      '.anchor-top-right',
-      '.anchor-notice',
-      '.anchor-bottom-left',
-      '.layer-rail-anchor',
-    ]
-    for (const anchor of anchors) expect(document.querySelector(anchor)).toBeTruthy()
-    expect(anchors).toHaveLength(6)
-    // The constraints panel is withdrawn, so its anchor must not exist.
-    expect(document.querySelector('.anchor-constraints')).toBeNull()
-
-    await user.click(screen.getByRole('button', { name: 'Command' }))
-    await user.click(screen.getByRole('button', { name: 'Supporting data' }))
-    expect(document.querySelector('.anchor-right-column')).toBeTruthy()
-
-    const layers = [
-      ['.layer-agent', ZOrder.agentBar],
-      ['.layer-controls', ZOrder.controlStrip],
-      ['.layer-cards', ZOrder.scenarioCards],
-      ['.layer-notice', ZOrder.abstentionNotice],
-      ['.layer-evidence', ZOrder.evidence],
-      ['.layer-rail-anchor', ZOrder.layerRail],
-      ['.layer-chips', ZOrder.chips],
-    ] as const
-    const zIndices = layers.map(([selector, zIndex]) => {
-      const element = document.querySelector<HTMLElement>(selector)
-      expect(element).toBeTruthy()
-      expect(element?.style.zIndex).toBe(String(zIndex))
-      return zIndex
-    })
-    expect(zIndices).toEqual([...zIndices].sort((a, b) => b - a))
-
-    const panels = document.querySelectorAll('.panel-surface')
-    expect(panels.length).toBeGreaterThanOrEqual(5)
-    for (const chip of document.querySelectorAll('.top-chip')) {
-      expect(chip.classList.contains('panel-surface')).toBe(false)
-    }
-  })
-
-  it('does not repeat the empty reason as both evidence title and subtitle', async () => {
-    // Evidence is empty when the field's scenarios carry no evidence rows. The panel
-    // must then show the empty title and the reason as its subtitle, not twice.
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input)
-      if (new URL(url).pathname === '/layers') {
-        return { ok: true, status: 200, json: async () => layersResponse() } as Response
-      }
-      if (url.endsWith('/fields')) {
-        return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2023/24', '2024/25', '2025/26'], default_season: '2025/26' }) } as Response
-      }
-      const fieldId = new URL(url).pathname.split('/')[2]
-      return {
-        ok: true,
-        status: 200,
-        json: async () => ({
-          ...scenarios,
-          field_id: fieldId,
-          scenarios: scenarios.scenarios.map((scenario) => ({ ...scenario, evidence_rows: [] })),
-        }),
-      } as Response
-    }))
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(await screen.findByRole('button', { name: 'Supporting data' }))
-    const evidence = await screen.findByRole('region', { name: 'Evidence' })
-    await waitFor(() => expect(evidence.querySelector('[data-slot="empty-title"]')).toBeTruthy())
-    expect(evidence.querySelector('[data-slot="empty-title"]')?.textContent)
-      .not.toBe(evidence.querySelector('[data-slot="empty-description"]')?.textContent)
   })
 
   it('shows the server abstention threshold for field 03, keeps all cards, and hides ranking markers', async () => {
@@ -313,14 +306,12 @@ describe('field map and rotation scenario selection', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem South/ }))
-
-    expect((await screen.findByRole('status')).textContent).toContain('Ranking withheld: coverage below 80%.')
+    await pickField(user, /Santa Carmem South/)
+    await waitFor(() => expect(document.querySelector('.abstention-notice')?.textContent).toContain('Ranking withheld: coverage below 80%.'))
     const list = screen.getByRole('list', { name: 'Rotation scenarios' })
     expect(within(list).getAllByRole('option')).toHaveLength(3)
     expect(within(list).queryByText(/#\s*\d+/)).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Supporting data' }))
+    await user.click(rail('evidence'))
     expect(within(screen.getByRole('region', { name: 'Evidence' })).getByRole('row', { name: /SMAP soil moisture/ }).textContent).toContain('retrieved')
   })
 
@@ -329,35 +320,29 @@ describe('field map and rotation scenario selection', () => {
     const user = userEvent.setup()
     render(<App />)
 
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem North/ }))
-
+    await pickField(user, /Santa Carmem North/)
     await screen.findByRole('list', { name: 'Rotation scenarios' })
-    expect(screen.queryByRole('status')).toBeNull()
-    await user.click(screen.getByRole('button', { name: 'Supporting data' }))
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
+    expect(document.querySelector('.abstention-notice')).toBeNull()
   })
 
-  it('requests scenarios without a season and keeps the fixture values when the date changes (R-30)', async () => {
+  it('requests scenarios without a season and keeps the fixture values when the date changes', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
+    await pickField(user, 'Santa Carmem North')
     await screen.findByRole('list', { name: 'Rotation scenarios' })
     const scenarioRequest = 'http://localhost:8000/fields/mt-santa-carmem-01/scenarios'
     expect(vi.mocked(fetch).mock.calls.map(([input]) => String(input))).toContain(scenarioRequest)
 
     const before = vi.mocked(fetch).mock.calls.filter(([input]) => String(input).includes('/scenarios')).length
     fireEvent.change(screen.getByLabelText('Go to date'), { target: { value: '2026-11-12' } })
-    const note = await screen.findByText('Fixture data for 2025/26, not for 2026/27')
-    expect(note).toBeTruthy()
+    expect(await screen.findByText('Fixture data for 2025/26, not for 2026/27')).toBeTruthy()
     expect(screen.getByText('0.28 m³/m³')).toBeTruthy()
     expect(vi.mocked(fetch).mock.calls.filter(([input]) => String(input).includes('/scenarios'))).toHaveLength(before)
   })
 
-  it('keeps the unconditional pairs mounted and retries only the field list after an HTTP error', async () => {
+  it('keeps every panel mounted and retries only the field list after an HTTP error', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       if (new URL(String(input)).pathname === '/layers') {
         return { ok: true, status: 200, json: async () => layersResponse() } as Response
@@ -377,23 +362,14 @@ describe('field map and rotation scenario selection', () => {
     expect(await screen.findAllByText('Backend request failed (HTTP 500). Retry when it is available.')).not.toHaveLength(0)
     expect(screen.getByRole('region', { name: 'Field map' })).toBeTruthy()
     expect(screen.getByRole('navigation', { name: 'Layers' })).toBeTruthy()
-    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
     expect(screen.getByRole('region', { name: 'Timeline' })).toBeTruthy()
-    expect(screen.queryByRole('combobox', { name: 'Season' })).toBeNull()
     expect(document.querySelector('select')).toBeNull()
-    expect(screen.getByRole('button', { name: 'Command' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Supporting data' })).toBeTruthy()
-    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
 
-    const satellitePreset = screen.getByRole('button', { name: 'Satellite', pressed: false })
-    await user.click(satellitePreset)
+    await user.click(screen.getByRole('button', { name: 'Satellite', pressed: false }))
     expect(screen.getByRole('button', { name: 'Satellite', pressed: true })).toBeTruthy()
 
-    await user.click(screen.getByRole('button', { name: 'Fields' }))
     await user.click(screen.getByRole('button', { name: 'Retry' }))
     expect(await screen.findByRole('button', { name: /Santa Carmem North/ })).toBeTruthy()
-    expect(fetchMock.mock.calls.filter(([input]) => new URL(String(input)).pathname === '/layers')).toHaveLength(1)
     expect(fetchMock.mock.calls.filter(([input]) => new URL(String(input)).pathname === '/fields')).toHaveLength(2)
   })
 
@@ -403,22 +379,47 @@ describe('field map and rotation scenario selection', () => {
 
     expect(await screen.findAllByText('Backend is unreachable. Check your connection and retry.')).not.toHaveLength(0)
     expect(screen.getByRole('region', { name: 'Field map' })).toBeTruthy()
-    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Supporting data' })).toBeTruthy()
     expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
   })
 
+  it('mounts Evidence only while Supporting data is open', async () => {
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await fieldList()
+    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
+    await user.click(rail('evidence'))
+    expect(await screen.findByRole('region', { name: 'Evidence' })).toBeTruthy()
+    await user.click(rail('evidence'))
+    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
+  })
+
+  it('prints coverage once, in the rotation panel', async () => {
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await pickField(user, /Santa Carmem North/)
+    await screen.findByText('86% data coverage')
+    expect(screen.getAllByText(/% data coverage/)).toHaveLength(1)
+  })
+})
+
+describe('the command panel', () => {
   it('runs a registered agent command and reports an unregistered name', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    await user.click(await screen.findByRole('button', { name: 'Command' }))
+    await fieldList()
+    await user.click(rail('command'))
     expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
     const commandInput = screen.getByRole('textbox', { name: 'Command name' })
+    expect(document.activeElement).toBe(commandInput)
     const argumentsInput = screen.getByRole('textbox', { name: 'JSON arguments' })
     await user.type(commandInput, 'set_composition')
-    await fireEvent.change(argumentsInput, { target: { value: '{"preset":"satellite"}' } })
+    fireEvent.change(argumentsInput, { target: { value: '{"preset":"satellite"}' } })
     await user.click(screen.getByRole('button', { name: 'Run command' }))
     expect(useMapStore.getState().composition).toBe('satellite')
 
@@ -427,701 +428,64 @@ describe('field map and rotation scenario selection', () => {
     await user.click(screen.getByRole('button', { name: 'Run command' }))
     expect(screen.getByRole('alert').textContent).toMatch(/select_field.*set_composition.*open_panel.*apply_filter/)
   })
-})
 
-describe('toggles and the single coverage readout', () => {
-  async function expandFields(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(await screen.findByRole('button', { name: 'Fields' }))
-    return await waitFor(() => {
-      const row = document.getElementById('fields-chip-row')
-      expect(row).toBeTruthy()
-      return row as HTMLElement
-    })
-  }
-
-  it('mounts the agent command form only while Command is open', async () => {
+  it('open_panel from the agent opens the named panel on screen', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    const command = await screen.findByRole('button', { name: 'Command' })
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-    expect(command.getAttribute('aria-expanded')).toBe('false')
-    expect(command.getAttribute('aria-controls')).toBeNull()
-
-    await user.click(command)
-    const form = screen.getByRole('form', { name: 'Agent command' })
-    expect(command.getAttribute('aria-expanded')).toBe('true')
-    expect(command.getAttribute('aria-controls')).toBe(form.id)
-
-    await user.click(command)
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-    expect(command.getAttribute('aria-expanded')).toBe('false')
-    expect(command.getAttribute('aria-controls')).toBeNull()
-  })
-
-  it('moves focus into the command form, returns it on close and keeps the draft', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const command = await screen.findByRole('button', { name: 'Command' })
-    await user.click(command)
-    const nameInput = screen.getByRole('textbox', { name: 'Command name' })
-    expect(document.activeElement).toBe(nameInput)
-    await user.type(nameInput, 'set_composition')
-    const jsonInput = screen.getByRole('textbox', { name: 'JSON arguments' })
-    await fireEvent.change(jsonInput, { target: { value: '{"preset":"satellite"}' } })
-
-    await user.click(command)
-    expect(document.activeElement).toBe(command)
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-
-    await user.click(command)
-    expect((screen.getByRole('textbox', { name: 'Command name' }) as HTMLInputElement).value).toBe('set_composition')
-    expect((screen.getByRole('textbox', { name: 'JSON arguments' }) as HTMLInputElement).value).toBe('{"preset":"satellite"}')
-  })
-
-  it('wraps the field list in the vendored collapsible', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const trigger = await screen.findByRole('button', { name: 'Fields' })
-    const row = document.getElementById('fields-chip-row')
-    expect(row).toBeTruthy()
-    expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    expect(trigger.getAttribute('aria-controls')).toBe('fields-chip-row')
-    expect(document.querySelector('[data-slot="collapsible-panel"]')).toBeNull()
-
-    await user.click(trigger)
-    const panel = await waitFor(() => {
-      const found = document.querySelector('[data-slot="collapsible-panel"]')
-      expect(found).toBeTruthy()
-      return found as Element
-    })
-    expect(row?.contains(panel)).toBe(true)
-    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('true'))
-
-    await user.click(trigger)
-    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'))
-    expect(document.querySelector('[data-slot="collapsible-panel"]')).toBeNull()
-  })
-
-  it('shows one collapsed chip for the selected field and no percentage', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const trigger = await screen.findByRole('button', { name: 'Fields' })
-    expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    // The collapsed header shows exactly one chip for the selected field and no
-    // percentage. A fresh load always selects the first field now, so that chip exists
-    // before any click instead of depending on when the map happened to load.
-    await waitFor(() => expect(document.querySelectorAll('.field-chip')).toHaveLength(1))
-    expect(document.querySelector('.field-chip')?.textContent).toBe('Santa Carmem North')
-
-    const row = await expandFields(user)
-    const rowChips = within(row).getAllByRole('button')
-    expect(rowChips).toHaveLength(2)
-    for (const chip of rowChips) expect(chip.textContent).not.toContain('%')
-
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    await user.click(trigger)
-    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'))
-
-    const header = document.querySelector('.fields-header')
-    const northChips = header?.querySelectorAll('button.field-chip') ?? []
-    expect(northChips).toHaveLength(1)
-    expect(northChips[0].textContent).toBe('Santa Carmem North')
-
-    await user.click(trigger)
-    await user.click(within(await waitFor(() => {
-      const expanded = document.getElementById('fields-chip-row')
-      expect(expanded).toBeTruthy()
-      return expanded as HTMLElement
-    })).getByRole('button', { name: 'Santa Carmem South' }))
-    await screen.findByRole('status')
-    await user.click(trigger)
-    await waitFor(() => expect(trigger.getAttribute('aria-expanded')).toBe('false'))
-
-    const southChips = document.querySelector('.fields-header')?.querySelectorAll('button.field-chip') ?? []
-    expect(southChips).toHaveLength(1)
-    expect(southChips[0].textContent).toBe('Santa Carmem South')
-    expect(southChips[0].textContent).not.toContain('%')
-    expect(document.querySelector('.field-list-anchor')?.textContent).not.toContain('%')
-  })
-
-  it('renders no chip while the field list is loading with nothing selected', () => {
-    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})))
-    render(<App />)
-
-    expect(screen.getByRole('button', { name: 'Fields' })).toBeTruthy()
-    expect(document.querySelectorAll('.field-chip')).toHaveLength(0)
-    expect(document.querySelector('.field-list-anchor')?.textContent).not.toContain('%')
-  })
-
-  it('keeps the selected field and issues no new scenario request when the panel collapses or expands', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const trigger = await screen.findByRole('button', { name: 'Fields' })
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    const scenarioRequestCount = () => vi.mocked(fetch).mock.calls
-      .filter(([input]) => String(input).includes('/scenarios')).length
-    const before = scenarioRequestCount()
-    expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01')
-
-    await user.click(trigger)
-    await user.click(trigger)
-
-    expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01')
-    expect(scenarioRequestCount()).toBe(before)
-
-    await user.click(trigger)
-    const collapsedChip = await waitFor(() => {
-      const chip = document.querySelector('.fields-header button.field-chip')
-      expect(chip).toBeTruthy()
-      return chip as HTMLElement
-    })
-    await user.click(collapsedChip)
-    const list = screen.getByRole('list', { name: 'Rotation scenarios' })
-    expect(within(list).getAllByRole('option')).toHaveLength(3)
-    expect(scenarioRequestCount()).toBe(before)
-  })
-
-  it('keeps the four unconditional pairs at first paint and mounts Evidence only while Supporting data is open', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    expect(await screen.findByRole('region', { name: 'Field map' })).toBeTruthy()
-    expect(screen.getByRole('navigation', { name: 'Layers' })).toBeTruthy()
-    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-    expect(screen.getByRole('region', { name: 'Timeline' })).toBeTruthy()
-    expect(screen.queryByRole('combobox', { name: 'Season' })).toBeNull()
-    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-
-    const supportingData = screen.getByRole('button', { name: 'Supporting data' })
-    expect(supportingData.getAttribute('aria-expanded')).toBe('false')
-    await user.click(supportingData)
-
-    const evidence = await screen.findByRole('region', { name: 'Evidence' })
-    expect(supportingData.getAttribute('aria-expanded')).toBe('true')
-    expect(supportingData.getAttribute('aria-controls')).toBe(evidence.parentElement?.id)
-    const headers = within(evidence).getAllByRole('columnheader').map((header) => header.textContent)
-    expect(headers).toEqual(['Layer', 'Value', 'Basis', 'As of', 'Source'])
-
-    await user.click(supportingData)
-    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
-    expect(supportingData.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  it('prints coverage only in the rotation pill and drops every other readout', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const row = await expandFields(user)
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    expect(screen.getByText('86% data coverage')).toBeTruthy()
-
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem South' }))
-    await screen.findByRole('status')
-
-    expect(document.querySelector('.coverage-chip')).toBeNull()
-    expect(screen.queryByText('COVERAGE')).toBeNull()
-    expect(screen.getByText('62% data coverage')).toBeTruthy()
-    expect(document.querySelectorAll('.field-coverage-pill')).toHaveLength(1)
-    expect(document.querySelector('.field-list-anchor')?.textContent).not.toContain('%')
-    expect(screen.getByRole('status').textContent).toBe('Ranking withheld: coverage below 80%.')
-  })
-
-  it('stacks the command form above the evidence panel in one right edge column', async () => {
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(await screen.findByRole('button', { name: 'Command' }))
-    await user.click(await screen.findByRole('button', { name: 'Supporting data' }))
-
-    const column = document.querySelector('.anchor-right-column')
-    expect(column).toBeTruthy()
-    const stack = column?.querySelector('.right-column-stack')
-    const children = [...(stack?.children ?? [])]
-    expect(children).toHaveLength(2)
-    expect(children[0].classList.contains('layer-agent')).toBe(true)
-    expect(children[1].classList.contains('layer-evidence')).toBe(true)
-    expect(children[0].querySelector('form')?.getAttribute('aria-label')).toBe('Agent command')
-    expect(children[1].querySelector('[role="region"]')?.getAttribute('aria-label')).toBe('Evidence')
-  })
-
-  it('keeps every toggle operable and the field error reachable when the backend fails', async () => {
-    const fetchMock = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) }) as Response)
-    vi.stubGlobal('fetch', fetchMock)
-    const user = userEvent.setup()
-    render(<App />)
-
-    const fields = await screen.findByRole('button', { name: 'Fields' })
-    const supportingData = screen.getByRole('button', { name: 'Supporting data' })
-    const command = screen.getByRole('button', { name: 'Command' })
-    expect(fields).toBeTruthy()
-    expect(supportingData).toBeTruthy()
-    expect(command).toBeTruthy()
-    expect(document.querySelectorAll('.field-chip')).toHaveLength(0)
-
-    await user.click(fields)
-    const fieldPanel = document.querySelector('.field-list-anchor') as HTMLElement
-    expect(await within(fieldPanel).findByRole('alert')).toBeTruthy()
-    expect(within(fieldPanel).getByText('Backend request failed (HTTP 500). Retry when it is available.')).toBeTruthy()
-    expect(within(fieldPanel).getByRole('button', { name: 'Retry' })).toBeTruthy()
-
-    await user.click(supportingData)
-    const evidence = await screen.findByRole('region', { name: 'Evidence' })
-    expect(within(evidence).getByText('No evidence available')).toBeTruthy()
-
-    await user.click(command)
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-  })
-
-  it('has no second form and no withdrawn constraint control at first paint or after activations', async () => {
-    // Field 01 selected before the first paint, which is the fixture default the map
-    // resolves on load; nothing is clicked to reach the measured state.
-    useMapStore.setState({ selectedFieldId: 'mt-santa-carmem-01' })
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const list = await screen.findByRole('list', { name: 'Rotation scenarios' })
-    await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(3))
-
-    // The four-control form was withdrawn: no form at first paint, and none of its labels.
-    expect(document.querySelectorAll('form')).toHaveLength(0)
-    for (const name of ['Water', 'Rent', 'Credit', 'Market outlet']) {
-      expect(screen.queryByRole('combobox', { name })).toBeNull()
-      expect(screen.queryByText(name)).toBeNull()
-    }
-
-    await user.click(screen.getByRole('button', { name: 'Supporting data' }))
-    const evidence = await screen.findByRole('region', { name: 'Evidence' })
-    const smapRow = () => within(evidence).getByRole('row', { name: /SMAP soil moisture/ })
-    expect(smapRow().textContent).toContain('SMAP soil moisture')
-    expect(smapRow().textContent).toContain('retrieved')
-
-    // Activating every disclosure the app renders leaves the row labels unchanged.
-    await user.click(screen.getByRole('button', { name: 'Fields' }))
-    const currentCard = screen.getByRole('heading', { name: 'Current sequence' }).closest('.scenario-card') as HTMLElement
-    await user.click(within(currentCard).getByRole('button', { name: 'Charts for Current sequence' }))
-    expect(smapRow().textContent).toContain('SMAP soil moisture')
-    expect(smapRow().textContent).toContain('retrieved')
-    expect(document.querySelectorAll('form')).toHaveLength(0)
+    await fieldList()
+    await user.click(rail('command'))
+    await user.type(screen.getByRole('textbox', { name: 'Command name' }), 'open_panel')
+    fireEvent.change(screen.getByRole('textbox', { name: 'JSON arguments' }), { target: { value: '{"panel":"evidence"}' } })
+    await user.click(screen.getByRole('button', { name: 'Run command' }))
+    expect(await screen.findByRole('region', { name: 'Evidence' })).toBeTruthy()
   })
 })
 
-describe('layout, notice and right edge column rules', () => {
-  function stubViewport(matches: boolean) {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      matches,
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }))
-  }
-
-  /** A matchMedia stub whose media query change can be dispatched, as a real resize does. */
-  function stubViewportWithChange(initial: boolean) {
-    const listeners = new Set<(event: MediaQueryListEvent) => void>()
-    const mediaQuery = {
-      matches: initial,
-      media: '(max-width: 640px)',
-      onchange: null,
-      addEventListener: (type: string, listener: (event: MediaQueryListEvent) => void) => {
-        if (type === 'change') listeners.add(listener)
-      },
-      removeEventListener: (type: string, listener: (event: MediaQueryListEvent) => void) => {
-        if (type === 'change') listeners.delete(listener)
-      },
-      addListener: (listener: (event: MediaQueryListEvent) => void) => listeners.add(listener),
-      removeListener: (listener: (event: MediaQueryListEvent) => void) => listeners.delete(listener),
-      dispatchEvent: () => false,
-    }
-    vi.stubGlobal('matchMedia', () => mediaQuery)
-    return {
-      setMatches(next: boolean) {
-        mediaQuery.matches = next
-        for (const listener of listeners) listener({ matches: next, media: mediaQuery.media } as MediaQueryListEvent)
-      },
-      listeners: () => listeners.size,
-    }
-  }
-
-  async function selectSouth(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(await screen.findByRole('button', { name: 'Fields' }))
-    const row = await waitFor(() => {
-      const found = document.getElementById('fields-chip-row')
-      expect(found).toBeTruthy()
-      return found as HTMLElement
-    })
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem South/ }))
-    await screen.findByRole('status')
-  }
-
-  it('keeps one notice node, first in the left stack, with no duplicate mount', async () => {
-    stubViewport(true)
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await selectSouth(user)
-    expect(document.querySelectorAll('.anchor-notice')).toHaveLength(1)
-    expect(document.querySelectorAll('.abstention-notice')).toHaveLength(1)
-
-    const stack = document.querySelector('.left-stack') as HTMLElement
-    expect(stack).toBeTruthy()
-    const order = [...stack.children].map((child) => child.className)
-    // At 360 the left flow column holds the notice and the fields panel only.
-    expect(order).toHaveLength(2)
-    expect(order[0]).toContain('anchor-notice')
-    expect(order[1]).toContain('field-list-anchor')
-    expect(document.querySelector('.anchor-constraints')).toBeNull()
-  })
-
-  it('holds at most one right edge panel open at 360', async () => {
-    stubViewport(true)
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const command = await screen.findByRole('button', { name: 'Command' })
-    const supporting = screen.getByRole('button', { name: 'Supporting data' })
-
-    await user.click(command)
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-
-    await user.click(supporting)
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-    expect(command.getAttribute('aria-expanded')).toBe('false')
-    expect(supporting.getAttribute('aria-expanded')).toBe('true')
-
-    await user.click(command)
-    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-    expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(1)
-  })
-
-  it('keeps both right edge panels open above 640', async () => {
-    stubViewport(false)
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await user.click(await screen.findByRole('button', { name: 'Command' }))
-    await user.click(screen.getByRole('button', { name: 'Supporting data' }))
-
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-    expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(2)
-  })
-
-  it('closes the older right edge panel when the viewport enters 360 and keeps focus', async () => {
-    const viewport = stubViewportWithChange(false)
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const command = await screen.findByRole('button', { name: 'Command' })
-    const supporting = screen.getByRole('button', { name: 'Supporting data' })
-    await user.click(command)
-    await user.click(supporting)
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-    expect(document.activeElement).toBe(supporting)
-
-    act(() => viewport.setMatches(true))
-
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-    expect(command.getAttribute('aria-expanded')).toBe('false')
-    expect(supporting.getAttribute('aria-expanded')).toBe('true')
-    expect(document.activeElement).toBe(supporting)
-    expect(document.querySelectorAll('.anchor-right-column .layer-agent, .anchor-right-column .layer-evidence')).toHaveLength(1)
-
-    // Leaving 360 does not reopen the panel that the transition closed.
-    act(() => viewport.setMatches(false))
-    expect(screen.queryByRole('form', { name: 'Agent command' })).toBeNull()
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-    expect(supporting.getAttribute('aria-expanded')).toBe('true')
-  })
-
-  it('keeps the panel opened last when the command form is the newer one', async () => {
-    const viewport = stubViewportWithChange(false)
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const command = await screen.findByRole('button', { name: 'Command' })
-    const supporting = screen.getByRole('button', { name: 'Supporting data' })
-    await user.click(supporting)
-    await user.click(command)
-    expect(screen.getByRole('region', { name: 'Evidence' })).toBeTruthy()
-
-    act(() => viewport.setMatches(true))
-
-    expect(screen.getByRole('form', { name: 'Agent command' })).toBeTruthy()
-    expect(screen.queryByRole('region', { name: 'Evidence' })).toBeNull()
-    expect(supporting.getAttribute('aria-expanded')).toBe('false')
-    expect(command.getAttribute('aria-expanded')).toBe('true')
-    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Command name' }))
-  })
-})
-
-describe('rotation flip card visuals', () => {
-  async function selectNorth(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(await screen.findByRole('button', { name: 'Fields' }))
-    const row = await waitFor(() => {
-      const found = document.getElementById('fields-chip-row')
-      expect(found).toBeTruthy()
-      return found as HTMLElement
-    })
-    await user.click(within(row).getByRole('button', { name: 'Santa Carmem North' }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    const card = screen.getByRole('heading', { name: 'Current sequence' }).closest('.scenario-card')
-    expect(card).toBeTruthy()
-    return card as HTMLElement
-  }
-
-  it('draws the measured SMAP value and its number at first paint with no interaction', async () => {
-    // Field 01 is the field the map selects on load; nothing is activated after paint.
-    useMapStore.setState({ selectedFieldId: 'mt-santa-carmem-01' })
-    mockApi()
-    render(<App />)
-
-    const list = await screen.findByRole('list', { name: 'Rotation scenarios' })
-    await waitFor(() => expect(within(list).getAllByRole('option')).toHaveLength(3))
-    const card = screen.getByRole('heading', { name: 'Current sequence' }).closest('.scenario-card') as HTMLElement
-    const smap = within(card).getByRole('group', { name: /^SMAP soil moisture/ })
-
-    // Nothing was clicked: Field 01 is auto selected and the row's own basis is retrieved.
-    expect(smap.textContent).toContain('SMAP soil moisture')
-    expect(smap.textContent).toContain('0.28 m³/m³')
-    expect(smap.textContent).toContain('retrieved')
-    expect(smap.textContent).toContain('2025-11-10')
-    expect(smap.textContent).not.toContain('(assumes)')
-    expect(smap.textContent).not.toContain('modelled')
-    expect(smap.getAttribute('aria-label')).toBe('SMAP soil moisture, 0.28 m³/m³, retrieved')
-    expect((card.querySelector('.smap-fill') as HTMLElement).style.width).toBe('56%')
-  })
-
+describe('rotation flip cards', () => {
   it('flips one card to its facts and back without touching the others', async () => {
     mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    const card = await selectNorth(user)
-    const triggers = [...document.querySelectorAll('.scenario-card .flip-overlay')] as HTMLElement[]
-    expect(triggers.every((trigger) => trigger.getAttribute('aria-expanded') === 'false')).toBe(true)
-    expect(screen.queryByText('Why')).toBeNull()
-
+    await pickField(user, 'Santa Carmem North')
+    await screen.findByRole('list', { name: 'Rotation scenarios' })
+    const card = (await screen.findByRole('heading', { name: 'Current sequence' })).closest('.scenario-card') as HTMLElement
     await user.click(within(card).getByRole('button', { name: 'Charts for Current sequence' }))
-
-    expect(within(card).getByRole('button').getAttribute('aria-expanded')).toBe('true')
-    expect(within(card).getAllByRole('term').map((term) => term.textContent))
-      .toEqual(['Why', 'Evidence', 'Benefit', 'Gap', 'Risk'])
-    expect(within(card).queryByRole('group')).toBeNull()
+    expect(within(card).getAllByRole('term').map((term) => term.textContent)).toEqual(['Why', 'Evidence', 'Benefit', 'Gap', 'Risk'])
     expect(document.querySelectorAll('.scenario-card .flip-overlay[aria-expanded="true"]')).toHaveLength(1)
 
     await user.click(within(card).getByRole('button', { name: 'Details for Current sequence' }))
     expect(within(card).queryByRole('term')).toBeNull()
-    expect(within(card).getByRole('group', { name: /^SMAP soil moisture/ })).toBeTruthy()
   })
-})
 
-describe('keyboard contract of the four controls', () => {
-  function focusLabel(element: Element | null): string {
-    if (!element) return 'none'
-    const label = element.getAttribute('aria-label') ?? element.textContent?.trim() ?? ''
-    return `${element.tagName.toLowerCase()}${label ? `:${label}` : ''}`
-  }
-
-  it('lists the four controls, their tag, tabIndex and state after Enter, Space and a letter key', async () => {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
+  it('names a scenario the catalog does not know by its own crops, never by a raw key', async () => {
+    const unknown = {
+      ...scenarios,
+      scenarios: [{ ...scenarios.scenarios[1], id: 'csb-1-observed-rotation', name: 'Spring Wheat → Sugarbeets', crops: ['Spring Wheat', 'Sugarbeets'], why: 'Seen in 2018 and 2019.' }],
+    }
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (new URL(url).pathname === '/layers') return { ok: true, status: 200, json: async () => layersResponse() } as Response
+      if (url.endsWith('/fields')) return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2025/26'], default_season: '2025/26' }) } as Response
+      return { ok: true, status: 200, json: async () => unknown } as Response
     }))
-    mockApi()
     const user = userEvent.setup()
     render(<App />)
 
-    type Row = {
-      control: string
-      tagName: string
-      tabIndex: number
-      disabled: boolean
-      negativeTabIndex: boolean
-      afterEnter: string | null
-      afterSpace: string | null
-      afterSecondEnter: string | null
-      afterLetter: string | null
-      focusAfterEnter: string
-      focusAfterSpace: string
-      focusAfterSecondEnter: string
-      focusAfterLetter: string
-      regionAfterEnter: boolean
-      regionAfterSpace: boolean
-      regionAfterSecondEnter: boolean
-      regionAfterLetter: boolean
-    }
-
-    // Enter toggles, Space toggles back, a second Enter toggles again, and `a` does
-    // nothing. The state is the control's own aria-expanded, the region is what it
-    // controls. Command is re-focused before each later press, because the
-    // opening press moves focus into the Command name box.
-    async function exercise(
-      control: HTMLElement,
-      region: () => Element | null,
-      refocusBeforePress: boolean,
-    ): Promise<Row> {
-      control.focus()
-      await user.keyboard('{Enter}')
-      const afterEnter = control.getAttribute('aria-expanded')
-      const focusAfterEnter = focusLabel(document.activeElement)
-      const regionAfterEnter = Boolean(region())
-
-      if (refocusBeforePress) control.focus()
-      await user.keyboard(' ')
-      const afterSpace = control.getAttribute('aria-expanded')
-      const focusAfterSpace = focusLabel(document.activeElement)
-      const regionAfterSpace = Boolean(region())
-
-      if (refocusBeforePress) control.focus()
-      await user.keyboard('{Enter}')
-      const afterSecondEnter = control.getAttribute('aria-expanded')
-      const focusAfterSecondEnter = focusLabel(document.activeElement)
-      const regionAfterSecondEnter = Boolean(region())
-
-      if (refocusBeforePress) control.focus()
-      await user.keyboard('a')
-      const afterLetter = control.getAttribute('aria-expanded')
-      const focusAfterLetter = focusLabel(document.activeElement)
-      const regionAfterLetter = Boolean(region())
-
-      return {
-        control: control.textContent?.trim() || (control.getAttribute('aria-label') ?? ''),
-        tagName: control.tagName,
-        tabIndex: control.tabIndex,
-        disabled: (control as HTMLButtonElement).disabled,
-        negativeTabIndex: control.getAttribute('tabindex') === '-1',
-        afterEnter,
-        afterSpace,
-        afterSecondEnter,
-        afterLetter,
-        focusAfterEnter,
-        focusAfterSpace,
-        focusAfterSecondEnter,
-        focusAfterLetter,
-        regionAfterEnter,
-        regionAfterSpace,
-        regionAfterSecondEnter,
-        regionAfterLetter,
-      }
-    }
-
-    const fields = await screen.findByRole('button', { name: 'Fields' })
-    const command = screen.getByRole('button', { name: 'Command' })
-    const supporting = screen.getByRole('button', { name: 'Supporting data' })
-
-    const fieldsRow = await exercise(fields, () => document.querySelector('#fields-chip-row [data-slot="collapsible-panel"][data-open]'), false)
-    const row = await waitFor(() => {
-      const found = document.getElementById('fields-chip-row')
-      expect(found).toBeTruthy()
-      return found as HTMLElement
-    })
-    await user.click(within(row).getByRole('button', { name: /Santa Carmem North/ }))
-    await screen.findByRole('list', { name: 'Rotation scenarios' })
-    const flip = await waitFor(() => {
-      const found = document.querySelector('.scenario-card .flip-overlay')
-      expect(found).toBeTruthy()
-      return found as HTMLElement
-    })
-    const flipFace = () => document.querySelector('.scenario-card .flip-face[data-face="back"]')
-
-    const commandRow = await exercise(command, () => screen.queryByRole('form', { name: 'Agent command' }), true)
-    const supportingRow = await exercise(supporting, () => screen.queryByRole('region', { name: 'Evidence' }), false)
-    const flipRow = await exercise(flip, flipFace, false)
-
-    const matrix = [fieldsRow, commandRow, supportingRow, flipRow]
-    console.log('keyboard matrix', JSON.stringify(matrix, null, 2))
-
-    for (const entry of matrix) {
-      expect(entry.tagName).toBe('BUTTON')
-      expect(entry.tabIndex).toBe(0)
-      expect(entry.disabled).toBe(false)
-      expect(entry.negativeTabIndex).toBe(false)
-      expect(entry.afterEnter).toBe('true')
-      expect(entry.regionAfterEnter).toBe(true)
-      expect(entry.afterSpace).toBe('false')
-      expect(entry.regionAfterSpace).toBe(false)
-      expect(entry.afterSecondEnter).toBe('true')
-      expect(entry.regionAfterSecondEnter).toBe(true)
-      expect(entry.afterLetter).toBe('true')
-      expect(entry.regionAfterLetter).toBe(true)
-    }
-
-    // Focus policy: Command moves focus into its form; every other control keeps focus on itself.
-    expect(fieldsRow.focusAfterEnter).toBe('button:Fields')
-    expect(fieldsRow.focusAfterSpace).toBe('button:Fields')
-    expect(fieldsRow.focusAfterSecondEnter).toBe('button:Fields')
-    expect(fieldsRow.focusAfterLetter).toBe('button:Fields')
-    expect(commandRow.focusAfterEnter).toBe('input:Command name')
-    expect(commandRow.focusAfterSpace).toBe('button:Command')
-    expect(commandRow.focusAfterSecondEnter).toBe('input:Command name')
-    expect(commandRow.focusAfterLetter).toBe('button:Command')
-    expect(supportingRow.focusAfterEnter).toBe('button:Supporting data')
-    expect(supportingRow.focusAfterSpace).toBe('button:Supporting data')
-    expect(supportingRow.focusAfterSecondEnter).toBe('button:Supporting data')
-    expect(supportingRow.focusAfterLetter).toBe('button:Supporting data')
-    expect(flipRow.focusAfterEnter).toBe('button:Details for Current sequence')
-    expect(flipRow.focusAfterSpace).toBe('button:Charts for Current sequence')
-    expect(flipRow.focusAfterSecondEnter).toBe('button:Details for Current sequence')
-    expect(flipRow.focusAfterLetter).toBe('button:Details for Current sequence')
+    const heading = await screen.findByRole('heading', { name: 'Spring wheat → Sugar beets' })
+    const card = heading.closest('.scenario-card') as HTMLElement
+    expect(card.textContent).not.toMatch(/scenarios\.|common\.crop\./)
+    await user.click(within(card).getByRole('button', { name: /^Charts for/ }))
+    expect(card.textContent).toContain('Seen in 2018 and 2019.')
   })
 })
 
-describe('block 4 wave 3: the timeline replaces the season control', () => {
+describe('the timeline panel', () => {
   const dateInput = () => screen.getByLabelText('Go to date') as HTMLInputElement
 
-  it('has no element named Season and no season select anywhere (AC-22, timeline half)', async () => {
-    mockApi()
-    render(<App />)
-
-    expect(await screen.findByRole('region', { name: 'Timeline' })).toBeTruthy()
-    expect(document.querySelector('[aria-label="Season"]')).toBeNull()
-    expect(document.querySelector('select')).toBeNull()
-    expect(screen.queryByText('Season')).toBeNull()
-  })
-
-  it('opens at the axis end by default (AC-23)', async () => {
+  it('opens at the axis end by default', async () => {
     mockApi()
     render(<App />)
 
@@ -1131,8 +495,8 @@ describe('block 4 wave 3: the timeline replaces the season control', () => {
     expect(dateInput().max).toBe('2026-11-14')
   })
 
-  it('opens at ?date=2026-11-12 and asks /layers for that date (AC-23)', async () => {
-    window.history.replaceState({}, '', '/?date=2026-11-12')
+  it('opens at ?date= and asks /layers for that date', async () => {
+    window.history.replaceState({}, '', '/?region=br&date=2026-11-12')
     mockApi()
     render(<App />)
 
@@ -1144,318 +508,13 @@ describe('block 4 wave 3: the timeline replaces the season control', () => {
     expect(layerRequests.some((url) => url.searchParams.get('date') === '2026-11-12')).toBe(true)
   })
 
-  it('clamps a query before the axis and shows the polite limit message (AC-23)', async () => {
-    window.history.replaceState({}, '', '/?date=2015-03-01')
+  it('clamps a query before the axis and says so', async () => {
+    window.history.replaceState({}, '', '/?region=br&date=2015-03-01')
     mockApi()
     render(<App />)
 
     await screen.findByRole('region', { name: 'Timeline' })
     await waitFor(() => expect(dateInput().value).toBe('2015-04-01'))
-    expect(screen.getByRole('status').textContent).toBe('Date limited to 2015-04-01')
-  })
-
-  it('renders none_in_lookback and the first axis day without inventing a date (AC-28)', async () => {
-    const payloads: Record<string, ReturnType<typeof layersResponse>> = {}
-    const noneInLookback = layersResponse('2025-01-15')
-    payloads['2025-01-15'] = {
-      ...noneInLookback,
-      layers: noneInLookback.layers.map((layer) => (layer.id === 'ndvi-8day'
-        ? { ...layer, status: 'none_in_lookback' as const, effective_date: null, age_days: null }
-        : layer)),
-    }
-    const firstAxisDay = layersResponse('2015-04-01')
-    payloads['2015-04-01'] = {
-      ...firstAxisDay,
-      layers: firstAxisDay.layers.map((layer) => (layer.id === 'smap-l3'
-        ? { ...layer, status: 'on_date' as const, effective_date: '2015-04-01', age_days: 0 }
-        : layer)),
-    }
-    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
-      const url = new URL(String(input))
-      if (url.pathname === '/layers') {
-        const date = url.searchParams.get('date') ?? ''
-        return { ok: true, status: 200, json: async () => payloads[date] } as Response
-      }
-      if (url.pathname === '/fields') {
-        return { ok: true, status: 200, json: async () => ({ fields, seasons: ['2023/24', '2024/25', '2025/26'], default_season: '2025/26' }) } as Response
-      }
-      throw new Error(`Unexpected request: ${String(input)}`)
-    }))
-
-    window.history.replaceState({}, '', '/?date=2025-01-15')
-    const first = render(<App />)
-    await waitFor(() => expect((screen.getByLabelText('Go to date') as HTMLInputElement).value).toBe('2025-01-15'))
-    const ndvi = document.querySelector('.layer-entry[data-layer-id="ndvi-8day"]') as HTMLElement
-    await waitFor(() => expect(ndvi.textContent).toContain('no observation in lookback'))
-    expect(ndvi.querySelector('time')).toBeNull()
-    first.unmount()
-
-    window.history.replaceState({}, '', '/?date=2015-04-01')
-    // A page load starts with the default state: the store is fresh, no chosen date.
-    useMapStore.setState({ chosenDate: null })
-    render(<App />)
-    await waitFor(() => expect((screen.getByLabelText('Go to date') as HTMLInputElement).value).toBe('2015-04-01'))
-    const smap = document.querySelector('.layer-entry[data-layer-id="smap-l3"]') as HTMLElement
-    await waitFor(() => expect(smap.textContent).toContain('2015-04-01'))
-  })
-})
-
-describe('block 4 wave 4: the dock states, the two toggles and the motion rules', () => {
-  type Width = '1440' | '780' | '360'
-
-  /** The two queries the block 4 layout reads, keyed by the width they stand for. */
-  function widthMatches(query: string, width: Width): boolean {
-    if (query === '(max-width: 640px)') return width === '360'
-    if (query === '(max-width: 1020px)') return width !== '1440'
-    return false
-  }
-
-  function stubWidth(width: Width) {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: widthMatches(query, width),
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }))
-  }
-
-  /** A matchMedia stub a test can resize, dispatching `change` the way a real resize does. */
-  function stubResizableWidth(initial: Width) {
-    const current: { width: Width } = { width: initial }
-    const listeners = new Map<string, Set<(event: MediaQueryListEvent) => void>>()
-    const set = (width: Width) => {
-      current.width = width
-      for (const [query, handlers] of listeners) {
-        const event = { matches: widthMatches(query, width), media: query } as MediaQueryListEvent
-        for (const handler of handlers) handler(event)
-      }
-    }
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      get matches() { return widthMatches(query, current.width) },
-      media: query,
-      onchange: null,
-      addEventListener: (type: string, handler: (event: MediaQueryListEvent) => void) => {
-        if (type !== 'change') return
-        if (!listeners.has(query)) listeners.set(query, new Set())
-        listeners.get(query)?.add(handler)
-      },
-      removeEventListener: (type: string, handler: (event: MediaQueryListEvent) => void) => {
-        if (type === 'change') listeners.get(query)?.delete(handler)
-      },
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }))
-    return { set }
-  }
-
-  const timelineToggle = () => screen.getByRole('button', { name: 'Timeline controls' })
-  const timelineRegion = () => screen.queryByRole('region', { name: 'Timeline' })
-  const rotationCollapsedState = () => document.querySelector('[data-rotation-panel]')?.getAttribute('data-collapsed')
-  const chosenDate = () => useMapStore.getState().chosenDate
-
-  it('R-46, AC-39: at 360x640 the dock is the collapsed toggle and Enter expands it as the region first control', async () => {
-    stubWidth('360')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await waitFor(() => expect(timelineRegion()).toBeNull())
-    expect(screen.queryByRole('region', { name: 'Timeline' })).toBeNull()
-    const toggle = timelineToggle()
-    expect(toggle.tagName).toBe('BUTTON')
-    expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(toggle.textContent).toContain('2026-11-14')
-    expect(toggle.tabIndex).toBe(0)
-
-    toggle.focus()
-    await user.keyboard('{Enter}')
-    const region = await screen.findByRole('region', { name: 'Timeline' })
-    expect(timelineToggle().getAttribute('aria-expanded')).toBe('true')
-    expect(region.querySelector('.timeline-date-row')?.firstElementChild).toBe(timelineToggle())
-    expect(document.activeElement).toBe(timelineToggle())
-    // The four R-37 controls stay four at this width.
-    expect(within(region).getByLabelText('Go to date')).toBeTruthy()
-    expect(within(region).getByLabelText('Previous day')).toBeTruthy()
-    expect(within(region).getByLabelText('Timeline date')).toBeTruthy()
-    expect(within(region).getByLabelText('Next day')).toBeTruthy()
-
-    await user.keyboard(' ')
-    await waitFor(() => expect(timelineRegion()).toBeNull())
-    expect(timelineToggle().getAttribute('aria-expanded')).toBe('false')
-    expect(document.activeElement).toBe(timelineToggle())
-  })
-
-  it('R-46, AC-39: at 780x900 the dock is expanded at first paint and its toggle is a sibling of the region', async () => {
-    stubWidth('780')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const region = await screen.findByRole('region', { name: 'Timeline' })
-    const toggle = timelineToggle()
-    expect(toggle.getAttribute('aria-expanded')).toBe('true')
-    expect(region.contains(toggle)).toBe(false)
-    expect(toggle.compareDocumentPosition(region) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-
-    await user.click(toggle)
-    await waitFor(() => expect(timelineRegion()).toBeNull())
-    expect(timelineToggle().getAttribute('aria-expanded')).toBe('false')
-    expect(timelineToggle().textContent).toContain('2026-11-14')
-
-    await user.click(timelineToggle())
-    expect(await screen.findByRole('region', { name: 'Timeline' })).toBeTruthy()
-  })
-
-  it('R-40, R-51, R-52, AC-33: a resize keeps the chosen date and the states the user set', async () => {
-    const viewport = stubResizableWidth('1440')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await screen.findByRole('region', { name: 'Timeline' })
-    act(() => useMapStore.setState({ chosenDate: '2026-11-12' }))
-    await user.click(screen.getByRole('button', { name: 'Collapse Rotation outlook' }))
-    expect(rotationCollapsedState()).toBe('true')
-
-    act(() => viewport.set('780'))
-    await waitFor(() => expect(rotationCollapsedState()).toBe('true'))
-    expect(timelineRegion()).toBeTruthy()
-    expect(chosenDate()).toBe('2026-11-12')
-
-    // Two presses at 780: the expanded state is a press value, not the width default.
-    await user.click(timelineToggle())
-    expect(timelineRegion()).toBeNull()
-    await user.click(timelineToggle())
-    expect(timelineRegion()).toBeTruthy()
-
-    act(() => viewport.set('360'))
-    await waitFor(() => expect(timelineToggle().getAttribute('aria-expanded')).toBe('true'))
-    const region = await screen.findByRole('region', { name: 'Timeline' })
-    expect(region.querySelector('.timeline-date-row')?.firstElementChild).toBe(timelineToggle())
-    expect(chosenDate()).toBe('2026-11-12')
-    // 360x640's own default is collapsed, and the resize does not reapply it.
-    expect(rotationCollapsedState()).toBe('true')
-  })
-
-  it('R-48, AC-42: the rotation toggle is a native button whose name states the action and whose keys toggle it', async () => {
-    stubWidth('1440')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    const toggle = await screen.findByRole('button', { name: 'Collapse Rotation outlook' })
-    expect(toggle.tagName).toBe('BUTTON')
-    expect(toggle.tabIndex).toBe(0)
-    expect((toggle as HTMLButtonElement).disabled).toBe(false)
-    expect(toggle.getAttribute('aria-expanded')).toBe('true')
-
-    toggle.focus()
-    await user.keyboard('{Enter}')
-    const collapsed = screen.getByRole('button', { name: 'Expand Rotation outlook' })
-    expect(collapsed.getAttribute('aria-expanded')).toBe('false')
-    expect(document.activeElement).toBe(collapsed)
-
-    await user.keyboard(' ')
-    const expanded = screen.getByRole('button', { name: 'Collapse Rotation outlook' })
-    expect(expanded.getAttribute('aria-expanded')).toBe('true')
-    expect(document.activeElement).toBe(expanded)
-  })
-
-  it('R-49, AC-43: collapsing unmounts the three cards and the Rotation scenarios list', async () => {
-    stubWidth('1440')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
-    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-
-    await user.click(screen.getByRole('button', { name: 'Collapse Rotation outlook' }))
-    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(0))
-    expect(screen.queryByRole('list', { name: 'Rotation scenarios' })).toBeNull()
-    expect(document.querySelectorAll('.rotation-card').length).toBe(0)
-    // The heading block stays, because the collapsed panel's height is that header.
-    expect(screen.getByRole('heading', { name: 'Rotation outlook' })).toBeTruthy()
-
-    await user.click(screen.getByRole('button', { name: 'Expand Rotation outlook' }))
-    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
-    expect(screen.getByRole('list', { name: 'Rotation scenarios' })).toBeTruthy()
-    for (const face of document.querySelectorAll('.scenario-card .flip-face')) {
-      expect(face.getAttribute('data-face')).toBe('front')
-    }
-  })
-
-  it('R-37, AC-36: Enter and Space step the date from Previous day and Next day and keep focus', async () => {
-    stubWidth('1440')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    await screen.findByRole('region', { name: 'Timeline' })
-
-    const previous = screen.getByRole('button', { name: 'Previous day' })
-    previous.focus()
-    await user.keyboard('{Enter}')
-    expect(chosenDate()).toBe('2026-11-13')
-    expect(document.activeElement).toBe(previous)
-    await user.keyboard(' ')
-    expect(chosenDate()).toBe('2026-11-12')
-    expect(document.activeElement).toBe(previous)
-
-    const next = screen.getByRole('button', { name: 'Next day' })
-    next.focus()
-    await user.keyboard('{Enter}')
-    expect(chosenDate()).toBe('2026-11-13')
-    expect(document.activeElement).toBe(next)
-  })
-
-  it('R-53, AC-45: a block 4 press leaves the card faces and values alone, and wave 4 imports no other panel state', async () => {
-    stubWidth('780')
-    mockApi()
-    const user = userEvent.setup()
-    render(<App />)
-
-    // 780x900 loads with the rotation panel collapsed (R-52), so the cards mount after a press.
-    await user.click(await screen.findByRole('button', { name: 'Expand Rotation outlook' }))
-    await waitFor(() => expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3))
-    const flip = document.querySelector('.scenario-card .flip-overlay') as HTMLElement
-    await user.click(flip)
-    const face = () => document.querySelector('.scenario-card .flip-face')?.getAttribute('data-face')
-    expect(face()).toBe('back')
-    const value = document.querySelector('.smap-value')?.textContent ?? null
-
-    await user.click(timelineToggle())
-    expect(face()).toBe('back')
-    await user.click(timelineToggle())
-    expect(face()).toBe('back')
-    expect(document.querySelectorAll('.scenario-card[role="option"]')).toHaveLength(3)
-    expect(document.querySelector('.smap-value')?.textContent ?? null).toBe(value)
-
-    const wave4Sources = ['src/components/TimelineDock.tsx', 'src/components/ScenarioCards.tsx', 'src/lib/viewport.ts']
-      .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
-      .join('\n')
-    expect(wave4Sources).not.toMatch(/useCommandToggle|useSupportingDataToggle|SUPPORTING_DATA_PANEL_ID/)
-  })
-
-  it('R-41, AC-22: the top right strip is the label, the avatar, Command and Supporting data in that order', async () => {
-    stubWidth('1440')
-    mockApi()
-    render(<App />)
-
-    await screen.findByRole('region', { name: 'Timeline' })
-    const strip = document.querySelector('.anchor-top-right .topbar-meta') as HTMLElement
-    const children = [...strip.children]
-    expect(children).toHaveLength(4)
-    expect(children[0].textContent).toBe('FIELD INTELLIGENCE')
-    expect(children[1].getAttribute('aria-label')).toBe('Grower profile')
-    expect(children[2].textContent).toBe('Command')
-    expect(children[3].textContent).toBe('Supporting data')
-    expect(document.querySelector('[aria-label="Season"]')).toBeNull()
-    expect(document.querySelector('select')).toBeNull()
+    expect(screen.getByText('Date limited to 2015-04-01')).toBeTruthy()
   })
 })

@@ -47,11 +47,11 @@ export const LAYER_DEFAULT_OPACITY = 0.55
 type MapState = {
   selectedFieldId: string | null
   composition: CompositionPreset
-  openPanelName: 'scenarios' | 'evidence' | null
+  openPanelName: string | null
   activeFilter: 'all' | 'ranked' | 'abstained' | null
   selectField: (fieldId: string) => void
   setComposition: (composition: CompositionPreset) => void
-  openPanel: (panel: 'scenarios' | 'evidence') => void
+  openPanel: (panel: string) => void
   applyFilter: (filter: 'all' | 'ranked' | 'abstained') => void
 
   // Block 5, the map surface. `regionId` defaults to the United States at every width (R-01);
