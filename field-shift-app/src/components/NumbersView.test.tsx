@@ -538,6 +538,11 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     return gap?.cause ?? ''
   }
 
+  /** The card-level NDVI sentence: the paragraph that states the count and the two-scene rule. */
+  function ndviCardSentence(container: HTMLElement): string {
+    return container.querySelector<HTMLElement>('[data-card="ndvi"] [data-abstain-sentence="ndvi"]')?.textContent ?? ''
+  }
+
   it('prints the SMAP abstention with the palette source and the SMAP gap cause', async () => {
     const payload = recordedNumbersPayload()
     stubNumbersFetch(payload)
@@ -794,6 +799,36 @@ describe('abstention texts name the missing input, its source and its cause (R-1
       expect(text, metric).toContain(payload.sections.ndvi.source)
       expect(text, metric).not.toContain('No value')
     }
+  })
+
+  it('names the scene count and the Earth Search source in the card-level NDVI sentence when the count was not read (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.ndvi.scene_count).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = ndviCardSentence(container)
+    expect(text).toContain('scene count')
+    expect(text).toContain(payload.sections.ndvi.source)
+    expect(text).toContain(gapCause(payload, 'ndvi', 'search window unknown'))
+    // The rule the sentence states stays, because it is what the reader needs to act on.
+    expect(text).toContain('At least two scenes at or above 0.5 are needed.')
+    expect(text).not.toContain('No value')
+  })
+
+  it('says the reason was not recorded in the card-level NDVI sentence when neither the payload nor the register carries one (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    delete (payload.sections.ndvi as { error?: string | null }).error
+    payload.gaps = payload.gaps.filter((gap) => gap.section !== 'ndvi')
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = ndviCardSentence(container)
+    expect(text).toContain('scene count')
+    expect(text).toContain('the reason was not recorded in the payload or the gap register')
+    expect(text).toContain(payload.sections.ndvi.source)
+    expect(text).toContain('At least two scenes at or above 0.5 are needed.')
+    expect(text).not.toContain('No value')
   })
 
   it('fails the state cause closed to the not-recorded sentence when the register carries no state gap (R-12, AC-11)', async () => {
