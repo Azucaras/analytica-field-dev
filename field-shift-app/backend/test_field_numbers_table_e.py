@@ -33,6 +33,11 @@ BODY = {"ring": RING, "centroid": [-55.27, -11.91], "area_ha": 22.4, "date": "20
 FROZEN_NOW = datetime(2026, 11, 15, 3, 0, tzinfo=timezone.utc)
 SOIL_ARTIFACT = ARTIFACTS / "soilgrids-55.27--11.91.json"
 
+# Table E, climate row: the section carries these keys in every state.
+TABLE_E_CLIMATE_KEYS = {"series", "aggregates", "normals", "window", "source", "basis", "resolution", "as_of",
+                        "fetched_at", "cached"}
+NORMALS_KEYS = {"of_years", "excluded_years"}
+
 
 class TableECase(unittest.TestCase):
     def setUp(self) -> None:
@@ -106,6 +111,49 @@ class SoilDFactorTests(TableECase):
         soil = self.payload()["sections"]["soil"]
         self.assertEqual(soil["state"], "unavailable")
         self.assertEqual(soil["d_factor"], {"clay": None, "sand": None, "phh2o": None, "soc": None})
+
+
+class ClimateNormalsTests(TableECase):
+    """Table E climate row and R-12: `normals` is present in every state, with a printable reason."""
+
+    def assert_table_e_climate(self, climate: dict, state: str) -> dict:
+        self.assertEqual(climate["state"], state)
+        missing = TABLE_E_CLIMATE_KEYS - set(climate)
+        self.assertEqual(missing, set(), f"Table E climate keys missing in state {state}")
+        normals = climate["normals"]
+        self.assertTrue(NORMALS_KEYS <= set(normals), f"normals facts missing in state {state}: {normals}")
+        return normals
+
+    def test_table_e_the_ok_state_carries_the_normals_family(self) -> None:
+        normals = self.assert_table_e_climate(self.payload()["sections"]["climate"], "ok")
+        self.assertGreater(normals["of_years"], 0)
+        self.assertNotIn("error", normals)
+
+    def test_table_e_power_unavailable_carries_normals_with_the_section_reason(self) -> None:
+        self.transport.offline_hosts = ("power.larc",)
+        climate = self.payload()["sections"]["climate"]
+        normals = self.assert_table_e_climate(climate, "unavailable")
+        self.assertEqual(normals["of_years"], 0)
+        self.assertEqual(normals["excluded_years"], [])
+        self.assertEqual(normals["error"], climate["error"])
+
+    def test_table_e_a_malformed_power_body_carries_normals_with_its_reason(self) -> None:
+        # A body without `properties.parameter`: `power.parse` raises KeyError, the malformed branch.
+        with patch.object(self.transport, "_power",
+                          return_value={"header": {"fill_value": -999.0}, "properties": {}}):
+            climate = self.payload()["sections"]["climate"]
+        normals = self.assert_table_e_climate(climate, "unavailable")
+        self.assertEqual(normals["of_years"], 0)
+        self.assertEqual(normals["error"], "malformed POWER response")
+
+    def test_r12_no_valid_rain_day_still_carries_normals_with_its_reason(self) -> None:
+        # Drop every PRECTOTCORR day: `resolve_window` finds no valid day in the 120 day lookback.
+        self.transport.power["PRECTOTCORR"] = {}
+        climate = self.payload()["sections"]["climate"]
+        normals = self.assert_table_e_climate(climate, "abstained")
+        self.assertEqual(normals["of_years"], 0)
+        self.assertEqual(normals["excluded_years"], [])
+        self.assertIn("no consolidated PRECTOTCORR day", normals["error"])
 
 
 if __name__ == "__main__":
