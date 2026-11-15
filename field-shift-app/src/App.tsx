@@ -21,7 +21,7 @@ import {
   searchWithRegion,
 } from '@/lib/regions'
 import { BASEMAP_ADAPTERS } from '@/lib/basemap-adapters'
-import { unmappedClassColour } from '@/lib/polygon-style'
+import { noCdlYearOf, unmappedClassColour } from '@/lib/polygon-style'
 import { polygonIdFromSearch, searchWithPolygon, commandFieldId } from '@/lib/polygon-selection'
 import {
   COMPACT_QUERY,
@@ -79,6 +79,9 @@ function App() {
   const regionId = useMapStore((state) => state.regionId)
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const polygonClass = useMapStore((state) => state.polygonClass)
+  // R-21, R-28: the raw class value tells a United States null class from an unmapped code.
+  const polygonRaw = useMapStore((state) => state.polygonRaw)
+  const polygonDate = useMapStore((state) => state.chosenDate ?? state.axis.default)
   const numbersOpen = useMapStore((state) => state.numbersOpen)
   const command = useCommandToggle()
   const supportingData = useSupportingDataToggle()
@@ -253,8 +256,11 @@ function App() {
         fieldId: commandFieldId(regionAdapter(regionId), selectedPolygonId),
         name: polygonClass?.name ?? null,
         hex: polygonClass?.hex ?? unmappedClassColour(),
+        noCdlYear: polygonRaw === null
+          ? null
+          : noCdlYearOf(regionAdapter(regionId), polygonRaw.classValue, polygonDate),
       }),
-    [selectedPolygonId, polygonClass, regionId],
+    [selectedPolygonId, polygonClass, polygonRaw, polygonDate, regionId],
   )
   // R-14, R-15: every evidence row is presented from its own fields. The layer name is
   // the fixture string through its catalog key; the basis label comes from the row's
