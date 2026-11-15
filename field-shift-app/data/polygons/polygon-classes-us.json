@@ -1,0 +1,1288 @@
+{
+ "source": {
+  "name": "CDL raster attribute table",
+  "url": "https://pdi.scinet.usda.gov/image/rest/services/CDL_WM/ImageServer/rasterAttributeTable?f=json",
+  "sha256": "8b5cec2ff965a2d1f7f1205111b3a0fbe3cce5ed82cb0ef6a446ae304fe0b699",
+  "rows_in_source": 256,
+  "rows_named_in_source": 133,
+  "fetched": "2026-11-14",
+  "note": "Generated from the RAT: Value is the CDL code, Class_Names and Red/Green/Blue are the RAT's own, rendered as #rrggbb. Value 0 (Background) is excluded and is handled by R-21. Spelling follows the RAT, so Sunflower and Grassland/Pasture, not the county statistics JSON's Sunflowers and Grass/Pasture. The RAT carries 256 rows and 122 of them have a null Class_Names, so of the 255 values this table keeps, 133 carry the RAT's name and the rest carry null, which is the RAT's own value for an unassigned code."
+ },
+ "rows": [
+  {
+   "value": 1,
+   "name": "Corn",
+   "hex": "#ffd300"
+  },
+  {
+   "value": 2,
+   "name": "Cotton",
+   "hex": "#ff2626"
+  },
+  {
+   "value": 3,
+   "name": "Rice",
+   "hex": "#00a8e4"
+  },
+  {
+   "value": 4,
+   "name": "Sorghum",
+   "hex": "#ff9e0b"
+  },
+  {
+   "value": 5,
+   "name": "Soybeans",
+   "hex": "#267000"
+  },
+  {
+   "value": 6,
+   "name": "Sunflower",
+   "hex": "#ffff00"
+  },
+  {
+   "value": 7,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 8,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 9,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 10,
+   "name": "Peanuts",
+   "hex": "#70a500"
+  },
+  {
+   "value": 11,
+   "name": "Tobacco",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 12,
+   "name": "Sweet Corn",
+   "hex": "#dda50b"
+  },
+  {
+   "value": 13,
+   "name": "Pop or Orn Corn",
+   "hex": "#dda50b"
+  },
+  {
+   "value": 14,
+   "name": "Mint",
+   "hex": "#7ed3ff"
+  },
+  {
+   "value": 15,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 16,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 17,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 18,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 19,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 20,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 21,
+   "name": "Barley",
+   "hex": "#e2007c"
+  },
+  {
+   "value": 22,
+   "name": "Durum Wheat",
+   "hex": "#896254"
+  },
+  {
+   "value": 23,
+   "name": "Spring Wheat",
+   "hex": "#d8b56b"
+  },
+  {
+   "value": 24,
+   "name": "Winter Wheat",
+   "hex": "#a57000"
+  },
+  {
+   "value": 25,
+   "name": "Other Small Grains",
+   "hex": "#d69ebc"
+  },
+  {
+   "value": 26,
+   "name": "Dbl Crop WinWht/Soybeans",
+   "hex": "#707000"
+  },
+  {
+   "value": 27,
+   "name": "Rye",
+   "hex": "#ac007c"
+  },
+  {
+   "value": 28,
+   "name": "Oats",
+   "hex": "#a05989"
+  },
+  {
+   "value": 29,
+   "name": "Millet",
+   "hex": "#700049"
+  },
+  {
+   "value": 30,
+   "name": "Speltz",
+   "hex": "#d69ebc"
+  },
+  {
+   "value": 31,
+   "name": "Canola",
+   "hex": "#d1ff00"
+  },
+  {
+   "value": 32,
+   "name": "Flaxseed",
+   "hex": "#7e99ff"
+  },
+  {
+   "value": 33,
+   "name": "Safflower",
+   "hex": "#d6d600"
+  },
+  {
+   "value": 34,
+   "name": "Rape Seed",
+   "hex": "#d1ff00"
+  },
+  {
+   "value": 35,
+   "name": "Mustard",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 36,
+   "name": "Alfalfa",
+   "hex": "#ffa5e2"
+  },
+  {
+   "value": 37,
+   "name": "Other Hay/Non Alfalfa",
+   "hex": "#a5f28c"
+  },
+  {
+   "value": 38,
+   "name": "Camelina",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 39,
+   "name": "Buckwheat",
+   "hex": "#d69ebc"
+  },
+  {
+   "value": 40,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 41,
+   "name": "Sugarbeets",
+   "hex": "#a800e4"
+  },
+  {
+   "value": 42,
+   "name": "Dry Beans",
+   "hex": "#a50000"
+  },
+  {
+   "value": 43,
+   "name": "Potatoes",
+   "hex": "#702600"
+  },
+  {
+   "value": 44,
+   "name": "Other Crops",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 45,
+   "name": "Sugarcane",
+   "hex": "#b17eff"
+  },
+  {
+   "value": 46,
+   "name": "Sweet Potatoes",
+   "hex": "#702600"
+  },
+  {
+   "value": 47,
+   "name": "Misc Vegs & Fruits",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 48,
+   "name": "Watermelons",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 49,
+   "name": "Onions",
+   "hex": "#ffcc66"
+  },
+  {
+   "value": 50,
+   "name": "Cucumbers",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 51,
+   "name": "Chick Peas",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 52,
+   "name": "Lentils",
+   "hex": "#00ddaf"
+  },
+  {
+   "value": 53,
+   "name": "Peas",
+   "hex": "#54ff00"
+  },
+  {
+   "value": 54,
+   "name": "Tomatoes",
+   "hex": "#f2a377"
+  },
+  {
+   "value": 55,
+   "name": "Caneberries",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 56,
+   "name": "Hops",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 57,
+   "name": "Herbs",
+   "hex": "#7ed3ff"
+  },
+  {
+   "value": 58,
+   "name": "Clover/Wildflowers",
+   "hex": "#e8bfff"
+  },
+  {
+   "value": 59,
+   "name": "Sod/Grass Seed",
+   "hex": "#afffdd"
+  },
+  {
+   "value": 60,
+   "name": "Switchgrass",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 61,
+   "name": "Fallow/Idle Cropland",
+   "hex": "#bfbf77"
+  },
+  {
+   "value": 62,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 63,
+   "name": "Forest",
+   "hex": "#93cc93"
+  },
+  {
+   "value": 64,
+   "name": "Shrubland",
+   "hex": "#c6d69e"
+  },
+  {
+   "value": 65,
+   "name": "Barren",
+   "hex": "#ccbfa3"
+  },
+  {
+   "value": 66,
+   "name": "Cherries",
+   "hex": "#ff00ff"
+  },
+  {
+   "value": 67,
+   "name": "Peaches",
+   "hex": "#ff8eaa"
+  },
+  {
+   "value": 68,
+   "name": "Apples",
+   "hex": "#ba004f"
+  },
+  {
+   "value": 69,
+   "name": "Grapes",
+   "hex": "#704489"
+  },
+  {
+   "value": 70,
+   "name": "Christmas Trees",
+   "hex": "#007777"
+  },
+  {
+   "value": 71,
+   "name": "Other Tree Crops",
+   "hex": "#b19a70"
+  },
+  {
+   "value": 72,
+   "name": "Citrus",
+   "hex": "#ffff7e"
+  },
+  {
+   "value": 73,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 74,
+   "name": "Pecans",
+   "hex": "#b5705b"
+  },
+  {
+   "value": 75,
+   "name": "Almonds",
+   "hex": "#00a582"
+  },
+  {
+   "value": 76,
+   "name": "Walnuts",
+   "hex": "#e9d6af"
+  },
+  {
+   "value": 77,
+   "name": "Pears",
+   "hex": "#b19a70"
+  },
+  {
+   "value": 78,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 79,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 80,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 81,
+   "name": "Clouds/No Data",
+   "hex": "#f2f2f2"
+  },
+  {
+   "value": 82,
+   "name": "Developed",
+   "hex": "#9a9a9a"
+  },
+  {
+   "value": 83,
+   "name": "Water",
+   "hex": "#4b70a3"
+  },
+  {
+   "value": 84,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 85,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 86,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 87,
+   "name": "Wetlands",
+   "hex": "#7eb1b1"
+  },
+  {
+   "value": 88,
+   "name": "Nonag/Undefined",
+   "hex": "#e8ffbf"
+  },
+  {
+   "value": 89,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 90,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 91,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 92,
+   "name": "Aquaculture",
+   "hex": "#00ffff"
+  },
+  {
+   "value": 93,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 94,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 95,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 96,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 97,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 98,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 99,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 100,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 101,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 102,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 103,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 104,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 105,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 106,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 107,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 108,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 109,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 110,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 111,
+   "name": "Open Water",
+   "hex": "#4b70a3"
+  },
+  {
+   "value": 112,
+   "name": "Perennial Ice/Snow",
+   "hex": "#d3e2f9"
+  },
+  {
+   "value": 113,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 114,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 115,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 116,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 117,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 118,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 119,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 120,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 121,
+   "name": "Developed/Open Space",
+   "hex": "#9a9a9a"
+  },
+  {
+   "value": 122,
+   "name": "Developed/Low Intensity",
+   "hex": "#9a9a9a"
+  },
+  {
+   "value": 123,
+   "name": "Developed/Med Intensity",
+   "hex": "#9a9a9a"
+  },
+  {
+   "value": 124,
+   "name": "Developed/High Intensity",
+   "hex": "#9a9a9a"
+  },
+  {
+   "value": 125,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 126,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 127,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 128,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 129,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 130,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 131,
+   "name": "Barren",
+   "hex": "#ccbfa3"
+  },
+  {
+   "value": 132,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 133,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 134,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 135,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 136,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 137,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 138,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 139,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 140,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 141,
+   "name": "Deciduous Forest",
+   "hex": "#93cc93"
+  },
+  {
+   "value": 142,
+   "name": "Evergreen Forest",
+   "hex": "#93cc93"
+  },
+  {
+   "value": 143,
+   "name": "Mixed Forest",
+   "hex": "#93cc93"
+  },
+  {
+   "value": 144,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 145,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 146,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 147,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 148,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 149,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 150,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 151,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 152,
+   "name": "Shrubland",
+   "hex": "#c6d69e"
+  },
+  {
+   "value": 153,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 154,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 155,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 156,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 157,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 158,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 159,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 160,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 161,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 162,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 163,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 164,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 165,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 166,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 167,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 168,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 169,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 170,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 171,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 172,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 173,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 174,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 175,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 176,
+   "name": "Grassland/Pasture",
+   "hex": "#e8ffbf"
+  },
+  {
+   "value": 177,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 178,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 179,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 180,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 181,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 182,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 183,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 184,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 185,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 186,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 187,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 188,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 189,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 190,
+   "name": "Woody Wetlands",
+   "hex": "#7eb1b1"
+  },
+  {
+   "value": 191,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 192,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 193,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 194,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 195,
+   "name": "Herbaceous Wetlands",
+   "hex": "#7eb1b1"
+  },
+  {
+   "value": 196,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 197,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 198,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 199,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 200,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 201,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 202,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 203,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 204,
+   "name": "Pistachios",
+   "hex": "#00ff8c"
+  },
+  {
+   "value": 205,
+   "name": "Triticale",
+   "hex": "#d69ebc"
+  },
+  {
+   "value": 206,
+   "name": "Carrots",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 207,
+   "name": "Asparagus",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 208,
+   "name": "Garlic",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 209,
+   "name": "Cantaloupes",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 210,
+   "name": "Prunes",
+   "hex": "#ff8eaa"
+  },
+  {
+   "value": 211,
+   "name": "Olives",
+   "hex": "#334933"
+  },
+  {
+   "value": 212,
+   "name": "Oranges",
+   "hex": "#e47026"
+  },
+  {
+   "value": 213,
+   "name": "Honeydew Melons",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 214,
+   "name": "Broccoli",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 215,
+   "name": "Avocados",
+   "hex": "#66994c"
+  },
+  {
+   "value": 216,
+   "name": "Peppers",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 217,
+   "name": "Pomegranates",
+   "hex": "#b19a70"
+  },
+  {
+   "value": 218,
+   "name": "Nectarines",
+   "hex": "#ff8eaa"
+  },
+  {
+   "value": 219,
+   "name": "Greens",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 220,
+   "name": "Plums",
+   "hex": "#ff8eaa"
+  },
+  {
+   "value": 221,
+   "name": "Strawberries",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 222,
+   "name": "Squash",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 223,
+   "name": "Apricots",
+   "hex": "#ff8eaa"
+  },
+  {
+   "value": 224,
+   "name": "Vetch",
+   "hex": "#00af4b"
+  },
+  {
+   "value": 225,
+   "name": "Dbl Crop WinWht/Corn",
+   "hex": "#ffd300"
+  },
+  {
+   "value": 226,
+   "name": "Dbl Crop Oats/Corn",
+   "hex": "#ffd300"
+  },
+  {
+   "value": 227,
+   "name": "Lettuce",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 228,
+   "name": "Dbl Crop Triticale/Corn",
+   "hex": "#ffd200"
+  },
+  {
+   "value": 229,
+   "name": "Pumpkins",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 230,
+   "name": "Dbl Crop Lettuce/Durum Wht",
+   "hex": "#896254"
+  },
+  {
+   "value": 231,
+   "name": "Dbl Crop Lettuce/Cantaloupe",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 232,
+   "name": "Dbl Crop Lettuce/Cotton",
+   "hex": "#ff2626"
+  },
+  {
+   "value": 233,
+   "name": "Dbl Crop Lettuce/Barley",
+   "hex": "#e2007c"
+  },
+  {
+   "value": 234,
+   "name": "Dbl Crop Durum Wht/Sorghum",
+   "hex": "#ff9e0b"
+  },
+  {
+   "value": 235,
+   "name": "Dbl Crop Barley/Sorghum",
+   "hex": "#ff9e0b"
+  },
+  {
+   "value": 236,
+   "name": "Dbl Crop WinWht/Sorghum",
+   "hex": "#a57000"
+  },
+  {
+   "value": 237,
+   "name": "Dbl Crop Barley/Corn",
+   "hex": "#ffd300"
+  },
+  {
+   "value": 238,
+   "name": "Dbl Crop WinWht/Cotton",
+   "hex": "#a57000"
+  },
+  {
+   "value": 239,
+   "name": "Dbl Crop Soybeans/Cotton",
+   "hex": "#267000"
+  },
+  {
+   "value": 240,
+   "name": "Dbl Crop Soybeans/Oats",
+   "hex": "#267000"
+  },
+  {
+   "value": 241,
+   "name": "Dbl Crop Corn/Soybeans",
+   "hex": "#ffd300"
+  },
+  {
+   "value": 242,
+   "name": "Blueberries",
+   "hex": "#000099"
+  },
+  {
+   "value": 243,
+   "name": "Cabbage",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 244,
+   "name": "Cauliflower",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 245,
+   "name": "Celery",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 246,
+   "name": "Radishes",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 247,
+   "name": "Turnips",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 248,
+   "name": "Eggplants",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 249,
+   "name": "Gourds",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 250,
+   "name": "Cranberries",
+   "hex": "#ff6666"
+  },
+  {
+   "value": 251,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 252,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 253,
+   "name": null,
+   "hex": "#000000"
+  },
+  {
+   "value": 254,
+   "name": "Dbl Crop Barley/Soybeans",
+   "hex": "#267000"
+  },
+  {
+   "value": 255,
+   "name": null,
+   "hex": "#000000"
+  }
+ ]
+}

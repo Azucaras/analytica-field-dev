@@ -1,0 +1,10 @@
+{
+ "schema_version": "1",
+ "region": "us",
+ "clip_box": "-97.20,46.90,-97.14,46.96",
+ "detail_minzoom": 6,
+ "detail_maxzoom": 14,
+ "overview_minzoom": 3,
+ "overview_maxzoom": 5,
+ "interactive_minzoom": 8
+}
