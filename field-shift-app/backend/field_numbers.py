@@ -133,6 +133,10 @@ SOIL_RESOLUTION = "250 m static model"
 SOIL_DEPTHS = (("0-5cm", "0_5"), ("5-15cm", "5_15"), ("15-30cm", "15_30"))
 SOIL_PROPERTIES = (("clay", "soil.clay", 0, "g/kg"), ("sand", "soil.sand", 0, "g/kg"),
                    ("phh2o", "soil.ph", 1, "pH"), ("soc", "soil.soc", 1, "g/kg"))
+# Table E, soil row: the keys a depth entry carries. Table A addresses the same depth by its token
+# (`soil.clay.0_5`, `soil.clay.5_15`, `soil.clay.15_30`), so the entry carries that token as `depth`
+# beside the SoilGrids `label`. Both are read from Table A and Table E, never invented here.
+SOIL_DEPTH_KEYS = {"clay": "clay_g_kg", "sand": "sand_g_kg", "phh2o": "ph", "soc": "soc_g_kg"}
 for _, _family, _decimals, _unit in SOIL_PROPERTIES:
     for _, _depth_key in SOIL_DEPTHS:
         METRICS[f"{_family}.{_depth_key}"] = _metric(_family.split(".")[1], _unit, _decimals,
@@ -640,7 +644,7 @@ def _soil(ctx: Context, gaps: list) -> tuple[dict, list]:
     depth_rows = []
     any_value = False
     for depth, depth_key in SOIL_DEPTHS:
-        entry: dict[str, Any] = {"label": depth}
+        entry: dict[str, Any] = {"label": depth, "depth": depth_key}
         for prop, family, decimals, unit in SOIL_PROPERTIES:
             cell = values[(prop, depth)]
             metric = f"{family}.{depth_key}"
@@ -650,7 +654,7 @@ def _soil(ctx: Context, gaps: list) -> tuple[dict, list]:
             else:
                 any_value = True
             rows.append(_row(metric, value, as_of=as_of, source=soilgrids.URL, fetched_at=sourced.fetched_at))
-            entry[f"{family.split('.')[1]}"] = _fmt(metric, value)
+            entry[SOIL_DEPTH_KEYS[prop]] = _fmt(metric, value)
         depth_rows.append(entry)
     section["depths"] = depth_rows
     section["state"] = "ok" if any_value else "abstained"

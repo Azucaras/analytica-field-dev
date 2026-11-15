@@ -10,11 +10,15 @@ import { fetchPolygonArea, readoutRows, type SidecarArea } from '@/lib/polygon-r
 import { commandFieldId } from '@/lib/polygon-selection'
 import { regionAdapter } from '@/lib/regions'
 import {
+  AGGREGATE_INPUTS,
   familyOf,
   formatMetric,
   interiorPoint,
   METRICS,
+  type AggregateName,
   type ClimateSection,
+  type ClimateSeries,
+  type NormalName,
   type NumbersPayload,
   type NumbersRequest,
   type ProvenanceRow,
@@ -120,7 +124,7 @@ function Card({
   source: string
   asOf: string | null
   basis: ProvenanceRow['basis']
-  resolution?: string
+  resolution?: string | null
   children: ReactNode
 }) {
   return (
@@ -139,6 +143,9 @@ function Card({
  * R-21: the daily chart. One point per valid day for rain, `T2M_MAX` and `T2M_MIN`, each panel
  * in the unit of Table A. A line joins two neighbouring days only when both carry a value, so a
  * dropped day is a gap in the series and never a bridge.
+ *
+ * The card renderers below are exported for the contract tests: each one reads exactly one section
+ * of the payload, so a test can hold that section to the recorded response on its own.
  */
 const CHART_W = 640
 const PANEL_H = 120
@@ -147,14 +154,14 @@ const PAD_R = 12
 const PAD_T = 14
 const PAD_B = 18
 
-function ClimateChart({ series }: { series: ClimateSection['series'] }) {
-  const n = Math.max(series.rain.length, series.tmax.length, series.tmin.length)
+export function ClimateChart({ series }: { series: ClimateSeries }) {
+  const n = Math.max(series.rain_day.length, series.tmax_day.length, series.tmin_day.length)
   if (n === 0) return <p className="numbers-abstain">{t('numbers.chart.no_points')}</p>
   const x = (i: number) => PAD_L + (n <= 1 ? 0 : (i * (CHART_W - PAD_L - PAD_R)) / (n - 1))
-  const rainValues = series.rain.flatMap((p) => (p.value === null ? [] : [p.value]))
+  const rainValues = series.rain_day.flatMap((p) => (p.value === null ? [] : [p.value]))
   const rainMax = Math.max(10, ...rainValues)
   const yRain = (v: number) => PANEL_H - PAD_B - (v / rainMax) * (PANEL_H - PAD_T - PAD_B)
-  const tempValues = [...series.tmax, ...series.tmin].flatMap((p) => (p.value === null ? [] : [p.value]))
+  const tempValues = [...series.tmax_day, ...series.tmin_day].flatMap((p) => (p.value === null ? [] : [p.value]))
   const tMin = tempValues.length ? Math.floor(Math.min(...tempValues)) - 1 : 0
   const tMax = tempValues.length ? Math.ceil(Math.max(...tempValues)) + 1 : 1
   const yTemp = (v: number) =>
@@ -187,23 +194,23 @@ function ClimateChart({ series }: { series: ClimateSection['series'] }) {
       <text className="numbers-chart-axis" x={PAD_L} y={PANEL_H + PAD_T - 3}>{t('numbers.climate.chart_temperature')}</text>
       <line className="numbers-chart-base" x1={PAD_L} x2={CHART_W - PAD_R} y1={PANEL_H - PAD_B} y2={PANEL_H - PAD_B} />
       <line className="numbers-chart-base" x1={PAD_L} x2={CHART_W - PAD_R} y1={PANEL_H * 2 - PAD_B} y2={PANEL_H * 2 - PAD_B} />
-      <g className="numbers-chart-rain" data-metric="rain_day" data-points={series.rain.filter((p) => p.value !== null).length}>
-        {points(series.rain, yRain)}
+      <g className="numbers-chart-rain" data-metric="rain_day" data-points={series.rain_day.filter((p) => p.value !== null).length}>
+        {points(series.rain_day, yRain)}
       </g>
-      <g className="numbers-chart-tmax" data-metric="tmax_day" data-points={series.tmax.filter((p) => p.value !== null).length}>
-        {segments(series.tmax, yTemp)}
-        {points(series.tmax, yTemp)}
+      <g className="numbers-chart-tmax" data-metric="tmax_day" data-points={series.tmax_day.filter((p) => p.value !== null).length}>
+        {segments(series.tmax_day, yTemp)}
+        {points(series.tmax_day, yTemp)}
       </g>
-      <g className="numbers-chart-tmin" data-metric="tmin_day" data-points={series.tmin.filter((p) => p.value !== null).length}>
-        {segments(series.tmin, yTemp)}
-        {points(series.tmin, yTemp)}
+      <g className="numbers-chart-tmin" data-metric="tmin_day" data-points={series.tmin_day.filter((p) => p.value !== null).length}>
+        {segments(series.tmin_day, yTemp)}
+        {points(series.tmin_day, yTemp)}
       </g>
     </svg>
   )
 }
 
-function ClimateCard({ climate, window }: { climate: ClimateSection; window: NumbersPayload['query']['window'] }) {
-  const aggregates: Array<keyof ClimateSection['aggregates']> = [
+export function ClimateCard({ climate, window }: { climate: ClimateSection; window: NumbersPayload['query']['window'] }) {
+  const aggregates: AggregateName[] = [
     'rain_total',
     'dry_spell_days',
     'gdd10',
@@ -211,25 +218,31 @@ function ClimateCard({ climate, window }: { climate: ClimateSection; window: Num
     'tmin_min',
     'gwetroot_mean',
   ]
-  const normals: Array<{ key: keyof ClimateSection['normals']; metric: string }> = [
+  const normals: Array<{ key: NormalName; metric: string }> = [
     { key: 'rain_median', metric: 'rain_median' },
     { key: 'rain_min', metric: 'rain_min' },
     { key: 'rain_max', metric: 'rain_max' },
-    { key: 'rank', metric: 'rain_rank' },
-    { key: 'percentile', metric: 'rain_percentile' },
+    { key: 'rain_rank', metric: 'rain_rank' },
+    { key: 'rain_percentile', metric: 'rain_percentile' },
     { key: 'hot_days', metric: 'hot_days' },
     { key: 'hot_days_median', metric: 'hot_days_median' },
   ]
-  const abstainAggregate = (key: keyof ClimateSection['aggregates']) => {
-    const info = climate.aggregate_valid[key]
-    if (!info) return t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })
+  // R-19: an aggregate abstains with the valid and missing day counts its own payload object carries,
+  // and the parameter is the Table A input of that aggregate. A missing object means the section
+  // could not be read at all, and then the section error is the reason (R-12).
+  const abstainAggregate = (key: AggregateName) => {
+    const aggregate = climate.aggregates[key]
+    if (!aggregate) return t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })
     return t('numbers.abstain.aggregate', {
-      parameter: info.parameter,
-      valid: info.valid,
-      days: info.days,
-      missing: info.days - info.valid,
+      parameter: AGGREGATE_INPUTS[key],
+      valid: aggregate.valid_days,
+      days: aggregate.of_days,
+      missing: aggregate.of_days - aggregate.valid_days,
     })
   }
+  const abstainNormal = t('numbers.abstain.normals', {
+    reason: climate.normals.error ?? climate.error ?? t('numbers.no_value'),
+  })
   return (
     <Card
       id="climate"
@@ -254,7 +267,7 @@ function ClimateCard({ climate, window }: { climate: ClimateSection; window: Num
           <div className="numbers-row" key={key}>
             <dt>{t(`numbers.${key}`)}</dt>
             <dd>
-              <Printed metric={key} value={climate.aggregates[key]} abstain={abstainAggregate(key)} />
+              <Printed metric={key} value={climate.aggregates[key]?.value ?? null} abstain={abstainAggregate(key)} />
             </dd>
           </div>
         ))}
@@ -269,8 +282,8 @@ function ClimateCard({ climate, window }: { climate: ClimateSection; window: Num
             <dd>
               <Printed
                 metric={metric}
-                value={climate.normals[key]}
-                abstain={t('numbers.abstain.normals', { reason: climate.normals_reason ?? t('numbers.no_value') })}
+                value={climate.normals[key]?.value ?? null}
+                abstain={abstainNormal}
               />
             </dd>
           </div>
@@ -416,7 +429,7 @@ function NdviCard({ ndvi }: { ndvi: NumbersPayload['sections']['ndvi'] }) {
   )
 }
 
-function SoilCard({ soil }: { soil: NumbersPayload['sections']['soil'] }) {
+export function SoilCard({ soil }: { soil: NumbersPayload['sections']['soil'] }) {
   return (
     <Card id="soil" title={t('numbers.card.soil')} source={soil.source} asOf={soil.as_of} basis="modelled" resolution="250 m static model">
       <p className="numbers-cell-statement">{t('numbers.soil.model')}</p>
@@ -450,17 +463,23 @@ function SoilCard({ soil }: { soil: NumbersPayload['sections']['soil'] }) {
   )
 }
 
-function RotationCard({ rotation }: { rotation: NumbersPayload['sections']['rotation'] }) {
-  const empty = rotation.first_crop.length === 0 && rotation.second_crop.length === 0
+export function RotationCard({ rotation }: { rotation: NumbersPayload['sections']['rotation'] }) {
+  // R-36: a sidecar that cannot be read sends null lists, not empty ones. Null and empty both
+  // abstain, and no year is printed for a section that holds none.
+  const first = rotation.first_crop ?? []
+  const second = rotation.second_crop ?? []
+  const empty = first.length === 0 && second.length === 0
   return (
     <Card id="rotation" title={t('numbers.card.rotation')} source={rotation.source} asOf={rotation.as_of} basis={rotation.basis}>
-      <p className="numbers-provenance-line">{t('numbers.rotation.collection', { year: rotation.collection_year })}</p>
+      {rotation.collection_year !== null && (
+        <p className="numbers-provenance-line">{t('numbers.rotation.collection', { year: rotation.collection_year })}</p>
+      )}
       {empty && <p className="numbers-abstain">{t('numbers.rotation.no_row')}</p>}
-      {rotation.first_crop.length > 0 && (
+      {first.length > 0 && (
         <>
           <h4>{t('numbers.rotation.first_crop')}</h4>
           <ul className="numbers-years">
-            {rotation.first_crop.map((entry) => (
+            {first.map((entry) => (
               <li key={`${entry.product}-${entry.year}`}>
                 <span className="numbers-year">{t('numbers.rotation.year', { year: entry.year })}</span>{' '}
                 <PrintedText metric={`mb_first_crop.${entry.year}`} text={entry.class_name} />
@@ -469,11 +488,11 @@ function RotationCard({ rotation }: { rotation: NumbersPayload['sections']['rota
           </ul>
         </>
       )}
-      {rotation.second_crop.length > 0 && (
+      {second.length > 0 && (
         <>
           <h4>{t('numbers.rotation.second_crop')}</h4>
           <ul className="numbers-years">
-            {rotation.second_crop.map((entry) => (
+            {second.map((entry) => (
               <li key={`${entry.product}-${entry.year}`}>
                 <span className="numbers-year">{t('numbers.rotation.year', { year: entry.year })}</span>{' '}
                 <PrintedText metric={`mb_second_crop.${entry.year}`} text={entry.class_name} />
@@ -536,7 +555,19 @@ function MunicipalCard({ municipal }: { municipal: NumbersPayload['sections']['m
   )
 }
 
-function ProvenanceTable({ rows }: { rows: ProvenanceRow[] }) {
+/**
+ * R-07: a chart series is one provenance row for the family it draws. Its `value` is the point
+ * list, which is not a React child, so the table prints the number of points the row covers, and
+ * the chart prints each point's own date.
+ */
+function provenanceValue(row: ProvenanceRow): string {
+  if (row.value === null) return t('numbers.no_value')
+  if (typeof row.value === 'number') return formatMetric(row.metric, row.value)
+  if (Array.isArray(row.value)) return t('numbers.provenance.series_value', { points: row.value.length })
+  return row.value
+}
+
+export function ProvenanceTable({ rows }: { rows: ProvenanceRow[] }) {
   return (
     <section className="numbers-provenance" aria-labelledby="numbers-provenance-heading">
       <h3 id="numbers-provenance-heading">{t('numbers.provenance.heading')}</h3>
@@ -562,9 +593,7 @@ function ProvenanceTable({ rows }: { rows: ProvenanceRow[] }) {
                 <td>{row.metric}</td>
                 <td>{t(row.label)}</td>
                 <td>
-                  {typeof row.value === 'number'
-                    ? formatMetric(row.metric, row.value)
-                    : (row.value ?? t('numbers.no_value'))}
+                  {provenanceValue(row)}
                 </td>
                 <td>{row.unit}</td>
                 <td><BasisChip basis={row.basis} /></td>
