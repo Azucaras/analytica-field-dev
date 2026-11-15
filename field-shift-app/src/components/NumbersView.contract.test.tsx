@@ -231,7 +231,7 @@ describe('the normals reader the unavailable payload broke (Table E, R-12)', () 
     }
 
     expect(() => render(<ClimateCard climate={unavailable} window={payload.query.window} />)).not.toThrow()
-    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Normals not computed: ConnectError\. Source: /).length).toBeGreaterThan(0)
     // The same section carries no series families, so the chart prints its empty text rather than throwing.
     expect(screen.getByText('No valid day in the window.')).toBeTruthy()
 
@@ -240,7 +240,7 @@ describe('the normals reader the unavailable payload broke (Table E, R-12)', () 
     const older = structuredClone(unavailable) as Partial<ClimateSection>
     delete older.normals
     expect(() => render(<ClimateCard climate={older as ClimateSection} window={payload.query.window} />)).not.toThrow()
-    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Normals not computed: ConnectError\. Source: /).length).toBeGreaterThan(0)
   })
 })
 
@@ -292,22 +292,31 @@ describe('the offline surface the route sends when POWER is unreachable (R-48, A
 
     // The climate card abstains with the section reason, and its chart prints the empty text.
     expect(within(card('climate')).getAllByText('Climate source unavailable: ConnectError.').length).toBeGreaterThan(0)
-    expect(within(card('climate')).getAllByText('Normals not computed: ConnectError.').length).toBe(7)
+    expect(within(card('climate')).getAllByText(/Normals not computed: ConnectError\. Source: /).length).toBe(7)
     expect(within(card('climate')).getByText('No valid day in the window.')).toBeTruthy()
 
     // The water card has no window to print, so it prints the abstention with the same reason and no window line.
     expect(card('water').querySelector('.numbers-window')).toBeNull()
     expect(within(card('water')).getByText('Climate source unavailable: ConnectError.')).toBeTruthy()
 
-    // The remaining cards print their empty states from the reason the section carries.
-    expect(within(card('smap')).getByText('SMAP palette not read: No value.')).toBeTruthy()
+    // The remaining cards print their empty states from the reason the section carries. The merged
+    // abstention copy names the gap cause and the source, so these hold the text to that shape.
+    const smapText = card('smap').textContent ?? ''
+    expect(smapText).toContain('SMAP palette not read')
+    expect(smapText).toContain('palette ramp')
+    expect(smapText).toContain(payload.sections.smap.source)
+    expect(smapText).not.toContain('No value')
     expect(
       within(card('ndvi')).getByText(
         'NDVI not plotted: No value scenes below 20 percent cloud, best valid fraction not read. At least two scenes at or above 0.5 are needed.',
       ),
     ).toBeTruthy()
     expect(within(card('rotation')).getByText('no MapBiomas Collection 11 row for this polygon')).toBeTruthy()
-    expect(within(card('municipal')).getByText('Municipal value not read: No value.')).toBeTruthy()
+    const municipalText = card('municipal').textContent ?? ''
+    expect(municipalText).toContain('Municipal value not read')
+    expect(municipalText).toContain('municipality code is unresolved')
+    expect(municipalText).toContain(payload.sections.municipality.source)
+    expect(municipalText).not.toContain('No value')
     // The capture's municipality section omits `share` altogether (the route only sends one beside a
     // municipality row), so the share cell paints no number and no `null`. Giving that cell its own
     // abstention text is t_e60dd62e's card, which owns the abstention copy; this test only holds the
