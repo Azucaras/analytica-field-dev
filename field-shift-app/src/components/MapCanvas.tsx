@@ -676,11 +676,16 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   // camera is restored if the resize moved it, so the centre, zoom, bearing and pitch are the
   // values they had before opening.
   const numbersOpen = useMapStore((state) => state.numbersOpen)
+  const calendarOpen = useMapStore((state) => state.calendarOpen)
+  const recordOpen = useMapStore((state) => state.recordOpen)
+  // Block 7, R-02: the two surfaces of this block hide the map screen the same way, so the camera is
+  // read before either opens and `map.resize()` runs once when the last one closes.
+  const surfaceOpen = numbersOpen || calendarOpen || recordOpen
   const cameraBeforeNumbersRef = useRef<{ center: [number, number]; zoom: number; bearing: number; pitch: number } | null>(null)
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map) return
-    if (numbersOpen) {
+    if (surfaceOpen) {
       const center = map.getCenter()
       cameraBeforeNumbersRef.current = {
         center: [center.lng, center.lat],
