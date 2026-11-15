@@ -14,6 +14,7 @@
  * label and the snapshot's `Y/YYYY` key is `seasonKeyFor`, which delegates to block 4's own
  * `snapshotSeasonKey` rather than holding a second copy of the rule.
  */
+import type { NumbersPayload } from './numbers'
 import { snapshotSeasonKey } from './timeline'
 import type { TranslationKey } from '@/strings'
 
@@ -350,46 +351,39 @@ export type CalendarContext =
   | { kind: 'numbers'; numbers: ContextNumber[] }
   | { kind: 'state'; state: string; reason: string }
 
-type PayloadLike = {
-  sections?: {
-    climate?: {
-      state?: string
-      basis?: string
-      source?: string
-      as_of?: string | null
-      error?: string | null
-      reason?: string | null
-      aggregates?: Record<string, { value?: number | null } | undefined>
-      normals?: Record<string, { value?: number | null } | undefined>
-    }
-  }
-}
-
 /**
  * R-30: the three climate numbers of the block 6 payload, each with the basis, source and `as_of`
  * the climate section carries. While the section abstains or is unavailable, or the payload names
  * no climate section, the calendar prints that state and the payload's own reason in place of the
  * numbers and still prints the window.
+ *
+ * The rain percentile is the block 6 key `rain_percentile` in the tree; R-30 words it `percentile`,
+ * and both spellings are read so a payload of either shape prints the number rather than a blank.
  */
-export function contextFrom(payload: PayloadLike | null | undefined): CalendarContext {
+export function contextFrom(payload: NumbersPayload | null | undefined): CalendarContext {
   const climate = payload?.sections?.climate
   if (!climate) return { kind: 'state', state: 'unavailable', reason: '' }
   if (climate.state !== 'ok') {
+    // Block 6's tree carries `error` on an abstaining section; R-30 words the same field `reason`,
+    // so both spellings are read and the one present is printed.
+    const loose = climate as { reason?: string | null }
     return {
       kind: 'state',
       state: climate.state ?? 'unavailable',
       reason: (typeof climate.error === 'string' && climate.error.trim() !== '')
         ? climate.error
-        : (typeof climate.reason === 'string' ? climate.reason : ''),
+        : (typeof loose.reason === 'string' ? loose.reason : ''),
     }
   }
   const basis = climate.basis ?? 'modelled'
   const source = climate.source ?? ''
   const asOf = climate.as_of ?? null
+  const normals = climate.normals as Record<string, { value?: number | null } | undefined> | undefined
+  const percentile = climate.normals?.rain_percentile?.value ?? normals?.percentile?.value ?? null
   const numbers: ContextNumber[] = [
     { key: 'calendar.dry_spell', value: climate.aggregates?.dry_spell_days?.value ?? null, basis, source, asOf },
     { key: 'calendar.frost_days', value: climate.aggregates?.frost_days?.value ?? null, basis, source, asOf },
-    { key: 'calendar.rain_percentile', value: climate.normals?.percentile?.value ?? null, basis, source, asOf },
+    { key: 'calendar.rain_percentile', value: percentile, basis, source, asOf },
   ]
   return { kind: 'numbers', numbers }
 }

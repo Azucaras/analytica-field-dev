@@ -1,3 +1,4 @@
+import type { NumbersPayload } from './numbers'
 import { describe, expect, it } from 'vitest'
 import snapshotJson from '../../artifacts/zarc-mt-snapshot.json'
 import usWindowsJson from '../../artifacts/us-windows-cass-nd.json'
@@ -231,7 +232,7 @@ describe('R-30, the block 6 context (AC-27)', () => {
   }
 
   it('prints the three numbers with the basis, the source and as_of of the section', () => {
-    const context = contextFrom(payload)
+    const context = contextFrom(payload as unknown as NumbersPayload)
     expect(context.kind).toBe('numbers')
     if (context.kind !== 'numbers') return
     expect(context.numbers.map((number) => number.value)).toEqual([7, 0, 20])
@@ -251,7 +252,7 @@ describe('R-30, the block 6 context (AC-27)', () => {
       },
     }
     const after = calendarRows(windows, fixtureSeason)
-    expect(contextFrom(changed).kind).toBe('numbers')
+    expect(contextFrom(changed as unknown as NumbersPayload).kind).toBe('numbers')
     expect(after.map((row) => `${row.start}|${row.end}`)).toEqual(before.map((row) => `${row.start}|${row.end}`))
   })
 
@@ -259,6 +260,6 @@ describe('R-30, the block 6 context (AC-27)', () => {
     const abstained = {
       sections: { climate: { state: 'abstained', reason: 'no POWER cell for this point' } },
     }
-    expect(contextFrom(abstained)).toEqual({ kind: 'state', state: 'abstained', reason: 'no POWER cell for this point' })
+    expect(contextFrom(abstained as unknown as NumbersPayload)).toEqual({ kind: 'state', state: 'abstained', reason: 'no POWER cell for this point' })
   })
 })

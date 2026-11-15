@@ -11,8 +11,19 @@ import { PolygonPanel } from '@/components/PolygonPanel'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { NumbersToggle, NUMBERS_TOGGLE_ATTR } from '@/components/NumbersToggle'
 import { NumbersView } from '@/components/NumbersView'
+import { DecisionToggle, DECISION_TOGGLE_ATTR } from '@/components/DecisionToggle'
+import { FieldRecordToggle, FIELD_RECORD_TOGGLE_ATTR } from '@/components/FieldRecordToggle'
+import { DecisionView, type CalendarTarget } from '@/components/DecisionView'
+import { FieldRecordView } from '@/components/FieldRecordView'
+import snapshotJson from '../artifacts/zarc-mt-snapshot.json'
+import usWindowsJson from '../artifacts/us-windows-cass-nd.json'
 import { chosenDateOf, useMapStore, type FieldSummary } from '@/lib/map-store'
 import { numbersOpenFromSearch, searchWithNumbers } from '@/lib/numbers'
+import { heldSeasonsOf, type SeasonlessPayload, type ZarcWindowRow } from '@/lib/planting-calendar'
+import { loadFields, loadProducer, type RegisteredField } from '@/lib/producer-store'
+import { ringCentroid } from '@/lib/field-ring'
+import { surfaceOpenFromSearch, searchWithSurface, searchWithoutSurface, type Surface } from '@/lib/surface-params'
+import { parseFieldLocation } from '@/lib/timeline'
 import { useLayers } from '@/lib/use-layers'
 import { seasonForDate } from '@/lib/timeline'
 import {
@@ -71,6 +82,9 @@ export const ZOrder = Object.freeze({
   agentBar: 70,
   /** Block 6, AM-05: the numbers surface sits above every map screen key. */
   numbersView: 80,
+  /** Block 7, AM-03: the two surfaces sit above the numbers surface. */
+  decisionView: 81,
+  fieldRecordView: 82,
 })
 
 function App() {
@@ -142,6 +156,9 @@ function App() {
     else if (store.selectedPolygonId !== null) store.clearPolygonSelection()
     // Block 6, R-01: `?numbers=1` opens the numbers surface, and nothing else in the URL changes.
     store.setNumbersOpen(numbersOpenFromSearch(search))
+    // Block 7, R-01: `?decision=1` and `?record=1` open the two surfaces of this block.
+    store.setCalendarOpen(surfaceOpenFromSearch(search, 'decision'))
+    store.setRecordOpen(surfaceOpenFromSearch(search, 'record'))
   }, [])
 
   // Block 6, R-01 and R-02: opening and closing the numbers surface writes or removes the one
@@ -164,6 +181,70 @@ function App() {
     }
     wasNumbersOpenRef.current = numbersOpen
   }, [numbersOpen])
+
+  // Block 7, R-01 and R-06: the two surfaces are URL state like `numbersOpen`. Opening one removes
+  // the other surface and `numbers`, and every other parameter is left byte for byte.
+  const calendarOpen = useMapStore((state) => state.calendarOpen)
+  const recordOpen = useMapStore((state) => state.recordOpen)
+  const registeredFields = useMapStore((state) => state.registeredFields)
+  const producerData = useMapStore((state) => state.producerData)
+
+  // R-52, R-53 and R-54: the two keys are read once when the app loads and again after an explicit
+  // action on the `Field record` surface. Nothing is written here.
+  const refreshProducer = useCallback(() => {
+    const storedFields = loadFields()
+    const storedProducer = loadProducer()
+    useMapStore.getState().setProducerRecords(
+      'value' in storedFields ? storedFields.value : [],
+      'value' in storedProducer ? storedProducer.value : {},
+    )
+  }, [])
+
+  useEffect(() => {
+    refreshProducer()
+  }, [refreshProducer])
+
+  const openSurface = useCallback((surface: Surface) => {
+    const store = useMapStore.getState()
+    // R-06: one screen at a time. Both flags are written explicitly rather than only the one being
+    // opened, so the store cannot keep a surface the URL has just dropped.
+    store.setNumbersOpen(false)
+    store.setCalendarOpen(surface === 'decision')
+    store.setRecordOpen(surface === 'record')
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${searchWithSurface(window.location.search, surface)}${window.location.hash}`,
+    )
+  }, [])
+
+  const closeSurface = useCallback((surface: Surface) => {
+    const store = useMapStore.getState()
+    if (surface === 'decision') store.setCalendarOpen(false)
+    else store.setRecordOpen(false)
+    window.history.replaceState(
+      null,
+      '',
+      `${window.location.pathname}${searchWithoutSurface(window.location.search, surface)}${window.location.hash}`,
+    )
+  }, [])
+
+  // R-01 and AC-01: closing a surface returns focus to the button that opened it.
+  const wasCalendarOpenRef = useRef(false)
+  useEffect(() => {
+    if (wasCalendarOpenRef.current && !calendarOpen) {
+      document.querySelector<HTMLButtonElement>(`[${DECISION_TOGGLE_ATTR}]`)?.focus()
+    }
+    wasCalendarOpenRef.current = calendarOpen
+  }, [calendarOpen])
+
+  const wasRecordOpenRef = useRef(false)
+  useEffect(() => {
+    if (wasRecordOpenRef.current && !recordOpen) {
+      document.querySelector<HTMLButtonElement>(`[${FIELD_RECORD_TOGGLE_ATTR}]`)?.focus()
+    }
+    wasRecordOpenRef.current = recordOpen
+  }, [recordOpen])
 
   // R-03 and R-23: the URL is the only record of the region and the polygon selection, so it
   // is rewritten with `history.replaceState` and never with a navigation or local storage.
@@ -392,13 +473,85 @@ function App() {
     return () => query.removeEventListener('change', handleChange)
   }, [command.isOpen, supportingData.isOpen, command.close, supportingData.close])
 
+  // Block 7, R-28 to R-34 and R-41: the data the two surfaces read. The window rows are the artifact
+  // block 4's band already bundles (TimelineDock imports the same file), so this block adds no
+  // request and no reader of its own; the calendar groups the rows of the field's municipality and
+  // season, and the seasonless payload is the recorded United States source of AC-57.
+  const region = regionAdapter(regionId)
+  const windowRows = snapshotJson.rows as unknown as ZarcWindowRow[]
+  const heldBySeason = useMemo(() => heldSeasonsOf(windowRows), [windowRows])
+  const selectedRegistered: RegisteredField | null = registeredFields.find((field) => field.id === selectedFieldId) ?? null
+  const calendarFieldName = selectedRegistered?.name ?? selectedField?.name ?? null
+  const calendarPlace = selectedRegistered === null ? parseFieldLocation(selectedField?.location ?? null) : null
+  const calendarSeasonless = regionId === 'us' ? (usWindowsJson as unknown as SeasonlessPayload) : null
+  const calendarTarget: CalendarTarget | null = useMemo(() => {
+    if (selectedRegistered !== null) {
+      return {
+        fieldId: selectedRegistered.id,
+        ring: selectedRegistered.ring,
+        centroid: ringCentroid(selectedRegistered.ring),
+        areaHa: selectedRegistered.area_ha,
+      }
+    }
+    if (selectedField !== null) {
+      return {
+        fieldId: selectedField.id,
+        ring: selectedField.boundary.coordinates[0] as [number, number][],
+        centroid: selectedField.center,
+        areaHa: null,
+      }
+    }
+    if (selectedPolygonId !== null) {
+      return null
+    }
+    return null
+  }, [selectedRegistered, selectedField, selectedPolygonId])
+  const selectedHistory = selectedFieldId === null ? [] : (producerData[selectedFieldId]?.history ?? [])
+  const calendarGaps = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    if (selectedFieldId !== null && selectedRegistered !== null && !calendarSeasonless) {
+      return [{
+        surface: 'Planting calendar',
+        cause: 'calendar.abstain_municipality' as const,
+        source: 'fs.fields.v1',
+        status: 'the field carries no municipality',
+        date: today,
+        remediation: 'CO-B7-06',
+      }]
+    }
+    if (calendarFieldName !== null && calendarPlace === null && !calendarSeasonless) {
+      return [{
+        surface: 'Planting calendar',
+        cause: 'calendar.no_source' as const,
+        source: 'src/lib/window-source.ts',
+        status: 'no window source for this region',
+        date: today,
+        remediation: 'CO-B7-05',
+      }]
+    }
+    return []
+  }, [selectedFieldId, selectedRegistered, calendarSeasonless, calendarPlace, calendarFieldName])
+  const selectedFieldName = calendarFieldName
+
+  const handleFieldDeleted = useCallback((fieldId: string) => {
+    const store = useMapStore.getState()
+    if (store.selectedFieldId === fieldId) useMapStore.setState({ selectedFieldId: null })
+  }, [])
+
+  const shellClass = [
+    'app-shell',
+    numbersOpen ? 'is-numbers-open' : '',
+    calendarOpen ? 'is-calendar-open' : '',
+    recordOpen ? 'is-record-open' : '',
+  ].filter(Boolean).join(' ')
+
   const shellStyle = {
     '--fs-notice-block': `${hasNotice ? noticeHeight + 8 : 0}px`,
     ...(rotationTop === null ? {} : { '--fs-rotation-top': `${rotationTop}px` }),
   } as CSSProperties
 
   return (
-    <main className={numbersOpen ? 'app-shell is-numbers-open' : 'app-shell'} style={shellStyle}>
+    <main className={shellClass} style={shellStyle}>
       <MapCanvas fields={regionFields} selectedField={selectedField} onTileChange={setMapTile} />
       <div className="overlay anchor-bottom-right layer-rail-anchor" style={{ zIndex: ZOrder.layerRail }}>
         <div className="overlay-interactive panel-surface layer-panel"><LayerRail /></div>
@@ -428,6 +581,9 @@ function App() {
           <CommandToggle isOpen={command.isOpen} buttonRef={command.buttonRef} onToggle={handleToggleCommand} />
           <SupportingDataToggle isOpen={supportingData.isOpen} onToggle={handleToggleSupportingData} />
           <NumbersToggle onOpen={openNumbers} />
+          {/* Block 7, R-08: the two buttons sit to the right of `Supporting data`, in this order. */}
+          <DecisionToggle onOpen={() => openSurface('decision')} />
+          <FieldRecordToggle onOpen={() => openSurface('record')} />
         </div>
       </div>
 
@@ -455,6 +611,7 @@ function App() {
             onSelectField={handleSelectField}
             onRetry={handleRetryFields}
             selectedPolygon={selectedPolygonChip}
+            registeredFields={registeredFields}
           />
         </div>
       </div>
@@ -572,6 +729,40 @@ function App() {
           open, `.is-numbers-open` hides every other child of the shell (NumbersView.css). */}
       {numbersOpen && (
         <NumbersView selectedField={selectedField} onClose={closeNumbers} />
+      )}
+
+      {/* Block 7, R-01 and R-02: the two surfaces are siblings of the map screen too, and
+          `.is-calendar-open` / `.is-record-open` hide every other child (Block7.css). */}
+      {calendarOpen && (
+        <DecisionView
+          chosenDate={chosenDate}
+          fieldName={calendarFieldName}
+          gaps={calendarGaps}
+          heldSeasons={heldBySeason}
+          history={selectedHistory}
+          numbersTarget={calendarTarget}
+          onClose={() => closeSurface('decision')}
+          place={calendarPlace}
+          seasonless={calendarSeasonless}
+          windowRows={calendarSeasonless === null ? windowRows : null}
+        />
+      )}
+      {recordOpen && (
+        <FieldRecordView
+          chosenDate={chosenDate}
+          heldSeasons={heldBySeason}
+          onChanged={refreshProducer}
+          onClose={() => closeSurface('record')}
+          onFieldDeleted={handleFieldDeleted}
+          onSelectField={handleSelectField}
+          place={calendarPlace}
+          region={region}
+          regionId={regionId}
+          rotationRows={[]}
+          selectedFieldId={selectedFieldId}
+          selectedFieldName={selectedFieldName}
+          windowRows={calendarSeasonless === null ? windowRows : null}
+        />
       )}
     </main>
   )

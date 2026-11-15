@@ -36,6 +36,8 @@ type FieldsPanelProps = {
   onSelectField: (fieldId: string) => void
   onRetry: () => void
   selectedPolygon?: SelectedPolygonChip | null
+  /** Block 7, AM-04: the registered fields, printed after the fixture fields, name only. */
+  registeredFields?: ReadonlyArray<{ id: string; name: string }>
 }
 
 /**
@@ -63,6 +65,7 @@ export function FieldsPanel({
   onSelectField,
   onRetry,
   selectedPolygon = null,
+  registeredFields = [],
 }: FieldsPanelProps) {
   const [isOpen, setIsOpen] = useState(false)
   // R-28, AC-24: the one measured width band where the long form does not fit the panel.
@@ -120,6 +123,17 @@ export function FieldsPanel({
                 aria-pressed={selectedFieldId === field.id}
               >
                 <span className="field-chip-name">{t(translationKeyFor(field.name) ?? field.name)}</span>
+              </button>
+            ))}
+            {registeredFields.map((field) => (
+              <button
+                className={`top-chip field-chip${selectedFieldId === field.id ? ' selected' : ''}`}
+                key={field.id}
+                onClick={() => onSelectField(field.id)}
+                type="button"
+                aria-pressed={selectedFieldId === field.id}
+              >
+                <span className="field-chip-name">{field.name}</span>
               </button>
             ))}
             {!isLoading && fields.length === 0 && (

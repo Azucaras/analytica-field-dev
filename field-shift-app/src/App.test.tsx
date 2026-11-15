@@ -1450,13 +1450,16 @@ describe('block 4 wave 4: the dock states, the two toggles and the motion rules'
     await screen.findByRole('region', { name: 'Timeline' })
     const strip = document.querySelector('.anchor-top-right .topbar-meta') as HTMLElement
     const children = [...strip.children]
-    // Block 6, R-01: the `Field numbers` button is the one control added after Supporting data.
-    expect(children).toHaveLength(5)
+    // Block 6, R-01: the `Field numbers` button is the control block 6 added after Supporting data,
+    // and block 7 R-08 adds `Planting calendar` and `Field record` to its right, in that order.
+    expect(children).toHaveLength(7)
     expect(children[0].textContent).toBe('FIELD INTELLIGENCE')
     expect(children[1].getAttribute('aria-label')).toBe('Grower profile')
     expect(children[2].textContent).toBe('Command')
     expect(children[3].textContent).toBe('Supporting data')
     expect(children[4].textContent).toBe('Field numbers')
+    expect(children[5].textContent).toBe('Planting calendar')
+    expect(children[6].textContent).toBe('Field record')
     expect(document.querySelector('[aria-label="Season"]')).toBeNull()
     expect(document.querySelector('select')).toBeNull()
   })

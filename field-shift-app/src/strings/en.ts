@@ -442,7 +442,7 @@ export const en = {
   'calendar.abstain_municipality': 'No planting window data for this municipality',
   'calendar.no_source': 'No planting window source for this region',
   'calendar.context_label': 'Climate beside the window',
-  'calendar.context_value': '{value} ({basis}, {as_of})',
+  'calendar.context_value': '{value} ({basis}, {source}, {as_of})',
   'calendar.dry_spell': 'Dry spell days',
   'calendar.frost_days': 'Frost days',
   'calendar.rain_percentile': 'Rain percentile',
