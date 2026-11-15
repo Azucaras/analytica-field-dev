@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NumbersView } from './NumbersView'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { recordedNumbersPayload, RECORDED_FIELD_ID } from '@/test/numbers-recorded'
-import type { NumbersPayload } from '@/lib/numbers'
+import { formatMetric, type NumbersPayload } from '@/lib/numbers'
 
 const field: FieldSummary = {
   id: 'mt-santa-carmem-01',
@@ -240,7 +240,7 @@ describe('climate, water balance, SMAP and NDVI (R-16 to R-30)', () => {
 })
 
 describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R-44, AC-06, AC-41)', () => {
-  it('prints each printed metric id once, only ids the payload carries, and records the rows AC-06 still finds unprinted', async () => {
+  it('prints each printed metric id once, only ids the payload carries, and every row of the payload (AC-06)', async () => {
     const payload = recordedNumbersPayload()
     stubNumbersFetch(payload)
     render(<NumbersView selectedField={field} onClose={vi.fn()} />)
@@ -250,24 +250,75 @@ describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R
     const carried = payload.provenance.map((row) => row.metric)
     // The surface invents no metric id: every id it prints is a row of the payload.
     expect(printed.filter((metric) => !carried.includes(metric))).toEqual([])
-    // AC-06 is still open and this is where it is visible: on the recorded payload eight rows carry a
-    // value or an abstention the surface prints without their metric id. The list is pinned so the
-    // day one of them starts printing, this test changes with it. The gate recorded the same eight.
+    // And every row of the payload has its printed number or abstention: the two directions of
+    // AC-06 together are one set equality, so no row is left without a cell of its own.
     const unprinted = carried.filter((metric) => !printed.includes(metric)).sort()
-    expect(unprinted).toEqual([
-      'area',
-      'municipality_soy_ha',
-      'ndvi_mean',
-      'ndvi_valid_fraction',
-      'ring_area',
-      'smap_rootzone',
-      'smap_surface',
-      'state_soy_ha',
-    ])
+    expect(unprinted).toEqual([])
+    // The whole criterion in one line: the DOM ids and the payload metrics are the same multiset.
+    expect(printed.slice().sort()).toEqual(carried.slice().sort())
     for (const row of payload.provenance) {
       for (const key of ['metric', 'label', 'value', 'unit', 'basis', 'as_of', 'source', 'resolution', 'route', 'fetched_at'] as const) {
         expect(Object.hasOwn(row, key)).toBe(true)
       }
+    }
+  })
+
+  it('prints the header area and ring area cells with their metric ids (R-03, R-07, AC-03, AC-06)', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const header = container.querySelector('.numbers-header') as HTMLElement
+    // A fixture field carries no block 5 area source, so the area row abstains in the header.
+    const area = header.querySelector<HTMLElement>('[data-metric="area"]')
+    expect(area).not.toBeNull()
+    expect(area?.textContent).toBe('No area source for this field')
+    // The ring the request carries has a real spherical area, printed with its own row.
+    const row = payload.provenance.find((entry) => entry.metric === 'ring_area')
+    const ring = header.querySelector<HTMLElement>('[data-metric="ring_area"]')
+    expect(ring).not.toBeNull()
+    expect(ring?.textContent).toBe(`${formatMetric('ring_area', row?.value as number)} ha`)
+    expect(ring?.closest('.numbers-cell')?.querySelector('[data-basis]')?.textContent).toBe('retrieved')
+  })
+
+  it('prints the two SMAP family rows as abstentions when the series has no day (R-07, R-12, AC-06)', async () => {
+    const payload = recordedNumbersPayload()
+    expect(payload.sections.smap.days).toEqual([])
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const smap = container.querySelector('[data-card="smap"]') as HTMLElement
+    for (const metric of ['smap_surface', 'smap_rootzone']) {
+      const cell = smap.querySelector<HTMLElement>(`[data-metric="${metric}"]`)
+      expect(cell, metric).not.toBeNull()
+      expect(cell?.textContent).toBe('palette not read')
+    }
+  })
+
+  it('prints the two NDVI family rows as abstentions when no point is plotted (R-07, R-12, AC-06)', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const ndvi = container.querySelector('[data-card="ndvi"]') as HTMLElement
+    for (const metric of ['ndvi_mean', 'ndvi_valid_fraction']) {
+      const cell = ndvi.querySelector<HTMLElement>(`[data-metric="${metric}"]`)
+      expect(cell, metric).not.toBeNull()
+      expect(cell?.textContent).toBe('not plotted')
+    }
+  })
+
+  it('prints the two municipal rows as abstentions when the section abstains (R-07, R-12, R-38, AC-06)', async () => {
+    const payload = recordedNumbersPayload()
+    expect(payload.sections.municipality.municipality).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const municipal = container.querySelector('[data-card="municipal"]') as HTMLElement
+    for (const metric of ['municipality_soy_ha', 'state_soy_ha']) {
+      const cell = municipal.querySelector<HTMLElement>(`[data-metric="${metric}"]`)
+      expect(cell, metric).not.toBeNull()
+      expect(cell?.textContent).toMatch(/^(Municipal|State) value not read: /)
     }
   })
 
@@ -397,8 +448,10 @@ describe('a selected polygon (R-03, R-49, Table B, AC-50)', () => {
     expect(within(header).getByText('csb:381825001868504')).toBeTruthy()
     expect(within(header).getByText('Soybeans')).toBeTruthy()
     expect(within(header).getByText('153.2 acres')).toBeTruthy()
+    // The class and the area come from block 5's own readout; the outline area is the `ring_area`
+    // row the header prints beside them (R-07). All three are `retrieved`.
     const retrieved = within(header).getAllByText('retrieved')
-    expect(retrieved).toHaveLength(2)
+    expect(retrieved).toHaveLength(3)
     expect(bodies).toHaveLength(1)
     expect(bodies[0].ring).toEqual(usRing)
     expect(bodies[0].area_ha).toBeNull()
