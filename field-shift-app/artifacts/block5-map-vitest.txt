@@ -1,0 +1,16 @@
+# npx vitest run, 2026-11-14
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'vitest' run
+
+ RUN  v5.1.0 /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_3c7b161b/field-shift-app
+
+
+ Test Files  32 passed (32)
+      Tests  308 passed (308)
+   Start at  23:23:55
+   Duration  5.70s (environment 50%, tests 32%, setup 9%, import 6%, transform 2%, worker 1%)
+
+Environment  jsdom was created 32 times · 20.01s total, 50% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

@@ -1,0 +1,105 @@
+# AC-15, AC-18, AC-19, AC-23, AC-24, AC-28, AC-33: hover, selection, tooltip, chip, basemap and 360
+
+Measured on 2026-11-14 in the built app on http://127.0.0.1:5181 (byte-range static server),
+backend http://127.0.0.1:8021, with the products of card t_aa25032c in `data/polygons`.
+
+## AC-15 and AC-18: the feature state call and the press (Brazil, zoom 12)
+
+The `setFeatureState` calls read back through `map.getFeatureState` after a real pointer move
+and a real press on a rendered polygon (`Id` 4437031, class 15):
+
+```json
+{ "source": "trazo", "sourceLayer": "trazo", "id": 4437031, "state": { "hover": true, "selected": true } }
+```
+
+The id keeps its number type; the United States case keeps the fifteen digit string
+(`src/lib/polygon-selection.test.ts`, and `MapCanvas.block5.test.tsx` asserts
+`{ source: 'trazo', sourceLayer: 'trazo', id: '381825001868504' }` with `hover: true`).
+
+The press runs `select_field` through `runCommand`, not the store action: the map handler's
+only write is `runCommand('select_field', { field_id: 'csb:…' | 'trazo:…' })`, and the store
+effect stores the raw id with its own type (`src/lib/map-store.ts`, `selectField`).
+
+## AC-19: the URL
+
+| Step | `location.search` |
+|---|---|
+| Brazil load | `?region=br` |
+| press on polygon 4437031 | `?region=br&polygon=4437031` |
+| reload of that URL | `?region=br&polygon=4437031`, selection restored, chip `Pasture` |
+| fixture field selected instead | `?region=br`, polygon parameter removed |
+| `?region=br&polygon=381825001868504` (a csb id under Brazil) | parameter cleared, no selection |
+
+## AC-23: the tooltip
+
+At zoom 12 over a polygon: text `Pasture`, `aria-hidden="true"`, `pointer-events: none`,
+`max-width: 200px`, placed at `left 484, top 203` for a pointer at 472, 191 (the 12 px offset).
+Below the interactive zoom no tooltip mounted. The suppression test drives a column rectangle
+into the clamp: at 1440x900 a column at x 1018 to 1418 leaves no tooltip mounted while the
+hover feature state is still set (`MapCanvas.block5.test.tsx`).
+
+## AC-24: the fields chip (both panel states, three widths)
+
+With the polygon selected the fields header renders `Pasture` beside a dot of `#edde8e`
+(class 15 of the Brazil table), `aria-pressed="true"`, accessible name `Pasture`, no
+percentage. At 360x640 the chip measured 67 by 20 px at x 229, y 70 and was the only class
+surface (no polygon region mounted). `FieldsPanel.tsx` receives `selectedPolygon` and renders
+the chip in both panel states (`FieldsPanel.polygon.test.tsx`, five cases).
+
+## AC-28: the basemap layer order (Brazil)
+
+The style's own layers, in order, are the OpenFreeMap Liberty layers; the app inserted, before
+the first symbol layer:
+
+```
+... road_trunk_primary (line), basemap-raster (raster), polygon-overview-fill, polygon-overview-line,
+polygon-fill, polygon-line, road_one_way_arrow (line) ... place-label (symbol)
+```
+
+- the basemap index is greater than every non polygon fill/line layer before it (the style's
+  own land, water and boundary layers) and less than every symbol layer;
+- every polygon layer index is greater than the basemap index and less than the symbols;
+- exactly one basemap layer is mounted after two preset changes;
+- the `Map` preset sets the basemap `visibility: none`, `Satellite` sets it `visible` with the
+  symbols `none`, `Satellite with labels` sets both `visible`;
+- `raster-opacity` of the block 4 raster layer does not change with a preset (block 4 test
+  suite still green).
+
+Measured transitions: `Satellite` gave `basemap-raster: visible`, `waterway_line_label: none`,
+and 8 EOX tile requests (`https://tiles.maps.eox.at/.../13/4368/2838.jpg`), while the polygon
+layers kept their 292 rendered features.
+
+## AC-33 (the block 5 half): 360x640
+
+At 360x640, `window.innerWidth` 360 and `innerHeight` 640:
+
+| Element | Result |
+|---|---|
+| element with role region named `Polygon` | not mounted |
+| fields chip with the class | `Pasture`, 67 by 20 at x 229, y 70 |
+| dialog, alertdialog, toast, banner | none |
+| tooltip | not mounted |
+| attribution control | compact, computed margin `0px` |
+| collapsed attribution footprint after one press | 24 by 24, right edge x 352, bottom edge y 400 |
+
+The collapsed footprint's right edge is on the CO-02 edge. Its bottom edge is 400, not the
+432 the Layout contract names, because the `.maplibregl-ctrl-bottom-right` container is 56 px
+tall at this width (its own bottom edge is 432) and the floating control sits at the
+container's top. Reaching 432 needs the container to align its child to the bottom; that is a
+change to the block 2/3 box, which card 3 owns under R-33/AC-27, so it is reported and not
+made here.
+
+## AC-27 (the part this card owns): compact and margin
+
+The control is created as `new AttributionControl({ compact: true, customAttribution })`, its
+computed `margin` is `0px` at every width measured (1440x900 by inheritance of the same rule,
+360x640 measured), and its text carries, in the DOM, both exact strings:
+
+```
+EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2024) · Trazo3 field boundaries, WRI and ASU (Grupp et al. 2026), CC BY 4.0 · NASA GIBS · SMAP L4
+```
+
+The map's compact control starts expanded in maplibre-gl 6.17.0
+(`maplibregl-compact-show`) and collapses on a press or a drag. The collapsed button's
+accessible name is the library's `Toggle attribution`; composing both short credits into that
+name is AC-27 and card 3's change, not this card's.
