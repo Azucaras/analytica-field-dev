@@ -351,6 +351,42 @@ class RoutePartialFailureTests(RouteCase):
         self.assertGreaterEqual(len(network_gaps), 3)
 
 
+class RouteMalformedNormalsTests(RouteCase):
+    """AC-16 and R-20: a malformed normals response is readable from the normals payload itself.
+
+    t_c2709ec2: the malformed branch used to record the cause only in the gap register, while the
+    SourceFailure branch set `normals.error`. Both branches of the same source now agree.
+    """
+
+    def test_ac16_malformed_normals_sets_the_error_and_keeps_its_gap_row(self) -> None:
+        # Only the normals request (1991 to 2025) is answered without the parameter table: the daily
+        # climate request must keep succeeding, or the section returns before `_normals` runs.
+        recorded = self.transport._power
+
+        def power(url: str) -> dict:
+            if "start=19910101" in url:
+                return {"header": {"fill_value": -999.0}, "properties": {}}
+            return recorded(url)
+
+        with patch.object(self.transport, "_power", side_effect=power):
+            response = self.post()
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        normals = payload["sections"]["climate"]["normals"]
+        self.assertEqual(normals["error"], "malformed POWER normals response")
+        self.assertEqual(normals["of_years"], 0)
+        self.assertEqual(normals["excluded_years"], [])
+        # The same three keys the SourceFailure branch returns: a failure never carries metric keys.
+        self.assertEqual(set(normals), {"of_years", "excluded_years", "error"})
+        rows = {row["metric"]: row for row in payload["provenance"]}
+        self.assertIsNone(rows["rain_median"]["value"])
+        gaps = [g for g in payload["gaps"]
+                if g["section"] == "climate" and g["cause"] == "malformed POWER normals response"]
+        self.assertEqual(len(gaps), 1)
+        self.assertEqual(gaps[0]["status"], "malformed")
+        self.assertEqual(payload["sections"]["climate"]["window"]["days"], 42)  # the daily read still landed
+
+
 class RouteCacheTests(RouteCase):
     """R-47 and AC-46: per source lifetimes, cached and fetched_at exposed, no cache for an unavailable section."""
 
