@@ -6,8 +6,10 @@
  * Every type below is the shape the shipped route sends, not the shape the surface once assumed:
  * `climate.series` carries `rain_day`, `tmax_day` and `tmin_day`, each aggregate carries its own
  * `valid_days` and `of_days`, a soil depth carries the Table A token as `depth` beside the `_g_kg`
- * keys of Table E, a chart series carries its point list in its provenance `value`, and a section
- * that cannot be read sends nulls rather than empty lists. `src/test/numbers-recorded.json` is the
+ * keys of Table E, a chart series carries its point list in its provenance `value`, a section
+ * that cannot be read sends nulls rather than empty lists, and a window the route could not
+ * resolve carries null in all five of its facts (`printedWindow` is the guard the surface uses
+ * before it prints one). `src/test/numbers-recorded.json` is the
  * recorded response the suite renders, so a type that drifts from the route fails a test.
  */
 
@@ -16,11 +18,39 @@ export type SectionState = 'ok' | 'abstained' | 'not_applicable' | 'unavailable'
 export type Route = 'feature' | 'request' | 'api' | 'cogs' | 'canvas' | 'sidecar' | 'derived'
 
 export type WindowInfo = {
+  /**
+   * The 42 day window of R-16. Every fact is null when the route could not resolve a window at
+   * all, which is the shape R-48 sends offline: `{"start": null, "end": null, "days": null,
+   * "valid_days": null, "dropped_days": null}`. `printedWindow` below turns it into the shape a
+   * printed line needs, or into null.
+   */
+  start: string | null
+  end: string | null
+  days: number | null
+  valid_days: number | null
+  dropped_days: number | null
+}
+
+/** A window whose five facts are all present: the only shape the surface prints. */
+export type PrintedWindow = {
   start: string
   end: string
   days: number
   valid_days: number
   dropped_days: number
+}
+
+/**
+ * The window as the surface prints it, or null when any of its five facts is missing. A card with
+ * no window prints its abstention text instead (R-12, R-48): never a null, a zero, a made up date,
+ * or a window remembered from another read.
+ */
+export function printedWindow(window: WindowInfo | null | undefined): PrintedWindow | null {
+  if (!window) return null
+  const { start, end, days, valid_days, dropped_days } = window
+  if (start === null || end === null) return null
+  if (days === null || valid_days === null || dropped_days === null) return null
+  return { start, end, days, valid_days, dropped_days }
 }
 
 export type NumbersRequest = {
@@ -105,20 +135,26 @@ export type ClimateSection = {
 }
 
 export type WaterBalanceSection = {
-  state: 'ok' | 'abstained'
+  /** R-48 sends `unavailable` when POWER cannot be read at all; R-23 abstains the balance as a whole. */
+  state: 'ok' | 'abstained' | 'unavailable'
   in: number | null
   out: number | null
   remaining: number | null
   formula: string
-  window: WindowInfo
+  /** Null when there is no window: the section is unavailable, or no consolidated rain day was found. */
+  window: WindowInfo | null
   statement: string
+  unit?: string
   out_label?: string
   missing?: { parameter: string; days: number } | null
+  /** The reason an unavailable section carries (`ConnectError`, the HTTP status, ...). */
+  error?: string | null
   basis: 'modelled'
   source: string
   as_of: string | null
   resolution: string | null
   fetched_at: string | null
+  cached?: boolean
 }
 
 export type SmapDay = {
@@ -146,7 +182,8 @@ export type NdviScene = {
   valid_fraction: number | null
   kept_pixels: number | null
   polygon_pixels: number | null
-  partial: boolean
+  /** Null until the COG reader of OD-01 can mark a point partial; the route sends null today. */
+  partial: boolean | null
 }
 
 export type NdviSection = {
@@ -154,8 +191,18 @@ export type NdviSection = {
   scenes: NdviScene[]
   scene_count: number | null
   clear_count: number | null
-  best_valid_fraction?: number | null
-  assets?: string[]
+  /**
+   * Table E's ndvi `assets`: the B04, B08 and SCL addresses the STAC search returned, labelled by
+   * their own file stem (`B04.tif` is `B04`). Empty when no search ran, never absent.
+   */
+  assets: string[]
+  /**
+   * R-29 names the best valid fraction. It is null while the COG reader of OD-01 is open, and
+   * `best_valid_fraction_reason` names that missing producer beside it; a number means the reader
+   * computed it. Nothing is ever filled in here.
+   */
+  best_valid_fraction: number | null
+  best_valid_fraction_reason: string | null
   source: string
   as_of: string | null
   reason?: string | null
@@ -205,11 +252,19 @@ export type MunicipalityRow = { code: string; name: string; year: number; soy_ha
 export type MunicipalitySection = {
   state: SectionState
   municipality: MunicipalityRow | null
-  state_row?: (MunicipalityRow & { label: string }) | null
+  /**
+   * Table E's municipality `state` object. It is carried as `state_row` because the section's own
+   * `state` key is the state token of R-45: one JSON object cannot hold both. Null when the field
+   * carries no IBGE state code, and `state_reason` names why.
+   */
+  state_row: (MunicipalityRow & { label: string }) | null
+  state_reason: string | null
   share: number | null
   source: string
   as_of: string | null
   reason?: string | null
+  /** Present only when the SIDRA read itself failed; the section abstains with this text. */
+  error?: string | null
 }
 
 export type FragmentSection = {

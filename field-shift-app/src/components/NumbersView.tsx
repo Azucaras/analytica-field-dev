@@ -15,9 +15,11 @@ import {
   formatMetric,
   interiorPoint,
   METRICS,
+  printedWindow,
   type AggregateName,
   type ClimateSection,
   type ClimateSeries,
+  type GapRow,
   type NormalName,
   type NumbersPayload,
   type NumbersRequest,
@@ -52,6 +54,32 @@ type Request = { fieldId: string; body: NumbersRequest }
 
 /** The provenance rows of the payload, keyed by metric, for the basis chip of each value (R-08). */
 const RowsContext = createContext<Map<string, ProvenanceRow>>(new Map())
+
+const NO_GAPS: GapRow[] = []
+
+/**
+ * R-12, AC-11: the cause an abstained row prints. The section's own `reason` when the route sends
+ * one; otherwise the cause of the section's gap row, which is where the route records why the input
+ * is missing; otherwise a sentence that says the reason was not recorded, so the text never falls
+ * back to `No value`. `needle` picks the gap row of a section that records more than one cause: the
+ * municipality section records the municipal cause and the state cause. A per-row cause never
+ * borrows another row's, so when the needle finds no gap the row fails closed to that sentence.
+ */
+function abstainReason(
+  reason: string | null | undefined,
+  section: string,
+  gaps: GapRow[],
+  needle?: string,
+): string {
+  const own = typeof reason === 'string' ? reason.trim() : ''
+  if (own !== '') return own
+  const sectionGaps = gaps.filter((gap) => gap.section === section)
+  const gap = needle
+    ? sectionGaps.find((entry) => entry.cause.toLowerCase().includes(needle))
+    : sectionGaps[0]
+  const cause = gap?.cause?.trim() ?? ''
+  return cause === '' ? t('numbers.abstain.not_recorded') : cause
+}
 
 function dateOf(stamp: string | null | undefined): string {
   return stamp ? stamp.slice(0, 10) : t('numbers.no_value')
@@ -209,7 +237,7 @@ export function ClimateChart({ series }: { series: ClimateSeries }) {
   )
 }
 
-export function ClimateCard({ climate, window }: { climate: ClimateSection; window: NumbersPayload['query']['window'] }) {
+export function ClimateCard({ climate, window, gaps = NO_GAPS }: { climate: ClimateSection; window: NumbersPayload['query']['window']; gaps?: GapRow[] }) {
   const aggregates: AggregateName[] = [
     'rain_total',
     'dry_spell_days',
@@ -228,11 +256,18 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
     { key: 'hot_days_median', metric: 'hot_days_median' },
   ]
   // R-19: an aggregate abstains with the valid and missing day counts its own payload object carries,
-  // and the parameter is the Table A input of that aggregate. A missing object means the section
-  // could not be read at all, and then the section error is the reason (R-12).
+  // and the parameter is the Table A input of that aggregate. An absent object means the section
+  // carries no aggregate at all: the row then names that input and the section source, with the
+  // section error or gap cause, or the sentence that says the reason was not recorded (R-12, AC-11).
   const abstainAggregate = (key: AggregateName) => {
     const aggregate = climate.aggregates[key]
-    if (!aggregate) return t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })
+    if (!aggregate) {
+      return t('numbers.abstain.aggregate_absent', {
+        parameter: AGGREGATE_INPUTS[key],
+        reason: abstainReason(climate.error, 'climate', gaps),
+        source: climate.source,
+      })
+    }
     return t('numbers.abstain.aggregate', {
       parameter: AGGREGATE_INPUTS[key],
       valid: aggregate.valid_days,
@@ -240,9 +275,23 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
       missing: aggregate.of_days - aggregate.valid_days,
     })
   }
+  // R-12: the normals abstention names the POWER input, its source and its cause, and Table E makes
+  // `normals` a key of every climate state. A payload from a build before that key existed carries
+  // none, so the access stays optional and the card prints its abstain text instead of throwing.
   const abstainNormal = t('numbers.abstain.normals', {
-    reason: climate.normals.error ?? climate.error ?? t('numbers.no_value'),
+    reason: abstainReason(climate.normals?.error ?? climate.error, 'climate', gaps),
+    source: climate.source,
   })
+  // An unavailable climate section sends `series: {}` (and a payload from an older build can omit it):
+  // hand the chart the three families it reads so it prints its empty text instead of throwing.
+  const chartSeries: ClimateSeries = {
+    rain_day: climate.series?.rain_day ?? [],
+    tmax_day: climate.series?.tmax_day ?? [],
+    tmin_day: climate.series?.tmin_day ?? [],
+  }
+  // R-16 asks for the window the aggregates were computed over. An unavailable section resolves
+  // none, and R-48 makes the card print its reason instead of a window line built from nulls.
+  const windowFacts = printedWindow(window)
   return (
     <Card
       id="climate"
@@ -252,15 +301,19 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
       basis={climate.basis}
       resolution={climate.resolution}
     >
-      <p className="numbers-window">
-        {t('numbers.window_line', {
-          start: window.start,
-          end: window.end,
-          valid: window.valid_days,
-          days: window.days,
-          dropped: window.dropped_days,
-        })}
-      </p>
+      {windowFacts ? (
+        <p className="numbers-window">
+          {t('numbers.window_line', {
+            start: windowFacts.start,
+            end: windowFacts.end,
+            valid: windowFacts.valid_days,
+            days: windowFacts.days,
+            dropped: windowFacts.dropped_days,
+          })}
+        </p>
+      ) : (
+        <p className="numbers-abstain">{t('numbers.abstain.climate', { error: climate.error ?? t('numbers.no_value') })}</p>
+      )}
       <p className="numbers-cell-statement">{t('numbers.climate.cell')}</p>
       <dl className="numbers-rows">
         {aggregates.map((key) => (
@@ -272,7 +325,7 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
           </div>
         ))}
       </dl>
-      <ClimateChart series={climate.series} />
+      <ClimateChart series={chartSeries} />
       <h4>{t('numbers.climate.normals_heading')}</h4>
       <p className="numbers-cell-statement">{t('numbers.climate.normals_statement')}</p>
       <dl className="numbers-rows">
@@ -282,7 +335,7 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
             <dd>
               <Printed
                 metric={metric}
-                value={climate.normals[key]?.value ?? null}
+                value={climate.normals?.[key]?.value ?? null}
                 abstain={abstainNormal}
               />
             </dd>
@@ -295,6 +348,13 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
 
 function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance'] }) {
   const missing = water.missing
+  // R-22 prints the window the balance was computed over. R-48's unavailable section and the
+  // abstention with no consolidated rain day carry `window: null`, and then the card prints its
+  // reason in place of the window line instead of reading five nulls into it.
+  const windowFacts = printedWindow(water.window)
+  const noWindow = water.error
+    ? t('numbers.abstain.climate', { error: water.error })
+    : t('numbers.no_value')
   // R-23: the balance abstains as a whole. The reason is printed once for the card, and each of
   // the three numbers shows `not computed`, so no partial sum and no zero stands in for it.
   const cell = (value: number | null) => (value === null && missing ? t('numbers.water.not_computed') : t('numbers.no_value'))
@@ -325,14 +385,19 @@ function WaterCard({ water }: { water: NumbersPayload['sections']['water_balance
         </div>
       </dl>
       <p className="numbers-formula">{t('numbers.water.formula')}</p>
-      <p className="numbers-window">{t('numbers.water.window', { start: water.window.start, end: water.window.end, days: water.window.days })}</p>
+      {windowFacts ? (
+        <p className="numbers-window">{t('numbers.water.window', { start: windowFacts.start, end: windowFacts.end, days: windowFacts.days })}</p>
+      ) : (
+        <p className="numbers-abstain">{noWindow}</p>
+      )}
       <p className="numbers-statement">{t('numbers.water.out_statement')}</p>
       <p className="numbers-statement">{t('numbers.water.statement')}</p>
     </Card>
   )
 }
 
-function SmapCard({ smap }: { smap: NumbersPayload['sections']['smap'] }) {
+function SmapCard({ smap, gaps = NO_GAPS }: { smap: NumbersPayload['sections']['smap']; gaps?: GapRow[] }) {
+  const reason = abstainReason(smap.reason, 'smap', gaps)
   return (
     <Card id="smap" title={t('numbers.card.smap')} source={smap.source} asOf={smap.as_of} basis="retrieved" resolution={smap.resolution}>
       <p className="numbers-axis">{t('numbers.smap.axis')}</p>
@@ -343,7 +408,20 @@ function SmapCard({ smap }: { smap: NumbersPayload['sections']['smap'] }) {
       </p>
       <p className="numbers-disclosure" data-disclosure>{t('numbers.smap.route1')}</p>
       {smap.days.length === 0 && (
-        <p className="numbers-abstain">{t('numbers.abstain.smap', { reason: smap.reason ?? t('numbers.no_value') })}</p>
+        <>
+          <p className="numbers-abstain">{t('numbers.abstain.smap', { reason, source: smap.source })}</p>
+          {/* R-07: the family rows print their abstention with their own metric ids (AC-06). */}
+          <dl className="numbers-rows">
+            <div className="numbers-row">
+              <dt>{t('numbers.smap.surface')}</dt>
+              <dd><Printed metric="smap_surface" value={null} abstain={t('numbers.smap.not_read')} /></dd>
+            </div>
+            <div className="numbers-row">
+              <dt>{t('numbers.smap.rootzone')}</dt>
+              <dd><Printed metric="smap_rootzone" value={null} abstain={t('numbers.smap.not_read')} /></dd>
+            </div>
+          </dl>
+        </>
       )}
       {smap.days.length > 0 && (
         <table className="numbers-table numbers-smap-table">
@@ -381,22 +459,42 @@ function SmapCard({ smap }: { smap: NumbersPayload['sections']['smap'] }) {
   )
 }
 
-function NdviCard({ ndvi }: { ndvi: NumbersPayload['sections']['ndvi'] }) {
+function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['ndvi']; gaps?: GapRow[] }) {
   const plotted = ndvi.scenes.filter((scene) => scene.ndvi_mean !== null && !scene.partial)
+  // R-12, AC-11: a null count names the input it counts and the Earth Search source, with the
+  // section reason or the NDVI gap cause, or the sentence that says the reason was not recorded.
+  const countReason = abstainReason(ndvi.reason, 'ndvi', gaps)
+  const abstainSceneCount = t('numbers.abstain.ndvi_scene_count', { reason: countReason, source: ndvi.source })
+  const abstainClearCount = t('numbers.abstain.ndvi_clear_count', { reason: countReason, source: ndvi.source })
   return (
     <Card id="ndvi" title={t('numbers.card.ndvi')} source={ndvi.source} asOf={ndvi.as_of} basis="retrieved">
       <p className="numbers-cell-statement">{t('numbers.ndvi.source')}</p>
       <dl className="numbers-rows">
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_scene_count')}</dt>
-          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_scene_count" value={ndvi.scene_count} abstain={abstainSceneCount} /></dd>
         </div>
         <div className="numbers-row">
           <dt>{t('numbers.ndvi_clear_count')}</dt>
-          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={t('numbers.no_value')} /></dd>
+          <dd><Printed metric="ndvi_clear_count" value={ndvi.clear_count} abstain={abstainClearCount} /></dd>
         </div>
       </dl>
-      {plotted.length === 0 && <p className="numbers-abstain">{t('numbers.ndvi.none_plotted')}</p>}
+      {plotted.length === 0 && (
+        <>
+          <p className="numbers-abstain">{t('numbers.ndvi.none_plotted')}</p>
+          {/* R-07: no point means the two family rows abstain with their own metric ids (AC-06). */}
+          <dl className="numbers-rows">
+            <div className="numbers-row">
+              <dt>{t('numbers.ndvi_mean')}</dt>
+              <dd><Printed metric="ndvi_mean" value={null} abstain={t('numbers.ndvi.not_plotted')} /></dd>
+            </div>
+            <div className="numbers-row">
+              <dt>{t('numbers.ndvi_valid_fraction')}</dt>
+              <dd><Printed metric="ndvi_valid_fraction" value={null} abstain={t('numbers.ndvi.not_plotted')} /></dd>
+            </div>
+          </dl>
+        </>
+      )}
       {ndvi.state !== 'ok' && (
         <p className="numbers-abstain">
           {t('numbers.abstain.ndvi', {
@@ -505,49 +603,65 @@ export function RotationCard({ rotation }: { rotation: NumbersPayload['sections'
   )
 }
 
-function MunicipalCard({ municipal }: { municipal: NumbersPayload['sections']['municipality'] }) {
+function MunicipalCard({ municipal, gaps = NO_GAPS }: { municipal: NumbersPayload['sections']['municipality']; gaps?: GapRow[] }) {
+  // R-12: the municipal row and the share carry the municipal cause of the gap register, and the
+  // state row carries the state cause, because the section records both and they are not the same.
+  const municipalReason = abstainReason(municipal.reason, 'municipality', gaps, 'municipal')
+  // R-12: the state row names its own input and cause. The payload carries `state_reason` for exactly
+  // this row, so the municipal reason must not leak into it; when `state_reason` and every state gap
+  // are absent the clause falls back to the sentence that says the reason was not recorded.
+  const stateReason = abstainReason(municipal.state_reason, 'municipality', gaps, 'state')
+  const municipality = municipal.municipality
+  const stateRow = municipal.state_row ?? null
   return (
     <Card id="municipal" title={t('numbers.card.municipal')} source={municipal.source} asOf={municipal.as_of} basis="retrieved">
-      {municipal.municipality ? (
-        <dl className="numbers-rows">
+      <dl className="numbers-rows">
+        {municipality && (
           <div className="numbers-row">
             <dt>{t('numbers.municipal.municipality')}</dt>
-            <dd>{municipal.municipality.name} ({municipal.municipality.code})</dd>
+            <dd>{municipality.name} ({municipality.code})</dd>
           </div>
-          <div className="numbers-row">
-            <dt>{t('numbers.municipal.soy_planted', { year: municipal.municipality.year })}</dt>
-            <dd>
-              <Printed
-                metric="municipality_soy_ha"
-                value={municipal.municipality.soy_ha}
-                abstain={t('numbers.abstain.municipal', { reason: t('numbers.no_value') })}
-              />
-            </dd>
-          </div>
-        </dl>
-      ) : (
-        <p className="numbers-abstain">{t('numbers.abstain.municipal', { reason: municipal.reason ?? t('numbers.no_value') })}</p>
-      )}
-      {municipal.state_row && (
-        <dl className="numbers-rows">
-          <div className="numbers-row">
-            <dt>
-              {t('numbers.municipal.state')}, {t('numbers.municipal.soy_planted', { year: municipal.state_row.year })}
-            </dt>
-            <dd>
-              <Printed metric="state_soy_ha" value={municipal.state_row.soy_ha} abstain={t('numbers.no_value')} />
-              <span className="numbers-state-label">{t('numbers.municipal.state_label')}</span>
-            </dd>
-          </div>
-        </dl>
-      )}
+        )}
+        {/* R-07 and R-38: with no municipality the row abstains in place, carrying its own metric id. */}
+        <div className="numbers-row">
+          <dt>
+            {municipality
+              ? t('numbers.municipal.soy_planted', { year: municipality.year })
+              : t('numbers.municipality_soy_ha')}
+          </dt>
+          <dd>
+            <Printed
+              metric="municipality_soy_ha"
+              value={municipality ? municipality.soy_ha : null}
+              abstain={t('numbers.abstain.municipal', { reason: municipalReason, source: municipal.source })}
+            />
+          </dd>
+        </div>
+        {/* R-38: the state row prints labelled beside an abstained municipal row, and abstains in place. */}
+        <div className="numbers-row">
+          <dt>
+            {stateRow
+              ? `${t('numbers.municipal.state')}, ${t('numbers.municipal.soy_planted', { year: stateRow.year })}`
+              : t('numbers.state_soy_ha')}
+          </dt>
+          <dd>
+            <Printed
+              metric="state_soy_ha"
+              value={stateRow ? stateRow.soy_ha : null}
+              abstain={t('numbers.abstain.state', { reason: stateReason, source: municipal.source })}
+            />
+            {stateRow && <span className="numbers-state-label">{t('numbers.municipal.state_label')}</span>}
+          </dd>
+        </div>
+      </dl>
       <div className="numbers-row">
         <dt>{t('numbers.municipal.share_label')}</dt>
         <dd>
+          {/* R-12: the route omits `share` when it cannot compute it, so an absent key is a missing input and abstains. */}
           <Printed
             metric="polygon_share"
-            value={municipal.share}
-            abstain={t('numbers.abstain.share', { reason: municipal.reason ?? t('numbers.no_value') })}
+            value={municipal.share ?? null}
+            abstain={t('numbers.abstain.share', { reason: municipalReason, source: municipal.source })}
           />
         </dd>
       </div>
@@ -760,6 +874,8 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
     for (const row of payload?.provenance ?? []) map.set(row.metric, row)
     return map
   }, [payload])
+  const areaRow = rows.get('area')
+  const ringRow = rows.get('ring_area')
 
   // R-03: the class and the area of a polygon are block 5's own readout values; a fixture field
   // has no block 5 source, so both rows print their absence text, never a number.
@@ -775,7 +891,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
     : []
   const classText = isPolygon ? (readout.find((row) => row.key === 'class')?.value ?? '') : t('numbers.header.no_class_source')
   const areaText = isPolygon ? (readout.find((row) => row.key === 'area')?.value ?? '') : t('numbers.header.no_area_source')
-  const window = payload?.query.window ?? null
+  const window = printedWindow(payload?.query.window)
 
   let body: ReactNode
   if (fieldId === null) {
@@ -803,69 +919,89 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
             <p className="numbers-last-read">{t('numbers.last_read', { date: dateOf(s.climate.fetched_at) })}</p>
           </>
         )}
-        <RowsContext.Provider value={rows}>
-          <div className="numbers-cards">
-            <ClimateCard climate={s.climate} window={payload.query.window} />
-            <WaterCard water={s.water_balance} />
-            <SmapCard smap={s.smap} />
-            <NdviCard ndvi={s.ndvi} />
-            <SoilCard soil={s.soil} />
-            <RotationCard rotation={s.rotation} />
-            <MunicipalCard municipal={s.municipality} />
-          </div>
-          <ProvenanceTable rows={payload.provenance} />
-          <GapRegister gaps={payload.gaps} />
-        </RowsContext.Provider>
+        <div className="numbers-cards">
+          <ClimateCard climate={s.climate} window={payload.query.window} gaps={payload.gaps} />
+          <WaterCard water={s.water_balance} />
+          <SmapCard smap={s.smap} gaps={payload.gaps} />
+          <NdviCard ndvi={s.ndvi} gaps={payload.gaps} />
+          <SoilCard soil={s.soil} />
+          <RotationCard rotation={s.rotation} />
+          <MunicipalCard municipal={s.municipality} gaps={payload.gaps} />
+        </div>
+        <ProvenanceTable rows={payload.provenance} />
+        <GapRegister gaps={payload.gaps} />
       </>
     )
   } else {
     body = null
   }
 
+  // R-08: the row map covers the whole surface, header included, so the header's `area` and
+  // `ring_area` cells read the same provenance rows as the cards.
   return (
-    <section aria-labelledby="numbers-title" className="numbers-view" data-numbers-view role="region">
-      <header className="numbers-header">
-        <button className="numbers-back" onClick={onClose} ref={backRef} type="button">
-          {t('numbers.back')}
-        </button>
-        <div className="numbers-title-block">
-          <h2 id="numbers-title">{t('numbers.region')}</h2>
-          {fieldId !== null && <span className="numbers-field-id">{fieldId}</span>}
-        </div>
-        {fieldId !== null && (
-          <dl className="numbers-header-facts">
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.class')}</dt>
-              <dd>
-                <span>{classText}</span>
-                {isPolygon && <BasisChip basis={region.basis} />}
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.area')}</dt>
-              <dd>
-                <span>{areaText}</span>
-                {isPolygon && <BasisChip basis={region.basis} />}
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.date')}</dt>
-              <dd>
-                <span>{chosenDate}</span>
-                <BasisChip basis="entered" />
-              </dd>
-            </div>
-            <div className="numbers-header-fact">
-              <dt>{t('numbers.header.window')}</dt>
-              <dd>
-                {window ? <span>{t('numbers.header.window_value', { start: window.start, end: window.end })}</span> : <span>{t('numbers.no_value')}</span>}
-                <BasisChip basis="modelled" />
-              </dd>
-            </div>
-          </dl>
-        )}
-      </header>
-      <div className="numbers-body">{body}</div>
-    </section>
+    <RowsContext.Provider value={rows}>
+      <section aria-labelledby="numbers-title" className="numbers-view" data-numbers-view role="region">
+        <header className="numbers-header">
+          <button className="numbers-back" onClick={onClose} ref={backRef} type="button">
+            {t('numbers.back')}
+          </button>
+          <div className="numbers-title-block">
+            <h2 id="numbers-title">{t('numbers.region')}</h2>
+            {fieldId !== null && <span className="numbers-field-id">{fieldId}</span>}
+          </div>
+          {fieldId !== null && (
+            <dl className="numbers-header-facts">
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.class')}</dt>
+                <dd>
+                  <span>{classText}</span>
+                  {isPolygon && <BasisChip basis={region.basis} />}
+                </dd>
+              </div>
+              <div className="numbers-header-fact numbers-header-fact-area">
+                <dt>{t('numbers.header.area')}</dt>
+                <dd>
+                  {/* R-07: the area row prints here, as block 5's value or as its abstention, with its id. */}
+                  <span
+                    className={areaRow?.value === null ? 'numbers-abstain' : undefined}
+                    data-metric={areaRow ? 'area' : undefined}
+                  >
+                    {areaText}
+                  </span>
+                  {isPolygon && <BasisChip basis={region.basis} />}
+                  {/* R-07: the ring's spherical hectares are the header row `ring_area`; it prints its own
+                      number and basis in the same fact, so R-03's four header values keep their places. */}
+                  {ringRow && (
+                    <span className="numbers-header-ring">
+                      <span className="numbers-header-ring-label">{t('numbers.ring_area')}</span>
+                      <Printed
+                        metric="ring_area"
+                        value={typeof ringRow.value === 'number' ? ringRow.value : null}
+                        abstain={t('numbers.no_value')}
+                      />
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.date')}</dt>
+                <dd>
+                  <span>{chosenDate}</span>
+                  <BasisChip basis="entered" />
+                </dd>
+              </div>
+              <div className="numbers-header-fact">
+                <dt>{t('numbers.header.window')}</dt>
+                <dd>
+                  {window ? <span>{t('numbers.header.window_value', { start: window.start, end: window.end })}</span> : <span>{t('numbers.no_value')}</span>}
+                  <BasisChip basis="modelled" />
+                </dd>
+              </div>
+            </dl>
+          )}
+        </header>
+        <div className="numbers-body">{body}</div>
+      </section>
+    </RowsContext.Provider>
   )
 }
