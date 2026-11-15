@@ -350,6 +350,10 @@ def _unavailable(section: dict[str, Any], failure: SourceFailure, name: str, sou
 
 CLIMATE_SOURCE = POWER_URL_NAME
 NORMALS_SOURCE = POWER_URL_NAME
+# Table A prints this resolution on every POWER row; Table E requires it on the section too, and R-10
+# wants it printed in the card header. It is passed to `_section_base` on every path, because that
+# helper's default `None` is the value that used to overwrite it.
+CLIMATE_RESOLUTION = "0.5 degree cell"
 ALL_CLIMATE_METRICS = ["rain_total", "dry_spell_days", "gdd10", "frost_days", "tmin_min", "gwetroot_mean",
                        "rain_day", "tmax_day", "tmin_day", "rain_median", "rain_min", "rain_max", "rain_rank",
                        "rain_percentile", "hot_days", "hot_days_median"]
@@ -369,8 +373,9 @@ def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Win
     url = _climate_source_url(ctx)
     start = ctx.chosen - timedelta(days=agg.LOOKBACK_DAYS)
     key = f"{ctx.lon},{ctx.lat},{start.isoformat()},{ctx.chosen.isoformat()}"
-    section: dict[str, Any] = {"state": "abstained", **_section_base(CLIMATE_SOURCE, None, None)}
-    section.update(resolution="0.5 degree cell", window=None, aggregates={}, series={})
+    section: dict[str, Any] = {"state": "abstained",
+                               **_section_base(CLIMATE_SOURCE, None, None, resolution=CLIMATE_RESOLUTION)}
+    section.update(window=None, aggregates={}, series={})
     rows: list[dict[str, Any]] = []
     metric_names = ALL_CLIMATE_METRICS
     try:
@@ -386,7 +391,7 @@ def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Win
         rows = [_row(m, None, as_of=None, source=CLIMATE_SOURCE, fetched_at=None) for m in metric_names]
         return section, rows, None, None
 
-    section.update(_section_base(CLIMATE_SOURCE, None, sourced))
+    section.update(_section_base(CLIMATE_SOURCE, None, sourced, resolution=CLIMATE_RESOLUTION))
     rain = series.get("PRECTOTCORR", {})
     window = agg.resolve_window(rain, ctx.chosen)
     if window is None:
@@ -624,7 +629,7 @@ def _soil(ctx: Context, gaps: list) -> tuple[dict, list]:
     url = soilgrids.url(ctx.lon, ctx.lat)
     section: dict[str, Any] = {"state": "abstained", **_section_base(soilgrids.URL, None, None, resolution=SOIL_RESOLUTION)}
     section.update(model_note="SoilGrids is a static 250 m model sampled at the centroid, not a map of the field.",
-                   depths=[])
+                   depths=[], d_factor={name: None for name in soilgrids.PROPERTIES})
     rows: list[dict[str, Any]] = []
     try:
         sourced = _sourced("soilgrids", f"{ctx.lon},{ctx.lat}", ctx.now, lambda: _http_json("GET", url))
@@ -657,6 +662,8 @@ def _soil(ctx: Context, gaps: list) -> tuple[dict, list]:
             entry[SOIL_DEPTH_KEYS[prop]] = _fmt(metric, value)
         depth_rows.append(entry)
     section["depths"] = depth_rows
+    # Table E, soil row: the factor each property was divided by, read from the same response (R-31).
+    section["d_factor"] = soilgrids.d_factors(values)
     section["state"] = "ok" if any_value else "abstained"
     return section, rows
 

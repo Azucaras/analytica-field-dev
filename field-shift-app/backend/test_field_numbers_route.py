@@ -6,6 +6,7 @@ The live smoke test is skipped unless BLOCK6_LIVE=1 is set. Rule ids point at th
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import re
@@ -14,6 +15,7 @@ import unittest
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import ModuleType
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -419,6 +421,39 @@ class RouteCacheTests(RouteCase):
         self.clock["now"] = FROZEN_NOW + timedelta(minutes=5)
         payload = self.ok_payload()
         self.assertEqual(payload["sections"]["climate"]["fetched_at"], "2026-11-15T03:05:00Z")
+
+
+APP_ROOT = Path(__file__).resolve().parents[1]
+RECORDER = APP_ROOT / "scripts" / "record_numbers_fixture.py"
+
+
+def _load_recorder() -> ModuleType:
+    """Load the recorder by path: it is a command, not a backend module."""
+    spec = importlib.util.spec_from_file_location("record_numbers_fixture", RECORDER)
+    if spec is None or spec.loader is None:  # pragma: no cover - a missing script is the failure itself
+        raise FileNotFoundError(RECORDER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class RecordedFixtureTests(unittest.TestCase):
+    """Block 6 contract repair: the committed frontend fixture is a tested claim about the backend.
+
+    `scripts/record_numbers_fixture.py --check` catches a payload the committed fixture no longer
+    matches, but nothing in the repository ran it, and the route test read only provenance rows.
+    A regression in the soil depth entry (`label`, the Table A token as `depth`, and the Table E
+    keys) therefore kept every suite green while the app blanked (defect D1 of the repair). This
+    test runs the same recorder over the same frozen clock and compares the bytes the frontend
+    renders, so the fixture cannot drift from the producer silently.
+    """
+
+    def test_the_committed_frontend_fixture_is_the_payload_the_backend_produces(self) -> None:
+        recorder = _load_recorder()
+        produced = (json.dumps(recorder.record(), indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+        committed = recorder.FIXTURE.read_bytes()
+        if produced != committed:
+            self.fail(f"MISMATCH: {recorder.FIXTURE} is not the payload the backend produces")
 
 
 class RouteLiveSmokeTests(unittest.TestCase):
