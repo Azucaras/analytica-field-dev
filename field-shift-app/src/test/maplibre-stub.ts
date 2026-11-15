@@ -15,13 +15,18 @@ export type StubSource = {
 
 export type StubLayer = {
   id: string
-  type: 'raster' | 'line' | 'symbol'
+  type: 'raster' | 'fill' | 'line' | 'symbol'
   source?: string
   paint?: Record<string, unknown>
 }
 
 export class MapStub {
   static instances: MapStub[] = []
+  /**
+   * Block 5 AC-28: a test seeds the style's own layers, in the order of the style, before the map
+   * mounts. Null keeps the one-symbol default below.
+   */
+  static styleLayers: StubLayer[] | null = null
 
   sources = new Map<string, StubSource>()
   layers: StubLayer[] = [{ id: 'place-label', type: 'symbol' }]
@@ -47,6 +52,7 @@ export class MapStub {
 
   constructor(options: Record<string, unknown>) {
     this.options = options
+    if (MapStub.styleLayers) this.layers = MapStub.styleLayers.map((layer) => ({ ...layer }))
     MapStub.instances.push(this)
   }
 
@@ -201,6 +207,7 @@ export class MapStub {
 
   static reset() {
     MapStub.instances = []
+    MapStub.styleLayers = null
   }
 
   static last(): MapStub {
