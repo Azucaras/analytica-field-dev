@@ -1,20 +1,30 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { t } from './index'
 import { en } from './en'
+import { ptBR } from './pt-BR'
 
 afterEach(() => {
   localStorage.removeItem('fs.locale')
 })
 
 describe('t', () => {
-  it('uses English when no locale is stored', () => {
+  it('uses Portuguese when no locale is stored (block 5, R-10)', () => {
     localStorage.removeItem('fs.locale')
+    expect(t('map.field_map')).toBe('Mapa de talhões')
+  })
+
+  it('uses English once the switch stores it', () => {
+    localStorage.setItem('fs.locale', 'en')
     expect(t('map.field_map')).toBe('Field map')
   })
 
-  it('uses an optional pt-BR translation when present and falls back to English otherwise', () => {
-    localStorage.setItem('fs.locale', 'pt-BR')
-    expect(t('map.field_map')).toBe('Field map')
+  it('carries a Portuguese value with the same placeholders for every English key (block 5, R-11)', () => {
+    const placeholders = (text: string) => [...text.matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]).sort()
+    for (const key of Object.keys(en) as Array<keyof typeof en>) {
+      expect(typeof ptBR[key], key).toBe('string')
+      expect(placeholders(ptBR[key]), key).toEqual(placeholders(en[key]))
+    }
+    expect(Object.keys(ptBR).sort()).toEqual(Object.keys(en).sort())
   })
 
   it('interpolates named variables in English strings', () => {

@@ -9,12 +9,18 @@ Bloco 3 (game HUD), gate final de 2026-11-14: spec `bloco-3-game-hud.md` com 426
 
 Restrições fora do app (rota 1), gate de 2026-11-14: por decisão do usuário o formulário de Constraints saiu do app e cada linha de evidência passou a se rotular pelo próprio `basis`. Specs congeladas em revisão 2 (`bloco-1-mapa-de-composicao.md`, 176 linhas, 25 R / 28 AC, sha256 `4fe0d2b7298e`) e revisão 7 (`bloco-3-game-hud.md`, 450 linhas, 42 R / 33 AC, sha256 `29a9d7efc2f1`), re-hasheadas iguais às 14:29 e às 14:36. O gate rodou `npx tsc -b --noEmit` (exit 0), `npx vitest run` (11 arquivos, 95 testes), `npm run build` (exit 0, 787 ms) e os 8 testes de backend, e mediu os seis critérios no navegador em 1440x900, 780x900 e 360x640. Resultado: seis de seis passam, nenhum FAIL. Zero formas e zero nomes acessíveis `Constraints` nas três larguras; o SMAP desenha 0,28 / 0,31 / 0,19 com 56,00 / 62,00 / 38,00 por cento de preenchimento, sem interação no Field 01; régua, painel de rotação e controle de navegação idênticos ao checkpoint do bloco 3. Evidência em `artifacts/CHECKPOINT-CONSTRAINTS-REMOVAL.md`. Esta linha vem depois de o gate do bloco 3 ter fechado em 2026-11-14 com 33 de 33 AC na revisão 6, e os critérios do bloco 3 afetados por esta remoção estão superados pelo texto emendado da revisão 7.
 
+Bloco 4 (sinal ENSO e evidência climática real), gate de 2026-11-14: o pipeline Field Phase entrou em `field-shift-pipeline/` com Santa Carmem (IBGE 5107248) ao lado de Tupanciretã e Luís Eduardo Magalhães, e o exportador grava a fixture datada em `backend/fixtures/climate/`. O backend serve `/climate/enso` e `/fields/{id}/climate`, lista cinco talhões e abstém os dois pilotos com `coverage_not_measured`. Na tela: chip do ENSO, linha de chuva desde 1 de setembro no painel de rotação e tabela climática no painel de evidência. Medido: pipeline 85 testes, backend 16, `tsc` exit 0, vitest 15 arquivos e 107 testes, build exit 0, geometria no navegador a 1440x900 e 360x640. Emenda AM-01: abaixo de 641 px o chip vai para o topo do painel de rotação, porque a 360 ele ocupava a mesma área da faixa superior. As capturas do AC-14 não foram gravadas porque o painel do navegador não desenhou com a janela oculta. Os três talhões do fixture caem dentro do polígono IBGE de Santa Carmem, conferido pelo exportador.
+
+Bloco 5 (página de análise Field Phase), gate de 2026-11-14: os commits `68ee20d` a `4d1d7b4` do Field Phase entraram em `field-shift-pipeline/` (Meteomatics, Planetary Computer, SoilGrids, FAO-56, pontuação de rotações) e o kit `fieldphase` virou a rota `/analise/:code`, servida pelo backend em `/fieldphase/data/v1/`. Santa Carmem não é pontuado porque a região `mt` não tem rotações nem calendário configurados. O app abre em português, com troca PT/EN no topo e na página; `pt-BR.ts` tem as 191 chaves do `en.ts`. Medido: pipeline 152 testes, backend 19, `tsc` exit 0, vitest 16 arquivos e 112 testes, build exit 0, geometria no navegador a 1440x900 e 360x640. Emendas AM-01 a AM-04 na spec; pela AM-04, pedida pelo usuário no mesmo dia, a análise deixou de ser uma segunda rota e virou um painel de tela cheia na própria página do HUD (`#analise/<código>`), com fronteira de erro. A previsão Meteomatics foi baixada pelo próprio usuário em 2026-11-14 (9 pedidos ok, 15 dias, 46 dias com 51 membros e sazonal, nos três municípios), sem a credencial passar pelo agente; nenhuma resposta salva carrega o campo de usuário. O erro "Não foi possível carregar os dados" que o usuário viu vinha do app antigo `nasa_chall_train/web`, que estava rodando nas portas 5173 e 5174, sem backend na 8000.
+
 ## Approvals
 
 Approved by user on 2026-11-10: "está ótimo, pode prosseguir. implemente escrevendo com subagents gpt luna 6"
 Approved by user on 2026-11-11: "aprovado." (quiz do bloco 2, spec `bloco-2-hud-sobreposto.md` congelada, tarefas 14 a 18)
 Approved by user on 2026-11-14: "ok go on, implement" (spec do bloco 3, `bloco-3-game-hud.md`. A decisão C-05, cards em uma linha e flip pela própria carta sem botão visível, foi pedida pelo usuário depois de ver o build em execução e está registrada na spec. Esta linha foi escrita pelo gate; o texto de Status da spec não foi editado.)
 Approved by user on 2026-11-14: "siga com o caminho 1" (remoção do formulário de Constraints e rótulo de evidência por linha a partir do `basis`; specs bloco 1 revisão 2 e bloco 3 revisão 7, registrado no ledger AM-11 dos dois arquivos.)
+Approved by user on 2026-11-14: "Aprovado, implemente" (spec curta do bloco 4, `bloco-4-sinal-enso.md`, revisão 1, com as decisões D-01 a D-04 do mesmo dia: Santa Carmem mais o dipolo, fixture climática datada, base `reported`, spec curta antes do código.)
+Instructed by user on 2026-11-14: "I want you to apply all the features down below, using this project as a basis" (bloco 5, `bloco-5-analise-field-phase.md`), com as decisões D-05 a D-08 do mesmo dia: destino analytica-field-dev, página de análise como segunda rota, português padrão no app todo com troca para inglês, credencial Meteomatics definida pelo próprio usuário. A instrução e as quatro respostas valem como aprovação da spec curta, pelo precedente do bloco 4.
 
 ## Commands
 
@@ -61,6 +67,23 @@ Itens abertos que o bloco 3 deixa (gate de 2026-11-14, 33 de 33 AC aprovados):
 - A 360, com a faixa superior rolada até o fim para alcançar Season (AC-18), os botões `Command` e `Supporting data` saem da borda esquerda e só voltam a ser clicáveis depois de rolar de volta. É overflow comum, registrado para não ser confundido com press engolido.
 - O texto de Status da spec do bloco 3 não foi editado por este gate; o checkpoint e esta linha carregam o resultado.
 - O corpo do card do gate fala em 28 AC e em espelho `en.ts`/`pt-BR.ts`; a spec carrega 33 AC e R-37 deixa `pt-BR.ts` vazio de propósito. A spec governa.
+
+Itens abertos que o bloco 5 deixa (gate de 2026-11-14):
+
+- Previsão Meteomatics: é um retrato de 2026-11-14; para atualizar, o usuário roda `pipeline.fetch_meteomatics` com a credencial, depois `build_evidence` e `api.export`.
+- Os cartões de rotação do HUD para Santa Carmem continuam sendo o fixture escrito à mão; as rotações pontuadas vivem só na página de análise, para RS e BA.
+- Lista "not built yet" do Field Phase, sem mudança: calendários sem CONAB, escala min-max dos scores, CHIRPS e MapBiomas fora, só três municípios, validação contra produtividade (fase 4) não feita.
+- A R-37 do bloco 3 foi emendada pela D-07 do bloco 5; o arquivo congelado do bloco 3 não foi editado para não mudar seu hash.
+
+Itens abertos que o bloco 4 deixa (gate de 2026-11-14):
+
+- Pontuação das rotações: nenhum dos dois projetos tem; os pilotos de RS e BA ficam sem cenário (OD-01).
+- Estações das culturas em `field-shift-pipeline/config/crops.yaml` seguem `suposicao` até citar o calendário da CONAB; a tabela mostra `assumed crop season`.
+- Amostra pequena: LEM só tem dois anos de El Niño forte no PAM (2010, 2016); Santa Carmem tem dois ou três por cultura.
+- Nenhum comando de agente para o clima (OD-04), então pela ADR 0004 o agente não alcança o chip nem a linha.
+- `pt-BR.ts` continua vazio (R-37 do bloco 3); as strings em português do Field Phase não foram portadas.
+- O rótulo acessível `map.satellite_map_label` ainda diz "Santa Carmem fields" com cinco talhões no mapa.
+- Capturas AC-14-1440.png e AC-14-360.png pendentes.
 
 Itens abertos que o gate da remoção de Constraints deixa (2026-11-14, seis de seis critérios aprovados):
 

@@ -43,6 +43,7 @@ export function FieldsPanel({
               onClick={() => onSelectField(selectedField.id)}
             >
               <span className="field-chip-name">{t(translationKeyFor(selectedField.name) ?? selectedField.name)}</span>
+              {selectedField.synthetic ? <span className="field-chip-synthetic">{t('fields.synthetic')}</span> : null}
             </button>
           )}
         </div>
@@ -58,6 +59,7 @@ export function FieldsPanel({
                 aria-pressed={selectedFieldId === field.id}
               >
                 <span className="field-chip-name">{t(translationKeyFor(field.name) ?? field.name)}</span>
+                {field.synthetic ? <span className="field-chip-synthetic">{t('fields.synthetic')}</span> : null}
               </button>
             ))}
             {!isLoading && fields.length === 0 && (

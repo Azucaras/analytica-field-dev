@@ -1,6 +1,8 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { EvidencePanel, type EvidenceRow } from './EvidencePanel'
+import { fieldClimateSchema } from '@/lib/climate'
+import { climateFixture } from '@/test/climate-fixtures'
 
 const rows: EvidenceRow[] = [
   {
@@ -103,5 +105,28 @@ describe('EvidencePanel', () => {
     const sourceLink = screen.getByRole('link', { name: sourceUrl })
 
     expect(sourceLink.getAttribute('href')).toBe(sourceUrl)
+  })
+})
+
+describe('EvidencePanel climate table (block 4, AC-07, AC-10)', () => {
+  it('renders a reported row with the reported badge', () => {
+    render(<EvidencePanel rows={[{ layer: 'Crop history', value: 'Soybean → Corn', basis: 'reported', as_of: '2025-06-30', source: 'https://example.com' }]} />)
+    expect(screen.getByText('reported').className).toContain('basis-reported')
+  })
+
+  it('renders one climate row per fixture row and flags exactly the flagged rows', () => {
+    const climate = fieldClimateSchema.parse({ state: 'available', ...climateFixture<Record<string, unknown>>('municipality-5107248.json') })
+    render(<EvidencePanel rows={[]} emptyReason="Evidence rows appear once a scenario is selected" climate={{ municipality: 'Santa Carmem (MT)', rows: climate.rows }} />)
+    const table = document.querySelector('.climate-evidence') as HTMLElement
+    expect(table.getAttribute('aria-label')).toBe('Climate signal, Santa Carmem (MT)')
+    const bodyRows = [...table.querySelectorAll('tbody tr')]
+    expect(bodyRows).toHaveLength(climate.rows.length)
+    bodyRows.forEach((tr, index) => {
+      const row = climate.rows[index]
+      expect(tr.textContent?.includes('small sample')).toBe(row.small_sample)
+      expect(tr.textContent?.includes('assumed crop season')).toBe(row.assumption)
+      expect(tr.querySelector('.basis-label')?.textContent).toBe(row.basis)
+      expect(tr.textContent).toContain(row.value)
+    })
   })
 })

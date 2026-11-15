@@ -17,6 +17,45 @@ with FIXTURE_PATH.open(encoding="utf-8") as fixture_file:
     FIXTURE: dict[str, Any] = json.load(fixture_file)
 
 BACKEND_DIR = Path(__file__).parent
+
+# Block 4: dated climate fixtures written by field-shift-pipeline/pipeline/export_fieldshift.py.
+# The backend only reads them; a missing file answers 503 on the climate endpoints and never
+# takes /fields down (R-10).
+CLIMATE_DIR = Path(os.getenv("CLIMATE_FIXTURE_DIR", str(BACKEND_DIR / "fixtures" / "climate")))
+
+
+def _load_pilot_fields() -> list[dict[str, Any]]:
+    path = CLIMATE_DIR / "pilot-fields.json"
+    try:
+        with path.open(encoding="utf-8") as pilot_file:
+            return list(json.load(pilot_file)["fields"])
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        return []
+
+
+def all_fields() -> list[dict[str, Any]]:
+    """The three fixture fields, then the two synthetic pilot fields (R-06)."""
+    return [*FIXTURE["fields"], *_load_pilot_fields()]
+
+
+def _field_or_404(field_id: str) -> dict[str, Any]:
+    field = next((entry for entry in all_fields() if entry["id"] == field_id), None)
+    if field is None:
+        raise HTTPException(status_code=404, detail="Field not found")
+    return field
+
+
+def _climate_file(name: str) -> dict[str, Any]:
+    path = CLIMATE_DIR / name
+    try:
+        with path.open(encoding="utf-8") as climate_file:
+            return json.load(climate_file)
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail=f"Climate fixture {name} is missing; run the pipeline exporter") from None
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=503, detail=f"Climate fixture {name} is unreadable") from None
+
+
 TILE_CACHE_DIR = Path(os.getenv("TILE_CACHE_DIR", str(BACKEND_DIR / ".tile-cache")))
 GIBS_MAX_ZOOM = 6
 TILE_CACHE_TTL = timedelta(hours=24)
@@ -281,19 +320,25 @@ def list_fields() -> dict[str, Any]:
         "seasons": FIXTURE["seasons"],
         "default_season": FIXTURE["default_season"],
         "fields": [
-            {key: value for key, value in field.items() if key != "scenarios"}
-            for field in FIXTURE["fields"]
+            {
+                **{key: value for key, value in field.items() if key != "scenarios"},
+                "municipality_code": field.get("municipality_code"),
+                "synthetic": bool(field.get("synthetic", False)),
+            }
+            for field in all_fields()
         ],
     }
 
 
 @app.get("/fields/{field_id}/scenarios")
 def get_scenarios(field_id: str) -> dict[str, Any]:
-    field = next((entry for entry in FIXTURE["fields"] if entry["id"] == field_id), None)
-    if field is None:
-        raise HTTPException(status_code=404, detail="Field not found")
+    field = _field_or_404(field_id)
 
-    threshold = "coverage_below_80_percent" if field["coverage"] < 80 else None
+    # R-07: a field with no coverage measurement abstains; abstention is a result, not an error.
+    if field["coverage"] is None:
+        threshold: str | None = "coverage_not_measured"
+    else:
+        threshold = "coverage_below_80_percent" if field["coverage"] < 80 else None
     return {
         "field_id": field["id"],
         "season": FIXTURE["default_season"],
@@ -302,3 +347,38 @@ def get_scenarios(field_id: str) -> dict[str, Any]:
         "coverage": field["coverage"],
         "scenarios": field["scenarios"],
     }
+
+
+@app.get("/climate/enso")
+def get_enso() -> dict[str, Any]:
+    """R-08: current CPC ENSO state and strength outlook, as a dated fixture."""
+    return _climate_file("enso.json")
+
+
+@app.get("/fields/{field_id}/climate")
+def get_field_climate(field_id: str) -> dict[str, Any]:
+    """R-09: the municipal climate evidence of the field's municipality."""
+    field = _field_or_404(field_id)
+    code = field.get("municipality_code")
+    if code is None:
+        return {"field_id": field_id, "state": "not_available", "municipality": None, "season_progress": None, "rows": []}
+    data = _climate_file(f"municipality-{code}.json")
+    return {"field_id": field_id, "state": "available", **data}
+
+
+# Block 5, R-05: the Field Phase contract, exported by `field-shift-pipeline` (`python -m api.export`)
+# as static JSON, served read-only for the analysis page.
+FIELDPHASE_DIR = Path(os.getenv("FIELDPHASE_FIXTURE_DIR", str(BACKEND_DIR / "fixtures" / "fieldphase")))
+
+
+@app.get("/fieldphase/data/v1/{path:path}")
+def get_fieldphase_file(path: str) -> Response:
+    root = (FIELDPHASE_DIR / "data" / "v1").resolve()
+    target = (root / path).resolve()
+    if not path.endswith(".json") or not target.is_relative_to(root):
+        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        content = target.read_bytes()
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail=f"Field Phase export {path} is missing; run the pipeline exporter") from None
+    return Response(content=content, media_type="application/json")

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { MapCanvas } from '@/components/MapCanvas'
 import { LayerRail } from '@/components/LayerRail'
 import { ScenarioCards, type RotationScenario } from '@/components/ScenarioCards'
@@ -8,10 +8,36 @@ import { AbstentionNotice } from '@/components/AbstentionNotice'
 import { FieldsPanel } from '@/components/FieldsPanel'
 import { AgentBar, CommandToggle, useCommandToggle } from '@/components/CommandToggle'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
+import { EnsoChip } from '@/components/EnsoChip'
+import { LocaleSwitch } from '@/components/LocaleSwitch'
+import { useLocaleStore } from '@/strings/locale-store'
+import { SheetBoundary } from '@/analysis/SheetBoundary'
+import { ClimateSignal } from '@/components/ClimateSignal'
+import { ensoSchema, fieldClimateSchema, loadParsed, type EnsoState, type FieldClimate, type Loadable } from '@/lib/climate'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { t, translationKeyFor } from '@/strings'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+
+// Block 5, AM-04: the Field Phase analysis is a sheet on this page, loaded on first open so the
+// HUD bundle does not carry Recharts. Its state lives in the hash, #analise/<IBGE code>.
+const AnalysisSheet = lazy(() => import('@/analysis/AnalysisPage'))
+const ANALYSIS_HASH = /^#analise(?:\/(\d+))?$/
+
+type AnalysisState = { open: boolean; code: number | null }
+
+function analysisFromHash(): AnalysisState {
+  if (typeof window === 'undefined') return { open: false, code: null }
+  const match = window.location.hash.match(ANALYSIS_HASH)
+  return match ? { open: true, code: match[1] ? Number(match[1]) : null } : { open: false, code: null }
+}
+
+function writeAnalysisHash(state: AnalysisState) {
+  if (typeof window === 'undefined') return
+  const next = state.open ? `#analise${state.code ? `/${state.code}` : ''}` : ''
+  if (window.location.hash === next) return
+  window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${next}`)
+}
 
 type FieldResponse = { fields: FieldSummary[]; seasons: string[]; default_season: string }
 type ScenarioResponse = {
@@ -19,7 +45,7 @@ type ScenarioResponse = {
   season: string
   state: 'ranked' | 'abstained'
   threshold: string | null
-  coverage: number
+  coverage: number | null
   scenarios: RotationScenario[]
 }
 
@@ -57,6 +83,8 @@ function isNarrowViewport() {
 }
 
 function App() {
+  // Block 5, R-10: subscribing re-renders the whole HUD when the language switch changes.
+  useLocaleStore((state) => state.locale)
   const selectedFieldId = useMapStore((state) => state.selectedFieldId)
   const selectField = useMapStore((state) => state.selectField)
   const command = useCommandToggle()
@@ -73,13 +101,26 @@ function App() {
   const [fieldsRequest, setFieldsRequest] = useState(0)
   const [isLoadingFields, setIsLoadingFields] = useState(true)
   const [isLoadingScenarios, setIsLoadingScenarios] = useState(false)
+  // Block 4: the ENSO chip and the climate line load on their own; a failure here never sets
+  // `error`, so the rest of the screen behaves exactly as without them (R-16, R-18).
+  const [enso, setEnso] = useState<Loadable<EnsoState>>({ status: 'loading' })
+  const [climate, setClimate] = useState<Loadable<FieldClimate> | null>(null)
+  // Block 4 AM-01: the top strip has no free room at 360, so below 640 px the ENSO chip
+  // renders at the top of the rotation panel instead of beside the brand. One mount only.
+  const [isNarrow, setIsNarrow] = useState(isNarrowViewport)
+  const [analysis, setAnalysis] = useState<AnalysisState>(analysisFromHash)
+  const analysisToggleRef = useRef<HTMLButtonElement | null>(null)
   const noticeRef = useRef<HTMLDivElement | null>(null)
   const [noticeHeight, setNoticeHeight] = useState(0)
   // R-40: which right edge panel was opened last. The transition into 360 keeps it
   // and closes the other; leaving 360 never reopens anything (R-35).
   const lastRightPanelRef = useRef<'command' | 'supporting' | null>(null)
 
-  const hasNotice = Boolean(error || (scenarioState === 'abstained' && threshold && scenarios.length > 0))
+  // R-20: a field whose coverage is not measured has no scenarios, and still shows why.
+  const showsAbstention = Boolean(
+    scenarioState === 'abstained' && threshold && (scenarios.length > 0 || threshold === 'coverage_not_measured'),
+  )
+  const hasNotice = Boolean(error || showsAbstention)
 
   // The status notice and the right edge column are separate fixed overlays, so the
   // 8 px gap of R-23 is kept by measuring the notice, not by nesting it. The measure
@@ -145,6 +186,38 @@ function App() {
       .finally(() => setIsLoadingFields(false))
     return () => controller.abort()
   }, [fieldsRequest])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const query = window.matchMedia(NARROW_QUERY)
+    const handleChange = (event: MediaQueryListEvent) => setIsNarrow(event.matches)
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    loadParsed(`${API_BASE}/climate/enso`, ensoSchema, controller.signal)
+      .then(setEnso)
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    if (!selectedFieldId) return
+    const controller = new AbortController()
+    setClimate({ status: 'loading' })
+    loadParsed(`${API_BASE}/fields/${selectedFieldId}/climate`, fieldClimateSchema, controller.signal)
+      .then(setClimate)
+      .catch(() => {})
+    return () => controller.abort()
+  }, [selectedFieldId])
+
+  const climateEvidence = useMemo(() => {
+    if (climate?.status !== 'ready') return null
+    const { municipality, rows } = climate.data
+    return { municipality: `${municipality.name_official} (${municipality.uf})`, rows }
+  }, [climate])
 
   useEffect(() => {
     if (!selectedFieldId) return
@@ -224,6 +297,27 @@ function App() {
     return () => query.removeEventListener('change', handleChange)
   }, [command.isOpen, supportingData.isOpen, command.close, supportingData.close])
 
+  // AM-04: opening the analysis follows the selected field's municipality; the sheet's own
+  // picker may move to another municipality without changing the selected field.
+  const openAnalysis = useCallback((code: number | null) => {
+    setAnalysis({ open: true, code })
+  }, [])
+  const closeAnalysis = useCallback(() => {
+    setAnalysis((current) => ({ ...current, open: false }))
+    analysisToggleRef.current?.focus()
+  }, [])
+  const selectAnalysisCode = useCallback((code: number) => setAnalysis({ open: true, code }), [])
+
+  useEffect(() => {
+    writeAnalysisHash(analysis)
+  }, [analysis])
+
+  useEffect(() => {
+    const onHashChange = () => setAnalysis(analysisFromHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
   const shellStyle = {
     '--fs-notice-block': `${hasNotice ? noticeHeight + 8 : 0}px`,
   } as CSSProperties
@@ -242,6 +336,7 @@ function App() {
             <span>{t('map.brand')}{t('map.brand_accent')}</span>
           </a>
         </div>
+        {!isNarrow && <div className="overlay-interactive enso-chip-slot"><EnsoChip enso={enso} /></div>}
       </div>
 
       <div className="overlay anchor-top-right layer-controls" style={{ zIndex: ZOrder.controlStrip }}>
@@ -254,6 +349,16 @@ function App() {
             <span>{t('season.label')}</span>
             <SeasonSelect key={season} seasons={seasons} default_season={season} onChange={handleSeasonChange} />
           </label>
+          <button
+            ref={analysisToggleRef}
+            type="button"
+            className="top-chip analysis-toggle"
+            aria-expanded={analysis.open}
+            onClick={() => (analysis.open ? closeAnalysis() : openAnalysis(selectedField?.municipality_code ?? null))}
+          >
+            {t('analysis.toggle')}
+          </button>
+          <LocaleSwitch />
         </div>
       </div>
 
@@ -264,9 +369,7 @@ function App() {
           <div className="overlay anchor-notice layer-notice" style={{ zIndex: ZOrder.abstentionNotice }}>
             <div ref={noticeRef} className="overlay-interactive panel-surface notice-anchor">
               {error && <p className="error-notice" role="alert">{error}</p>}
-              {scenarioState === 'abstained' && threshold && scenarios.length > 0 && (
-                <AbstentionNotice threshold={threshold} />
-              )}
+              {showsAbstention && threshold && <AbstentionNotice threshold={threshold} />}
             </div>
           </div>
         )}
@@ -291,8 +394,23 @@ function App() {
               <p className="eyebrow">{t('map.plan_with_evidence')}</p>
               <h2>{t('map.rotation_outlook')}</h2>
             </div>
-            <span className="field-coverage-pill"><span className="coverage-dot" />{t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
+            <span className="field-coverage-pill"><span className="coverage-dot" />{selectedField && selectedField.coverage === null
+              ? t('map.coverage_not_measured')
+              : t('map.data_coverage', { coverage: selectedField?.coverage ?? 0 })}</span>
           </div>
+          {selectedField?.municipality_code ? (
+            <div className="analysis-link-row">
+              <button
+                type="button"
+                className="analysis-link"
+                onClick={() => openAnalysis(selectedField.municipality_code ?? null)}
+              >
+                {t('analysis.open')}
+              </button>
+            </div>
+          ) : null}
+          {isNarrow && <div className="enso-chip-slot enso-chip-inline"><EnsoChip enso={enso} /></div>}
+          <ClimateSignal climate={selectedFieldId ? climate : null} />
           <ScenarioCards
             scenarios={scenarios}
             state={scenarioState === 'abstained' ? null : scenarioState}
@@ -327,6 +445,7 @@ function App() {
               >
                 <EvidencePanel
                   rows={evidenceRows}
+                  climate={climateEvidence}
                   isLoading={isLoadingFields || isLoadingScenarios}
                   emptyReason={isLoadingFields || isLoadingScenarios
                     ? null
@@ -336,6 +455,13 @@ function App() {
             )}
           </div>
         </div>
+      )}
+      {analysis.open && (
+        <SheetBoundary onClose={closeAnalysis}>
+          <Suspense fallback={null}>
+            <AnalysisSheet code={analysis.code} onSelectCode={selectAnalysisCode} onClose={closeAnalysis} />
+          </Suspense>
+        </SheetBoundary>
       )}
     </main>
   )

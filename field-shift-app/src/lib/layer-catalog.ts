@@ -1,4 +1,4 @@
-export type LayerBasis = 'observed' | 'retrieved' | 'modelled' | 'entered'
+export type LayerBasis = 'observed' | 'retrieved' | 'reported' | 'modelled' | 'entered'
 
 export type LayerMetadata = {
   id: string

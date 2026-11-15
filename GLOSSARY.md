@@ -8,6 +8,10 @@ Contexto do aplicativo que compara rotações de cultura em um talhão a partir 
 A menor unidade que o app compara e sobre a qual todas as camadas são recortadas. Um talhão tem limite versionado e nunca é renomeado.
 _Avoid_: campo, área, polígono, lote
 
+**Município**:
+A unidade da evidência climática e de produtividade. O talhão herda a evidência do seu município, e essa evidência nunca descreve o talhão.
+_Avoid_: região, área
+
 **Safra**:
 O intervalo de uma campanha agrícola nomeado por ano de colheita, por exemplo 2025/26. Toda comparação acontece dentro de uma safra.
 _Avoid_: temporada, ciclo, ano
@@ -23,7 +27,7 @@ Uma série de valores recortada por talhão e safra, com procedência, resoluç�
 _Avoid_: tema, overlay, raster
 
 **Base**:
-O rótulo que diz como um valor nasceu. São quatro: observado, recuperado, modelado e inserido. Um valor sem base não entra em cartão.
+O rótulo que diz como um valor nasceu. São cinco: observado, recuperado, reportado, modelado e inserido. Um valor sem base não entra em cartão.
 _Avoid_: tipo, origem, fonte
 
 **Observado**:
@@ -37,6 +41,10 @@ _Avoid_: derivado, calculado
 **Modelado**:
 Valor produzido por modelo de superfície, como zona radicular. Não é medição e não substitui uma.
 _Avoid_: simulado, estimado
+
+**Reportado**:
+Estatística oficial publicada por um órgão, como produtividade do IBGE PAM ou o índice RONI do CPC. Um valor derivado de um reportado e de um modelado fica com a base mais fraca, modelado.
+_Avoid_: oficial, censitário, inserido
 
 **Inserido**:
 Fato digitado pelo produtor, com autor e data. Histórico de cultura é sempre inserido.

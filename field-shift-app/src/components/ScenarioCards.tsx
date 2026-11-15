@@ -6,7 +6,7 @@ import { t } from '@/strings'
 export type EvidenceRow = {
   layer: string
   value: string | null
-  basis: 'observed' | 'retrieved' | 'modelled' | 'entered'
+  basis: 'observed' | 'retrieved' | 'reported' | 'modelled' | 'entered'
   as_of: string
   source: string
 }

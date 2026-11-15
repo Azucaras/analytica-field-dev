@@ -1,0 +1,194 @@
+{
+  "contract_version": "fieldshift-climate-1",
+  "recorded_at": "2026-11-14T22:21:05+00:00",
+  "municipality": {
+    "code": 5107248,
+    "name": "Santa Carmem",
+    "name_official": "Santa Carmem",
+    "uf": "MT",
+    "region_id": "mt",
+    "region_name": "Mato Grosso",
+    "enso_signal": "unclassified",
+    "centroid_lon": -54.8996,
+    "centroid_lat": -11.9346
+  },
+  "crop_year": 2027,
+  "crop_year_label": "2026/27",
+  "crop_year_enso": {
+    "enso_class": "el_nino_strong",
+    "provisional": true,
+    "forecast": true,
+    "basis": "CPC strength outlook issued 2026-11, NDJ"
+  },
+  "season_progress": {
+    "start": "2026-09-01",
+    "last_observed": "2026-11-11",
+    "rain_mm": 209.1,
+    "normal_mm": 289.0,
+    "analog_mm": 248.8,
+    "n_baseline": 30,
+    "n_analog": 5,
+    "analog_years": [
+      1983,
+      1992,
+      1998,
+      2010,
+      2016
+    ],
+    "basis": "modelled",
+    "source": "https://power.larc.nasa.gov/",
+    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data"
+  },
+  "rows": [
+    {
+      "metric": "early_rain_mm_anom_pct",
+      "layer": "Rain Sep to Dec, strong El Nino years vs 1991 to 2020",
+      "value": "-16.0%",
+      "number": -16.0,
+      "unit": "%",
+      "basis": "modelled",
+      "as_of": "2026-11-11",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "n_years": 5,
+      "years": [
+        1983,
+        1992,
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    },
+    {
+      "metric": "late_cdd_days_anom",
+      "layer": "Longest dry spell Jan to Apr, strong El Nino years vs 1991 to 2020",
+      "value": "+4.5 days",
+      "number": 4.5,
+      "unit": "days",
+      "basis": "modelled",
+      "as_of": "2026-11-11",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "n_years": 5,
+      "years": [
+        1983,
+        1992,
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Rice yield vs trend, strong El Nino years",
+      "value": "-7.0%",
+      "number": -7.0,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "n_years": 3,
+      "years": [
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": 2692,
+      "crop_name_en": "Rice",
+      "assumption": true,
+      "small_sample": false
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Beans yield vs trend, strong El Nino years",
+      "value": "-20.7%",
+      "number": -20.7,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 2702,
+      "crop_name_en": "Beans",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Soybean yield vs trend, strong El Nino years",
+      "value": "-2.7%",
+      "number": -2.7,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "n_years": 3,
+      "years": [
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": 2713,
+      "crop_name_en": "Soybean",
+      "assumption": true,
+      "small_sample": false
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Maize (2nd crop) yield vs trend, strong El Nino years",
+      "value": "-18.7%",
+      "number": -18.7,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 114254,
+      "crop_name_en": "Maize (2nd crop)",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "season_rain_to_date_mm",
+      "layer": "Rain since 1 Sep vs 1991 to 2020 normal",
+      "value": "209 mm vs 289 mm",
+      "number": 209.1,
+      "unit": "mm",
+      "basis": "modelled",
+      "as_of": "2026-11-11",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "n_years": 30,
+      "years": [],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    }
+  ],
+  "source": {
+    "climate": "https://power.larc.nasa.gov/",
+    "yield": "https://apisidra.ibge.gov.br/",
+    "rules": "field-shift-pipeline/config/analysis.yaml"
+  }
+}

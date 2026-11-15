@@ -4,7 +4,10 @@ export type FieldSummary = {
   id: string
   name: string
   location: string
-  coverage: number
+  /** Block 4: null for a synthetic pilot field, whose coverage is not measured (R-07). */
+  coverage: number | null
+  municipality_code?: number | null
+  synthetic?: boolean
   center: [number, number]
   boundary: { type: 'Polygon'; coordinates: number[][][] }
 }

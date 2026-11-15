@@ -1,0 +1,87 @@
+{
+  "contract_version": "fieldshift-climate-1",
+  "recorded_at": "2026-11-14T22:21:05+00:00",
+  "note": "Synthetic fields: a rectangle the size of Field 01 centred on the IBGE municipal centroid.",
+  "fields": [
+    {
+      "id": "rs-tupancireta-01",
+      "name": "Field 04",
+      "location": "Tupanciretã (RS)",
+      "municipality_code": 4322202,
+      "synthetic": true,
+      "coverage": null,
+      "center": [
+        -54.0037,
+        -29.0205
+      ],
+      "boundary": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -54.0162,
+              -29.0105
+            ],
+            [
+              -53.9912,
+              -29.0105
+            ],
+            [
+              -53.9912,
+              -29.0305
+            ],
+            [
+              -54.0162,
+              -29.0305
+            ],
+            [
+              -54.0162,
+              -29.0105
+            ]
+          ]
+        ]
+      },
+      "scenarios": []
+    },
+    {
+      "id": "ba-lem-01",
+      "name": "Field 05",
+      "location": "Luís Eduardo Magalhães (BA)",
+      "municipality_code": 2919553,
+      "synthetic": true,
+      "coverage": null,
+      "center": [
+        -46.0201,
+        -12.1984
+      ],
+      "boundary": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -46.0326,
+              -12.1884
+            ],
+            [
+              -46.0076,
+              -12.1884
+            ],
+            [
+              -46.0076,
+              -12.2084
+            ],
+            [
+              -46.0326,
+              -12.2084
+            ],
+            [
+              -46.0326,
+              -12.1884
+            ]
+          ]
+        ]
+      },
+      "scenarios": []
+    }
+  ]
+}

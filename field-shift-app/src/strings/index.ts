@@ -7,9 +7,14 @@ export type Locale = 'en' | 'pt-BR'
 
 const LOCALE_STORAGE_KEY = 'fs.locale'
 
+/** Block 5, R-10: Portuguese unless the switch stored English. */
 function getLocale(): Locale {
-  if (typeof localStorage === 'undefined') return 'en'
-  return localStorage.getItem(LOCALE_STORAGE_KEY) === 'pt-BR' ? 'pt-BR' : 'en'
+  try {
+    if (typeof localStorage === 'undefined') return 'pt-BR'
+    return localStorage.getItem(LOCALE_STORAGE_KEY) === 'en' ? 'en' : 'pt-BR'
+  } catch {
+    return 'pt-BR'
+  }
 }
 
 export function translationKeyFor(value: string): TranslationKey | null {

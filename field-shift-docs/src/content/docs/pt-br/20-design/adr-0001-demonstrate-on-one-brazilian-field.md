@@ -21,6 +21,10 @@ Difícil: a ferramenta parece somente brasileira para um avaliador, e a pesquisa
 
 Revisar se a entrega de recursos de 2026-11-13 adicionar um conjunto de dados brasileiro que mude o mix de sensores, ou se um membro da equipe tiver conhecimento de campo dos EUA e puder assumir esses três campos extras.
 
+## Revisão de 2026-11-14 (bloco 4)
+
+Em 2026-11-14 o usuário decidiu acrescentar o dipolo brasileiro do ENSO à demonstração. Santa Carmem continua sendo o único lugar com cenários de rotação. Dois talhões piloto sintéticos se juntam a ela, um em Tupanciretã (Rio Grande do Sul, excesso de chuva no El Niño) e um em Luís Eduardo Magalhães (Bahia, déficit de chuva no El Niño). Eles carregam apenas evidência climática municipal: composições de chuva do NASA POWER, anomalias de produtividade do IBGE PAM em anos de El Niño forte e o estado do ENSO publicado pelo CPC. Eles não carregam cenário de rotação, porque escrever um seria inventar uma afirmação agronômica antes de existir método de pontuação. A cobertura deles não é medida, então eles sempre se abstêm. A spec é `field-shift-app/specs/bloco-4-sinal-enso.md`.
+
 ## Alternativas consideradas
 
 - **Um campo por país.** Dobra a superfície de entrada e reduz pela metade a profundidade de evidência em cada um. Descartada por profundidade.

@@ -4,7 +4,7 @@ Repository for the Field Shift entry to the NASA Space Apps 2026 challenge, and 
 
 ## What this project is
 
-A rotation decision support tool for farmers in Brazil, scoped to one synthetic field at Santa Carmem, Mato Grosso. Interactive map, evidence cards, an agent over a read-only schema, voice gated by a noise test. The demo runs on a credential-free path; authenticated NASA products sit behind it.
+A rotation decision support tool for farmers in Brazil, scoped to synthetic fields at Santa Carmem, Mato Grosso, which carry the rotation scenarios, plus two synthetic pilot fields in Tupancireta (RS) and Luis Eduardo Magalhaes (BA) that carry municipal ENSO evidence only (ADR 0001, revision of 2026-11-14). Interactive map, evidence cards, an agent over a read-only schema, voice gated by a noise test. The demo runs on a credential-free path; authenticated NASA products sit behind it.
 
 ## Commands
 
