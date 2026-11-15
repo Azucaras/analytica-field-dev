@@ -165,6 +165,43 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
     expect(screen.getByText('Select from zoom 10')).toBeTruthy()
   })
 
+  /**
+   * AC-05, AC-09: Brazil Mode A mounts both tiers, so the line names the overview's 5.
+   */
+  it('names the overview floor in Brazil Mode A, where the overview file is mounted', () => {
+    const modeA: PolygonScene = {
+      ...brScene,
+      tiers: { detail: { minzoom: 8, maxzoom: 12 }, overview: { minzoom: 5, maxzoom: 7 }, interactiveMinzoom: 10 },
+      overviewUrl: 'pmtiles:///data/polygons/br-mt-overview.pmtiles/{z}/{x}/{y}',
+    }
+    setStore({ polygonMode: modeA, mapZoom: 6, regionId: 'br' })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygons from zoom 5')).toBeTruthy()
+    expect(screen.getByText('Select from zoom 10')).toBeTruthy()
+  })
+
+  /**
+   * AC-05, AC-09: the gate measured Brazil Mode B at zoom 6, 7, 9 and 10 and the line read
+   * `Polygons from zoom 5` while the lowest mounted tier was the detail at 8. The real Mode B scene
+   * keeps the Table B overview numbers and mounts no overview URL; the old `brScene` fixture had
+   * `overview: null`, so it never carried that state.
+   */
+  it('names the detail floor in Brazil Mode B, where the overview numbers are mounted by nothing', () => {
+    const modeB: PolygonScene = {
+      ...brScene,
+      tiers: { detail: { minzoom: 8, maxzoom: 12 }, overview: { minzoom: 5, maxzoom: 7 }, interactiveMinzoom: 10 },
+      overviewUrl: null,
+    }
+    for (const zoom of [6, 7, 9, 10]) {
+      setStore({ polygonMode: modeB, mapZoom: zoom, regionId: 'br' })
+      const { unmount } = render(<PolygonPanel />)
+      expect(screen.getByText('Polygons from zoom 8')).toBeTruthy()
+      expect(screen.queryByText('Polygons from zoom 5')).toBeNull()
+      expect(screen.queryByText('Polygon source unavailable')).toBeNull()
+      unmount()
+    }
+  })
+
   it('prints the Google key line when ?basemap=google was asked without a key (R-32)', () => {
     setStore({ polygonMode: brScene, basemapKeyMissing: true, regionId: 'br' })
     render(<PolygonPanel />)

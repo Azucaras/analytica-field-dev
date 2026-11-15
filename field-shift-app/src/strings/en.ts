@@ -240,6 +240,9 @@ export const en = {
   'polygon.area_not_available': 'Area not available',
   'polygon.area_not_in_class_table': 'Area not in the class table',
   'polygon.no_cdl_class': 'No CDL class for {year}',
+  // R-28, R-44: the one documented short form the chip may print, only in the 768 to 1023 px
+  // band where AC-24's overflow row shows the long form cut by the panel.
+  'polygon.no_cdl_class_short': 'No CDL {year}',
   'polygon.area_value': '{area} {unit}',
   'polygon.basis.retrieved': 'retrieved',
   'polygon.basis.modelled': 'modelled',

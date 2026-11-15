@@ -11,7 +11,7 @@ import { PolygonPanel } from '@/components/PolygonPanel'
 import { SUPPORTING_DATA_PANEL_ID, SupportingDataToggle, useSupportingDataToggle } from '@/components/SupportingDataToggle'
 import { NumbersToggle, NUMBERS_TOGGLE_ATTR } from '@/components/NumbersToggle'
 import { NumbersView } from '@/components/NumbersView'
-import { useMapStore, type FieldSummary } from '@/lib/map-store'
+import { chosenDateOf, useMapStore, type FieldSummary } from '@/lib/map-store'
 import { numbersOpenFromSearch, searchWithNumbers } from '@/lib/numbers'
 import { useLayers } from '@/lib/use-layers'
 import { seasonForDate } from '@/lib/timeline'
@@ -21,8 +21,8 @@ import {
   searchWithRegion,
 } from '@/lib/regions'
 import { BASEMAP_ADAPTERS } from '@/lib/basemap-adapters'
-import { noCdlYearOf, unmappedClassColour } from '@/lib/polygon-style'
-import { polygonIdFromSearch, searchWithPolygon, commandFieldId } from '@/lib/polygon-selection'
+import { selectedPolygonChipOf } from '@/lib/polygon-chip'
+import { polygonIdFromSearch, searchWithPolygon } from '@/lib/polygon-selection'
 import {
   COMPACT_QUERY,
   NARROW_QUERY,
@@ -81,7 +81,7 @@ function App() {
   const polygonClass = useMapStore((state) => state.polygonClass)
   // R-21, R-28: the raw class value tells a United States null class from an unmapped code.
   const polygonRaw = useMapStore((state) => state.polygonRaw)
-  const polygonDate = useMapStore((state) => state.chosenDate ?? state.axis.default)
+  const polygonDate = useMapStore(chosenDateOf)
   const numbersOpen = useMapStore((state) => state.numbersOpen)
   const command = useCommandToggle()
   const supportingData = useSupportingDataToggle()
@@ -248,18 +248,16 @@ function App() {
     [regionFields, selectedFieldId],
   )
   // R-28: the chip's class comes from the table through the store, never from the catalog, and
-  // an unresolved or unmapped class draws the unmapped colour.
+  // an unresolved or unmapped class draws the unmapped colour. The year rule is a pure function
+  // so a United States null class is tested at its source.
   const selectedPolygonChip = useMemo(
-    () => (selectedPolygonId === null
-      ? null
-      : {
-        fieldId: commandFieldId(regionAdapter(regionId), selectedPolygonId),
-        name: polygonClass?.name ?? null,
-        hex: polygonClass?.hex ?? unmappedClassColour(),
-        noCdlYear: polygonRaw === null
-          ? null
-          : noCdlYearOf(regionAdapter(regionId), polygonRaw.classValue, polygonDate),
-      }),
+    () => selectedPolygonChipOf(
+      selectedPolygonId,
+      polygonClass,
+      polygonRaw,
+      regionAdapter(regionId),
+      polygonDate,
+    ),
     [selectedPolygonId, polygonClass, polygonRaw, polygonDate, regionId],
   )
   // R-14, R-15: every evidence row is presented from its own fields. The layer name is

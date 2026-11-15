@@ -109,6 +109,38 @@ function compareBounds(map: MapLibreMap, divider: number): { a: [number, number,
 }
 
 /**
+ * R-36 and AC-28: the layer the app's imagery is inserted under.
+ *
+ * The polygon fill layer when the polygon surface is mounted, so imagery never covers a polygon;
+ * otherwise the style's first symbol layer, so the labels stay readable in the two satellite
+ * presets. A raster moved to the very top of the style (`moveLayer` with no anchor), which is how
+ * the block 4 stack list used to be applied, lands above the polygon fill and above every label.
+ * That is what veiled the polygons: measured on the running page at Brazil zoom 13 with the
+ * Satellite preset and the default `smap-l3` layer on at 0.55, the fill implied alpha 0.159 to
+ * 0.166 at 12 of 12 interior points of one class 41 polygon, and 0.398 to 0.402 at the same 12
+ * points once the raster sat below the polygons (artifacts/AC-11-alpha.json).
+ */
+function imageryAnchor(map: MapLibreMap): string | undefined {
+  return map.getLayer(POLYGON_FILL_LAYER_ID) ? POLYGON_FILL_LAYER_ID : firstSymbolId(map)
+}
+
+/**
+ * R-36: the basemap goes under every catalog raster already mounted and under the polygons, so a
+ * re-inserted basemap cannot cover the data layers of block 4 or the field polygons.
+ */
+function basemapInsertBefore(
+  map: MapLibreMap,
+  catalog: readonly LayerCatalogEntry[],
+  plan: { before: string | undefined },
+): string | undefined {
+  const mounted = new Set((map.getStyle().layers ?? []).map((layer) => layer.id))
+  for (const entry of catalog) {
+    if (mounted.has(rasterLayerId(entry.id))) return rasterLayerId(entry.id)
+  }
+  return imageryAnchor(map) ?? plan.before
+}
+
+/**
  * R-19 and R-17: only a layer that is on owns a source and a layer, so a layer that is off
  * issues no tile request. Opacity is a paint property on `raster-opacity` and never removes
  * or re-adds a source, which is what AC-13 counts.
@@ -135,13 +167,12 @@ function ensureRaster(
     })
   }
   if (!map.getLayer(layerId)) {
-    const firstSymbolLayer = map.getStyle().layers?.find((styleLayer) => styleLayer.type === 'symbol')
     map.addLayer({
       id: layerId,
       type: 'raster',
       source: sourceId,
       paint: { 'raster-opacity': 0 },
-    }, firstSymbolLayer?.id)
+    }, imageryAnchor(map))
   }
   return created
 }
@@ -180,9 +211,11 @@ function applyComposition(map: MapLibreMap, composition: CompositionPreset) {
 
 /** R-18: the stack list puts its first item on top, so the list is applied bottom up. */
 function applyOrder(map: MapLibreMap, order: string[]) {
+  // R-36: the rasters keep their order among themselves and stay under the polygons and the labels.
+  const before = imageryAnchor(map)
   for (let index = order.length - 1; index >= 0; index -= 1) {
     const layerId = rasterLayerId(order[index])
-    if (map.getLayer(layerId)) map.moveLayer(layerId)
+    if (map.getLayer(layerId)) map.moveLayer(layerId, before)
   }
 }
 
@@ -244,6 +277,7 @@ function ensureBasemap(
   adapter: BasemapAdapter,
   composition: CompositionPreset,
   ownIds: ReadonlySet<string>,
+  catalog: readonly LayerCatalogEntry[],
 ): void {
   if (!map.getSource(BASEMAP_SOURCE_ID)) {
     map.addSource(BASEMAP_SOURCE_ID, {
@@ -256,13 +290,14 @@ function ensureBasemap(
   }
   if (!map.getLayer(BASEMAP_LAYER_ID)) {
     const plan = basemapStackPlan(map.getStyle().layers ?? [], ownIds)
+    const before = basemapInsertBefore(map, catalog, plan)
     map.addLayer({
       id: BASEMAP_LAYER_ID,
       type: 'raster',
       source: BASEMAP_SOURCE_ID,
       paint: { 'raster-opacity': 1 },
-    }, plan.before)
-    for (const layerId of plan.raise) map.moveLayer(layerId, plan.before)
+    }, before)
+    for (const layerId of plan.raise) map.moveLayer(layerId, before)
   }
   // R-34: `Map` hides the basemap; the two satellite presets show it, and the labels are the
   // style's own symbol layers, which `applyComposition` owns.
@@ -388,7 +423,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       styleOwnLayerIdsRef.current = new Set((map.getStyle().layers ?? []).map((layer) => layer.id))
       ensureFieldBoundaries(map, fieldsRef.current)
       const styleRegion = regionAdapter(useMapStore.getState().regionId)
-      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition, styleOwnLayerIdsRef.current)
+      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition, styleOwnLayerIdsRef.current, useMapStore.getState().catalog)
       applyComposition(map, useMapStore.getState().composition)
       const scene = sceneRef.current
       if (scene?.tiers) {
@@ -515,7 +550,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map) return
-    ensureBasemap(map, basemapAdapter, composition, styleOwnLayerIdsRef.current)
+    ensureBasemap(map, basemapAdapter, composition, styleOwnLayerIdsRef.current, catalog)
     raisePolygonLayers(map)
   }, [mapReady, basemapAdapter, composition, regionId])
 
