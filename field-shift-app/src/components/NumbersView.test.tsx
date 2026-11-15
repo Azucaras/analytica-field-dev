@@ -262,7 +262,6 @@ describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R
       'ring_area',
       'smap_rootzone',
       'smap_surface',
-      'state_soy_ha',
     ])
     for (const row of payload.provenance) {
       for (const key of ['metric', 'label', 'value', 'unit', 'basis', 'as_of', 'source', 'resolution', 'route', 'fetched_at'] as const) {
