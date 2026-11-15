@@ -56,6 +56,25 @@ problems were present on the team's `main` before the Field Phase work was merge
   block 4 evidence still resolve, but `/layers` and the offline catalog leave them out. The layer on at load
   is now SMAP L4 surface soil moisture, the gap-free modelled version.
 
+## Efficiency pass
+
+Measured with `vite build` on 2026-11-15:
+
+| | Before | After |
+|---|---|---|
+| Main JavaScript chunk | 2,082 KB (468 KB gzip) | 1,601 KB (449 KB gzip) |
+| npm packages installed | | 316 fewer |
+
+- The recorded STAC response of the Sentinel-2 track (377 KB) is its own chunk, fetched only when that track is
+  drawn; with the HLS layers retired the app never fetches it.
+- The ZARC snapshot (249 KB) is its own chunk, fetched once after the first paint. Tests hand it over directly.
+- `translationKeyFor` used to scan the whole string catalog on every call; it reads a map built once.
+- `deck.gl`, `@deck.gl/react`, `react-router` and `cn` were dependencies nothing imported.
+- The backend parses each climate file and the pilot field list once per file version (keyed on the
+  modification time) instead of on every request.
+- The CSS (231 KB, 35 KB gzip) is mostly MapLibre's own stylesheet and the Tailwind base; limiting Tailwind's
+  source scan to `src/` saved 2 KB, so it was left as it was.
+
 ## What this replaces
 
 The position rules of blocks 2 to 5 (R-35, R-36, R-40, R-41, R-46, R-48, R-49 and the anchor tables) no longer

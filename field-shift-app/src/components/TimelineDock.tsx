@@ -13,14 +13,35 @@ import {
   seasonForDate,
 } from '@/lib/timeline'
 import { t } from '@/strings'
-import snapshotJson from '../../artifacts/zarc-mt-snapshot.json'
 
-export const DEFAULT_ZARC_SNAPSHOT = snapshotJson as unknown as ZarcSnapshot
+// The recorded ZARC snapshot is 249 KB. It is its own chunk, fetched once after the first paint
+// instead of being part of the bundle every page load parses.
+let zarcLoaded: ZarcSnapshot | null | undefined
+let zarcRequest: Promise<ZarcSnapshot | null> | null = null
+
+function loadZarcSnapshot(): Promise<ZarcSnapshot | null> {
+  zarcRequest ??= import('../../artifacts/zarc-mt-snapshot.json')
+    .then((module) => (zarcLoaded = module.default as unknown as ZarcSnapshot))
+    .catch(() => (zarcLoaded = null))
+  return zarcRequest
+}
+
+/** The snapshot a caller passed, else the recorded one once it has loaded (undefined until then). */
+function useZarcSnapshot(given: ZarcSnapshot | null | undefined): ZarcSnapshot | null | undefined {
+  const [loaded, setLoaded] = useState(zarcLoaded)
+  useEffect(() => {
+    if (given !== undefined || zarcLoaded !== undefined) return
+    let live = true
+    void loadZarcSnapshot().then((value) => { if (live) setLoaded(value) })
+    return () => { live = false }
+  }, [given])
+  return given !== undefined ? given : loaded
+}
 
 type TimelineDockProps = {
   location: string | null
   crops: readonly string[]
-  /** The recorded snapshot in the tree; a test may pass a recorded copy or null. */
+  /** Omitted: the recorded snapshot, loaded on demand. A test may pass a recorded copy or null. */
   snapshot?: ZarcSnapshot | null
   /**
    * R-46: while false the dock is the single `Timeline controls` button and the region
@@ -51,13 +72,14 @@ type TimelineDockProps = {
 export function TimelineDock({
   location,
   crops,
-  snapshot = DEFAULT_ZARC_SNAPSHOT,
+  snapshot: snapshotProp,
   expanded = true,
   onToggle,
   showToggle = false,
   toggleInside = false,
 }: TimelineDockProps) {
   const axis = useMapStore((state) => state.axis)
+  const snapshot = useZarcSnapshot(snapshotProp)
   const storedDate = useMapStore((state) => state.chosenDate)
   const setChosenDate = useMapStore((state) => state.setChosenDate)
   const order = useMapStore((state) => state.order)
@@ -181,7 +203,9 @@ export function TimelineDock({
             </svg>
           </button>
           <div className="timeline-range-wrap">
-            <SeasonBand axis={axis} crops={crops} date={chosenDate} location={location} snapshot={snapshot} />
+            {snapshot === undefined
+              ? <div aria-hidden="true" className="timeline-season-band" />
+              : <SeasonBand axis={axis} crops={crops} date={chosenDate} location={location} snapshot={snapshot} />}
             <AvailabilityTrack layerId={primaryId} name={primaryEntry ? t(primaryEntry.labelKey ?? primaryEntry.label) : primaryId} />
             <input
               aria-label={t('timeline.date')}

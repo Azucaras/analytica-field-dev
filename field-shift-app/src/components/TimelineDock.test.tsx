@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import recordedSnapshotJson from '../../artifacts/zarc-mt-snapshot.json'
 import { TimelineDock } from './TimelineDock'
 import { buildLayerCatalog } from '@/lib/layer-catalog'
 import { RECORDED_LAYERS_RESPONSE } from '@/lib/recorded-layers-response'
@@ -45,8 +46,11 @@ afterEach(() => {
   useMapStore.setState({ chosenDate: null })
 })
 
+// The dock loads the recorded snapshot on demand; the tests hand it over directly so they stay synchronous.
+const RECORDED_SNAPSHOT = recordedSnapshotJson as unknown as ZarcSnapshot
+
 function renderDock(props: Partial<Parameters<typeof TimelineDock>[0]> = {}) {
-  return render(<TimelineDock {...FIELD} {...props} />)
+  return render(<TimelineDock {...FIELD} snapshot={RECORDED_SNAPSHOT} {...props} />)
 }
 
 function setDate(date: string) {

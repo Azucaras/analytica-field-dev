@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { AvailabilityTrack } from './AvailabilityTrack'
@@ -34,8 +34,10 @@ afterEach(() => {
 })
 
 describe('AC-27: the Sentinel-2 track', () => {
-  it('carries 18 scene marks and highlights the 6 scenes under 20 percent cloud', () => {
+  it('carries 18 scene marks and highlights the 6 scenes under 20 percent cloud', async () => {
     render(<AvailabilityTrack layerId="hls-l30" name="HLS Landsat reflectance, 30 m" kind="sentinel2" />)
+    // The track's recorded STAC response is a lazy chunk, so the marks arrive after it loads.
+    await waitFor(() => expect(document.querySelectorAll('[data-track-scene]')).toHaveLength(18))
     const track = screen.getByRole('img', { name: 'Sentinel-2 scenes' })
     expect(track.querySelectorAll('[data-track-scene]')).toHaveLength(18)
     expect(track.querySelectorAll('[data-track-scene][data-highlight="true"]')).toHaveLength(6)

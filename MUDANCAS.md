@@ -67,6 +67,10 @@ Saíram da lista de camadas a umidade do solo SMAP L3 e as duas reflectâncias H
 qualquer data elas cobrem só faixas ou retalhos do mapa. A camada que abre ligada passou a ser a umidade do solo
 SMAP L4, que cobre o mundo todo.
 
+Uma passada de eficiência deixou o JavaScript principal 23% menor (2,08 MB para 1,60 MB): as gravações grandes
+(catálogo do Sentinel-2 e o ZARC) agora carregam só quando são usadas. Saíram quatro dependências que nada usava
+(316 pacotes a menos para instalar), e o backend deixou de reler os arquivos de clima a cada pedido.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.

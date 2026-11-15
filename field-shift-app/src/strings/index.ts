@@ -24,9 +24,14 @@ function getLocale(): Locale {
   }
 }
 
+// English text to its first catalog key, built once instead of scanning the catalog per call.
+const KEY_BY_ENGLISH = new Map<string, TranslationKey>()
+for (const [key, english] of Object.entries(en)) {
+  if (!KEY_BY_ENGLISH.has(english)) KEY_BY_ENGLISH.set(english, key as TranslationKey)
+}
+
 export function translationKeyFor(value: string): TranslationKey | null {
-  const entry = Object.entries(en).find(([, english]) => english === value)
-  return entry ? entry[0] as TranslationKey : null
+  return KEY_BY_ENGLISH.get(value) ?? null
 }
 
 export function t(key: TranslationKey | string, vars?: TranslationVariables): string {

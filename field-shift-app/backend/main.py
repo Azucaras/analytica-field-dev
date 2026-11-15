@@ -26,11 +26,24 @@ BACKEND_DIR = Path(__file__).parent
 CLIMATE_DIR = Path(os.getenv("CLIMATE_FIXTURE_DIR", str(BACKEND_DIR / "fixtures" / "climate")))
 
 
+_json_cache: dict[Path, tuple[float, Any]] = {}
+
+
+def _read_json(path: Path) -> Any:
+    """A parsed JSON file, parsed again only when the file's modification time changes."""
+    mtime = path.stat().st_mtime
+    cached = _json_cache.get(path)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    with path.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    _json_cache[path] = (mtime, value)
+    return value
+
+
 def _load_pilot_fields() -> list[dict[str, Any]]:
-    path = CLIMATE_DIR / "pilot-fields.json"
     try:
-        with path.open(encoding="utf-8") as pilot_file:
-            return list(json.load(pilot_file)["fields"])
+        return list(_read_json(CLIMATE_DIR / "pilot-fields.json")["fields"])
     except (FileNotFoundError, json.JSONDecodeError, KeyError):
         return []
 
@@ -48,10 +61,8 @@ def _field_or_404(field_id: str) -> dict[str, Any]:
 
 
 def _climate_file(name: str) -> dict[str, Any]:
-    path = CLIMATE_DIR / name
     try:
-        with path.open(encoding="utf-8") as climate_file:
-            return json.load(climate_file)
+        return _read_json(CLIMATE_DIR / name)
     except FileNotFoundError:
         raise HTTPException(status_code=503, detail=f"Climate fixture {name} is missing; run the pipeline exporter") from None
     except json.JSONDecodeError:
