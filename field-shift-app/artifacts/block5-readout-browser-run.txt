@@ -1,0 +1,55 @@
+## 1440x900 US vp=[1440, 900] regionMounted=True region={'x': 22, 'y': 260, 'r': 342, 'b': 450} box={'w': 320, 'h': 190, 'sh': 400, 'ch': 188}
+   terms=['Class', 'Area', 'Basis', 'Class year', 'Source'] status=['Polygons from zoom 3'] interactiveInRegion=0
+   fieldsPanel   {'x': 22, 'y': 72, 'r': 298, 'b': 116} overlap=0
+   timelineDock  {'x': 22, 'y': 450, 'r': 1006, 'b': 542} overlap=0
+   rotationPanel {'x': 22, 'y': 495, 'r': 1006, 'b': 884} overlap=0
+   layerRail     {'x': 1070, 'y': 768, 'r': 1420, 'b': 888} overlap=0
+   topStrip      {'x': 972.9, 'y': 0, 'r': 1440, 'b': 80} overlap=0
+   brand         {'x': 22, 'y': 18, 'r': 126.9, 'b': 46.5} overlap=0
+   navControl    {'x': 1395, 'y': 406.5, 'r': 1424, 'b': 493.5} overlap=0
+   attribButton  {'x': 1408, 'y': 772, 'r': 1432, 'b': 796} overlap=0
+   [right panels open] rightColumn={'x': 1018, 'y': 60, 'r': 1418, 'b': 393} overlap(region)=0 overlap(dock)=0 overlap(attrib)=0
+## 780x900 US vp=[780, 900] regionMounted=True region={'x': 22, 'y': 260, 'r': 224.8, 'b': 390} box={'w': 202.8, 'h': 130, 'sh': 514, 'ch': 128}
+   terms=['Class', 'Area', 'Basis', 'Class year', 'Source'] status=['Polygons from zoom 3'] interactiveInRegion=0
+   fieldsPanel   {'x': 22, 'y': 72, 'r': 180.8, 'b': 116} overlap=0
+   timelineDock  {'x': 22, 'y': 589, 'r': 66, 'b': 633} overlap=0
+   rotationPanel {'x': 22, 'y': 741, 'r': 395, 'b': 884} overlap=0
+   layerRail     {'x': 526, 'y': 768, 'r': 760, 'b': 888} overlap=0
+   topStrip      {'x': 312.9, 'y': 0, 'r': 780, 'b': 80} overlap=0
+   brand         {'x': 22, 'y': 18, 'r': 126.9, 'b': 46.5} overlap=0
+   navControl    {'x': 735, 'y': 406.5, 'r': 764, 'b': 493.5} overlap=0
+   attribButton  {'x': 748, 'y': 772, 'r': 772, 'b': 796} overlap=0
+   [right panels open] rightColumn={'x': 407, 'y': 60, 'r': 758, 'b': 393} overlap(region)=0 overlap(dock)=0 overlap(attrib)=0
+## 360x640 US vp=[360, 640] regionMounted=False region=None box=None
+   terms=[] status=[] interactiveInRegion=0
+   fieldsPanel   {'x': 8, 'y': 58, 'r': 296, 'b': 102} overlap=0
+   timelineDock  {'x': 8, 'y': 224, 'r': 296, 'b': 268} overlap=0
+   rotationPanel {'x': 8, 'y': 489, 'r': 352, 'b': 632} overlap=0
+   layerRail     {'x': 36.8, 'y': 546, 'r': 296, 'b': 632} overlap=0
+   topStrip      {'x': 127.2, 'y': 0, 'r': 360, 'b': 68} overlap=0
+   brand         {'x': 12, 'y': 12, 'r': 116.9, 'b': 40.5} overlap=0
+   navControl    {'x': 315, 'y': 276.5, 'r': 344, 'b': 363.5} overlap=0
+   attribButton  {'x': 328, 'y': 408, 'r': 352, 'b': 432} overlap=0
+   [right panels open] rightColumn={'x': 8, 'y': 328, 'r': 296, 'b': 432} overlap(region)=0 overlap(dock)=0 overlap(attrib)=0
+## 1440x900 BR vp=[1440, 900] regionMounted=True region={'x': 22, 'y': 260, 'r': 342, 'b': 450} box={'w': 320, 'h': 190, 'sh': 319, 'ch': 188}
+   terms=['Class', 'Area', 'Basis', 'Class year', 'Source'] status=['Polygons from zoom 5'] interactiveInRegion=0
+   fieldsPanel   {'x': 22, 'y': 72, 'r': 298, 'b': 116} overlap=0
+   timelineDock  {'x': 22, 'y': 450, 'r': 1006, 'b': 542} overlap=0
+   rotationPanel {'x': 22, 'y': 495, 'r': 1006, 'b': 884} overlap=0
+   layerRail     {'x': 1070, 'y': 768, 'r': 1420, 'b': 888} overlap=0
+   topStrip      {'x': 972.9, 'y': 0, 'r': 1440, 'b': 80} overlap=0
+   brand         {'x': 22, 'y': 18, 'r': 126.9, 'b': 46.5} overlap=0
+   navControl    {'x': 1395, 'y': 406.5, 'r': 1424, 'b': 493.5} overlap=0
+   attribButton  {'x': 1408, 'y': 772, 'r': 1432, 'b': 796} overlap=0
+   [right panels open] rightColumn={'x': 1018, 'y': 60, 'r': 1418, 'b': 393} overlap(region)=0 overlap(dock)=0 overlap(attrib)=0
+## 1440x900 google-no-key vp=[1440, 900] regionMounted=True region={'x': 22, 'y': 260, 'r': 342, 'b': 450} box={'w': 320, 'h': 190, 'sh': 418, 'ch': 188}
+   terms=['Class', 'Area', 'Basis', 'Class year', 'Source'] status=['Google basemap needs an API key', 'Polygons from zoom 3'] interactiveInRegion=0
+   fieldsPanel   {'x': 22, 'y': 72, 'r': 298, 'b': 116} overlap=0
+   timelineDock  {'x': 22, 'y': 450, 'r': 1006, 'b': 542} overlap=0
+   rotationPanel {'x': 22, 'y': 495, 'r': 1006, 'b': 884} overlap=0
+   layerRail     {'x': 1070, 'y': 768, 'r': 1420, 'b': 888} overlap=0
+   topStrip      {'x': 972.9, 'y': 0, 'r': 1440, 'b': 80} overlap=0
+   brand         {'x': 22, 'y': 18, 'r': 126.9, 'b': 46.5} overlap=0
+   navControl    {'x': 1395, 'y': 406.5, 'r': 1424, 'b': 493.5} overlap=0
+   attribButton  {'x': 1408, 'y': 772, 'r': 1432, 'b': 796} overlap=0
+   [right panels open] rightColumn={'x': 1018, 'y': 60, 'r': 1418, 'b': 393} overlap(region)=0 overlap(dock)=0 overlap(attrib)=0

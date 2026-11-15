@@ -14,7 +14,9 @@ import {
 import { rawIdFromCommandFieldId, type PolygonRawId } from './polygon-selection'
 import type { PolygonFailureKey, PolygonScene } from './polygon-source'
 import type { ClassDisplay } from './polygon-style'
-import type { BasemapAdapterId } from './basemap-adapters'
+import type { LegendRow } from './polygon-legend'
+import type { PolygonFeatureRaw } from './polygon-readout'
+import { activeBasemapAdapter, BASEMAP_ADAPTERS, type BasemapAdapter, type BasemapAdapterId } from './basemap-adapters'
 import type { TileDecision } from './tile-guard'
 
 export type FieldSummary = {
@@ -60,15 +62,26 @@ type MapState = {
   polygonSourceError: PolygonFailureKey | null
   /** R-35: the basemap tile failure line the region prints; the map itself keeps drawing. */
   basemapFailed: boolean
+  /** R-32: `?basemap=google` was asked for without `VITE_GOOGLE_MAPS_API_KEY`. */
+  basemapKeyMissing: boolean
+  /** R-25: the selected feature's own class and area values, read from the rendered tile. */
+  polygonRaw: PolygonFeatureRaw | null
+  /** R-37: the legend rows of the classes in view, read from the map at idle. */
+  legendRows: LegendRow[]
+  /** R-12: the current map zoom, which the zoom and select lines read. */
+  mapZoom: number | null
   setRegionId: (regionId: RegionId) => void
   restorePolygon: (rawId: PolygonRawId) => void
   clearPolygonSelection: () => void
   setPolygonScene: (scene: PolygonScene | null) => void
-  setPolygonClass: (display: ClassDisplay | null) => void
+  setPolygonClass: (display: ClassDisplay | null, raw?: PolygonFeatureRaw | null) => void
   setPolygonClassYear: (year: number | null) => void
   setBasemapId: (basemapId: BasemapAdapterId) => void
   setPolygonSourceError: (failure: PolygonFailureKey | null) => void
   setBasemapFailed: (failed: boolean) => void
+  setBasemapKeyMissing: (missing: boolean) => void
+  setLegendRows: (rows: LegendRow[]) => void
+  setMapZoom: (zoom: number | null) => void
 
   // Block 4, wave 2. `chosenDate` is null until a date control sets it, and the axis
   // default stands in for it, so this wave never invents a date of its own.
@@ -134,8 +147,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   basemapId: 'eox-s2cloudless-2024',
   polygonSourceError: null,
   basemapFailed: false,
+  basemapKeyMissing: false,
+  polygonRaw: null,
+  legendRows: [],
+  mapZoom: null,
 
-  /** R-03: a region change clears both selections and the class of the previous region. */
+  /** R-03: a region change clears both selections, the class and the legend of the previous region. */
   setRegionId: (regionId) => set({
     regionId,
     selectedPolygonId: null,
@@ -143,6 +160,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     polygonMode: null,
     polygonClass: null,
     polygonClassYear: null,
+    polygonRaw: null,
+    legendRows: [],
     polygonSourceError: null,
     basemapFailed: false,
   }),
@@ -150,14 +169,22 @@ export const useMapStore = create<MapState>((set, get) => ({
   /** R-23: the selection a `?polygon=` resolves at load, written without a command. */
   restorePolygon: (rawId) => set({ selectedPolygonId: rawId, selectedFieldId: null }),
 
-  clearPolygonSelection: () => set({ selectedPolygonId: null, polygonClass: null }),
+  clearPolygonSelection: () => set({ selectedPolygonId: null, polygonClass: null, polygonRaw: null }),
 
   setPolygonScene: (polygonMode) => set({ polygonMode }),
-  setPolygonClass: (polygonClass) => set({ polygonClass }),
+  // The raw values travel with the class: a class of null clears both, so no stale area or
+  // class value outlives the selection it was read from.
+  setPolygonClass: (polygonClass, raw) => set({
+    polygonClass,
+    polygonRaw: polygonClass === null ? null : (raw ?? null),
+  }),
   setPolygonClassYear: (polygonClassYear) => set({ polygonClassYear }),
   setBasemapId: (basemapId) => set({ basemapId }),
   setPolygonSourceError: (polygonSourceError) => set({ polygonSourceError }),
   setBasemapFailed: (basemapFailed) => set({ basemapFailed }),
+  setBasemapKeyMissing: (basemapKeyMissing) => set({ basemapKeyMissing }),
+  setLegendRows: (legendRows) => set({ legendRows }),
+  setMapZoom: (mapZoom) => set({ mapZoom }),
 
   chosenDate: null,
   axis: LAYER_AXIS,
@@ -255,6 +282,11 @@ export const useMapStore = create<MapState>((set, get) => ({
 /** The chosen date, or the axis default while no control has set one. */
 export function chosenDateOf(state: Pick<MapState, 'chosenDate'>): string {
   return state.chosenDate ?? LAYER_AXIS.default
+}
+
+/** R-29: the adapter a basemap id names, or the active adapter when the id is unknown. */
+export function basemapAdapterFor(basemapId: BasemapAdapterId): BasemapAdapter {
+  return BASEMAP_ADAPTERS.find((adapter) => adapter.id === basemapId) ?? activeBasemapAdapter()
 }
 
 export function opacityOf(state: Pick<MapState, 'opacity'>, layerId: string): number {

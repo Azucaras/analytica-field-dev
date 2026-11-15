@@ -1,0 +1,56 @@
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'vitest' run src/lib/polygon-readout.test.ts src/components/PolygonPanel.test.tsx
+
+ RUN  v5.1.0 /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_e3533a10/field-shift-repo/field-shift-app
+
+ ❯ src/components/PolygonPanel.test.tsx (0 test)
+ ❯ src/lib/polygon-readout.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/lib/polygon-readout.test.ts [ src/lib/polygon-readout.test.ts ]
+Error: Failed to resolve import "./polygon-readout" from "src/lib/polygon-readout.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_e3533a10/field-shift-repo/field-shift-app/src/lib/polygon-readout.test.ts:11:7
+  2  |  import { REGION_ADAPTERS } from "./regions";
+  3  |  import { BASEMAP_ADAPTERS, EOX_SHORT_CREDIT } from "./basemap-adapters";
+  4  |  ...Toggle, provenanceLine, rawFeatureFrom, readoutRows } from "./polygon-readout";
+     |                                                                 ^
+  5  |  import { en } from "@/strings/en";
+  6  |  const us = REGION_ADAPTERS.us;
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/node.js:8861:39
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/node.js:8858:14
+ ❯ resolveId node_modules/vite/dist/node/chunks/node.js:26533:18
+ ❯ node_modules/vite/dist/node/chunks/node.js:26632:23
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/node.js:26605:4
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/node.js:8632:14
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/node.js:20108:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/PolygonPanel.test.tsx [ src/components/PolygonPanel.test.tsx ]
+Error: Failed to resolve import "./PolygonPanel" from "src/components/PolygonPanel.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/carloshnp/.hermes/kanban/boards/field-shift/workspaces/t_e3533a10/field-shift-repo/field-shift-app/src/components/PolygonPanel.test.tsx:3:29
+  1  |  import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+  2  |  import { cleanup, render, screen, within } from "@testing-library/react";
+  3  |  import { PolygonPanel } from "./PolygonPanel";
+     |                                ^
+  4  |  import { useMapStore } from "@/lib/map-store";
+  5  |  import { REGION_ADAPTERS } from "@/lib/regions";
+ ❯ TransformPluginContext._formatLog node_modules/vite/dist/node/chunks/node.js:8861:39
+ ❯ TransformPluginContext.error node_modules/vite/dist/node/chunks/node.js:8858:14
+ ❯ resolveId node_modules/vite/dist/node/chunks/node.js:26533:18
+ ❯ node_modules/vite/dist/node/chunks/node.js:26632:23
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/node.js:26605:4
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/node.js:8632:14
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/node.js:20108:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  23:32:22
+   Duration  548ms (environment 82%, setup 15%, transform 1%, worker 1%)
+
