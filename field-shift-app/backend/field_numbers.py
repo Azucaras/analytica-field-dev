@@ -449,7 +449,7 @@ def _normals(ctx: Context, window: agg.Window, tmax: dict[date, float], current_
         gaps.append(_gap("climate", "malformed POWER normals response", NORMALS_SOURCE, "malformed",
                          window.end.isoformat()))
         return [_row(n, None, as_of=None, source=NORMALS_SOURCE, fetched_at=None) for n in names], \
-            {"of_years": 0, "excluded_years": []}
+            {"of_years": 0, "excluded_years": [], "error": "malformed POWER normals response"}
 
     rain_by_year = _group_by_year(series.get("PRECTOTCORR", {}))
     tmax_by_year = _group_by_year(series.get("T2M_MAX", {}))
