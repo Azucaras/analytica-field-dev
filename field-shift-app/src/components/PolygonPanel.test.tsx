@@ -246,6 +246,50 @@ describe('the provenance, source and credit lines (R-33, R-38, AC-31)', () => {
   })
 })
 
+// The measured state of the gate (AC-05, AC-09): the manifest answers, so the scene carries
+// tiers, but the tile files fail, so the map reports the source error and the region has no
+// tier that paints. R-12 says both zoom lines are then absent and the failure line prints.
+const usTiersFromManifest = {
+  detail: { minzoom: 6, maxzoom: 14 },
+  overview: { minzoom: 3, maxzoom: 5 },
+  interactiveMinzoom: 8,
+}
+
+describe('no tier available after a source error prints no zoom line (R-07, R-12, AC-05, AC-09)', () => {
+  it('AC-05: at zoom 3 the failure line prints and the zoom string is absent beside it', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 3,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('AC-09: at zoom 11 (the default view) the zoom string is absent when the US tier is absent', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 11,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('still prints the zoom line when the source answers (no regression on R-12)', () => {
+    setStore({ polygonMode: { ...usScene, tiers: usTiersFromManifest }, mapZoom: 3, polygonSourceError: null })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygons from zoom 3')).toBeTruthy()
+    expect(screen.queryByText('Polygon build not available')).toBeNull()
+  })
+})
+
 describe('R-43: the Brazil area when the sidecar answers 404 (AC-35)', () => {
   it('prints Area not in the class table and keeps the tile class name', async () => {
     setStore({

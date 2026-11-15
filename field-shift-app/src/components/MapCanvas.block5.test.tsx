@@ -190,6 +190,50 @@ describe('sources, layers and the basemap (R-04, R-30, R-36, AC-02, AC-28)', () 
     expect(basemapLayers).toHaveLength(1)
   })
 
+  it('places the basemap above the style own fill and line layers and below its symbols, polygons between (AC-28)', async () => {
+    // The Liberty order: a road-arrow symbol sits below a bridge line and above the labels. The
+    // criterion needs the basemap above every own fill and line and below every own symbol, so
+    // the arrow is raised above the imagery with the labels (the style's own order is kept).
+    MapStub.styleLayers = [
+      { id: 'water', type: 'fill', source: 'openmaptiles' },
+      { id: 'road_motorway', type: 'line', source: 'openmaptiles' },
+      { id: 'road_one_way_arrow', type: 'symbol', source: 'openmaptiles' },
+      { id: 'bridge_link', type: 'line', source: 'openmaptiles' },
+      { id: 'place-label', type: 'symbol', source: 'openmaptiles' },
+    ]
+    const { map } = await mountMap()
+    const ids = map.layers.map((layer) => layer.id)
+    const at = (id: string) => ids.indexOf(id)
+    const basemap = at(BASEMAP_LAYER_ID)
+    expect(basemap).toBeGreaterThanOrEqual(0)
+    for (const own of ['water', 'road_motorway', 'bridge_link']) {
+      expect(at(own), `${own} must sit below the basemap`).toBeLessThan(basemap)
+    }
+    for (const symbol of ['road_one_way_arrow', 'place-label']) {
+      expect(at(symbol), `${symbol} must sit above the basemap`).toBeGreaterThan(basemap)
+    }
+    for (const polygon of [POLYGON_OVERVIEW_FILL_LAYER_ID, 'polygon-overview-line', POLYGON_FILL_LAYER_ID, POLYGON_LINE_LAYER_ID]) {
+      expect(at(polygon), `${polygon} must sit above the basemap`).toBeGreaterThan(basemap)
+      expect(at(polygon), `${polygon} must sit below the labels`).toBeLessThan(at('place-label'))
+    }
+  })
+
+  it('sets the basemap failure from the map error event of the basemap source (R-35, AC-29)', async () => {
+    const { map } = await mountMap()
+    act(() => {
+      map.emit('error', { sourceId: 'basemap', error: new Error('Failed to fetch'), tile: { tileID: 'z12' } })
+    })
+    expect(useMapStore.getState().basemapFailed).toBe(true)
+  })
+
+  it('does not set the basemap failure for an error of another source (R-35)', async () => {
+    const { map } = await mountMap()
+    act(() => {
+      map.emit('error', { sourceId: 'openmaptiles', error: new Error('style tile failed'), tile: {} })
+    })
+    expect(useMapStore.getState().basemapFailed).toBe(false)
+  })
+
   it('paints the United States with cdl{Y} of the painted year and no other table', async () => {
     const { map } = await mountMap()
     const fill = map.getLayer(POLYGON_FILL_LAYER_ID) as { paint: Record<string, unknown> }

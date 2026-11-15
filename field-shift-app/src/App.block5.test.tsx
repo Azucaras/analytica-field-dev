@@ -167,3 +167,45 @@ describe('the polygon selection in the app (R-23, R-24, R-28, AC-19, AC-20, AC-2
     await waitFor(() => expect(window.location.search).not.toContain('polygon='))
   })
 })
+
+describe('the rotation panel while a polygon is selected (R-26, R-49, AC-22, AC-41)', () => {
+  it('AC-22: prints the polygon empty text, not the fixture copy, and requests no field scenarios', async () => {
+    window.history.replaceState({}, '', '/')
+    const calls = installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('us'))
+    act(() => {
+      useMapStore.getState().selectField('csb:381825001868504')
+    })
+    await waitFor(() => expect(window.location.search).toContain('polygon=381825001868504'))
+
+    const panel = document.querySelector('[data-rotation-panel]') as HTMLElement
+    expect(panel.textContent).toContain('No rotation scenarios are available for this field.')
+    expect(panel.textContent).not.toContain('Select a field to view rotation scenarios.')
+    expect(calls.some((url) => url.includes('/fields/'))).toBe(false)
+  })
+
+  it('AC-41: prints no 2025/26 season chip while the polygon is the selected field', async () => {
+    window.history.replaceState({}, '', '/')
+    installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('us'))
+    act(() => {
+      useMapStore.getState().selectField('csb:381825001868504')
+    })
+    await waitFor(() => expect(window.location.search).toContain('polygon=381825001868504'))
+    expect(document.body.textContent ?? '').not.toContain('2025/26 season')
+  })
+
+  it('keeps the fixture season chip for a fixture field (regression, block 3 R-07)', async () => {
+    window.history.replaceState({}, '', '/?region=br')
+    installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('br'))
+    act(() => {
+      useMapStore.getState().selectField('mt-santa-carmem-01')
+    })
+    await waitFor(() => expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01'))
+    expect(document.body.textContent ?? '').toContain('2025/26 season')
+  })
+})

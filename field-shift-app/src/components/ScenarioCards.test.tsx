@@ -240,3 +240,13 @@ describe('ScenarioCards', () => {
     expect(within(cover).getByRole('group', { name: /^Crop history/ })).toBeTruthy()
   })
 })
+
+describe('the season chip of the rotation panel (R-49, AC-41)', () => {
+  it('shows the season chip by default and omits it when the polygon surface is open', () => {
+    const { unmount } = render(<ScenarioCards scenarios={[]} state={null} threshold={null} emptyReason="x" />)
+    expect(screen.getByText('2025/26 season')).toBeTruthy()
+    unmount()
+    render(<ScenarioCards scenarios={[]} state={null} threshold={null} emptyReason="x" seasonChip={false} />)
+    expect(screen.queryByText('2025/26 season')).toBeNull()
+  })
+})
