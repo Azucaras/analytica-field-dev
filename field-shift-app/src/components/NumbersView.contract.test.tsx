@@ -6,6 +6,9 @@
  * Each defect test renders the one section reader it names, so a failure points at that section
  * and not at the first card that happens to be rendered. The smoke test at the end is the one that
  * would have caught all five at once: it mounts the surface exactly as the app does.
+ *
+ * The last block is the payload follow-up (t_4b5447cf): the climate card's resolution line had never
+ * printed, because the section sent `null` while its own rows and Table E carried the value.
  */
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -177,5 +180,15 @@ describe('the smoke test the four defects needed', () => {
 
     expect(container.querySelectorAll('[data-provenance-metric]')).toHaveLength(payload.provenance.length)
     expect(container.querySelectorAll('[data-gap-index]')).toHaveLength(payload.gaps.length)
+  })
+})
+
+describe('the climate resolution line the null payload never triggered (R-10, Table E)', () => {
+  it('prints the resolution the section carries, from the recorded payload', () => {
+    const payload = recordedNumbersPayload()
+    expect(payload.sections.climate.resolution).toBe('0.5 degree cell')
+
+    const { container } = render(<ClimateCard climate={payload.sections.climate} window={payload.query.window} />)
+    expect(container.querySelector('.numbers-resolution')?.textContent).toBe('Resolution: 0.5 degree cell.')
   })
 })
