@@ -96,3 +96,32 @@ else, and every tile at every zoom carries both `Id` and `mbmode24`. The previou
 extract carried a points level at zoom 8 with no `Id`, and both points and polygons
 at zooms 9 to 11, because the published file was built from a points file and two
 polygon files joined together; the rebuilt tier is polygons only.
+
+## Getting the products without building them
+
+The four `.pmtiles` files are gitignored, so a fresh clone has the code, the
+manifest and the class tables, and no polygons. Building them needs
+`tippecanoe`, the `pmtiles` CLI, a Python environment and network access to two
+upstream services, which is more than a teammate needs just to run the app.
+
+The products are published as the assets of the GitHub release `polygons-v1` of
+this repository, and one command fetches and verifies them:
+
+```sh
+scripts/fetch-polygons.sh
+```
+
+The script reads the expected sha256 and byte count of every product from
+`artifacts/polygon-build-manifest.json`, downloads each file with
+`gh release download`, checks both values, and only then leaves the file in
+`data/polygons/`. A file that fails either check is deleted and the script exits
+non-zero, so a truncated download never reaches the map. It is idempotent: files
+already present with the right hash are skipped, and a second run takes about a
+quarter of a second.
+
+Requirements: `gh`, authenticated, with access to this private repository;
+`python3`; `sha256sum`. Run it after `npm install`, because the app will not
+render at all until the `pmtiles` package is installed.
+
+If you want the products somewhere else, pass a directory:
+`scripts/fetch-polygons.sh /tmp/polygons`.
