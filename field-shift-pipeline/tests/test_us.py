@@ -87,3 +87,9 @@ def test_yield_anomalies_work_in_any_unit():
     s = pd.DataFrame({"year": range(2000, 2012), "yield_value": [150.0 + i for i in range(12)]})
     out = ev.yield_anomalies(s, 10, col="yield_value")
     assert "trend_value" in out and out.anomaly_pct.abs().max() < 1e-9
+
+
+def test_an_absent_crop_is_no_data_not_an_error():
+    assert nass.is_empty_answer('{"error":["bad request - invalid query"]}')
+    assert nass.is_empty_answer('{"error":["no data for selected filters"]}')
+    assert not nass.is_empty_answer('{"error":["unauthorized"]}')

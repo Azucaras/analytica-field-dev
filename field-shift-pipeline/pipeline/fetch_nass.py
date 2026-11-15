@@ -55,6 +55,12 @@ def parse_value(raw: Any) -> tuple[float, str]:
         raise ValueError(f"unknown Quick Stats value {text!r}") from None
 
 
+def is_empty_answer(text: str) -> bool:
+    """Quick Stats has no "no rows" status: it answers 400 with "no data" or "invalid query"."""
+    low = text.lower()
+    return "no data" in low or "invalid query" in low
+
+
 def _redact(url: str) -> str:
     key = os.environ.get("NASS_API_KEY")
     return url.replace(key, "***") if key else url
@@ -72,7 +78,9 @@ def query(params: dict[str, Any], cache_name: str, refresh: bool, base_url: str)
     resp = requests.get(base_url, params={"key": key, "format": "JSON", **params}, timeout=TIMEOUT,
                         headers={"User-Agent": USER_AGENT})
     log.info("GET %s -> %s", _redact(resp.url), resp.status_code)
-    if resp.status_code == 400 and "no data" in resp.text.lower():
+    if resp.status_code == 400 and is_empty_answer(resp.text):
+        # Quick Stats answers 400 when a filter value has no rows at all (cotton in Illinois, say).
+        log.warning("no NASS rows for %s; recorded as no data", cache_name)
         data: list[dict[str, Any]] = []
     elif resp.status_code != 200:
         raise NassError(f"Quick Stats answered {resp.status_code}: {resp.text[:200]}")
@@ -153,7 +161,7 @@ def main() -> None:
                     "state_alpha": state_alpha, "year__GE": cfg["first_year"]}
             county = query({**base, "agg_level_desc": "COUNTY", "county_ansi": county_ansi},
                            f"county_{code}_{spec['commodity_desc']}.json", args.refresh, cfg["base_url"])
-            state = query({**base, "agg_level_desc": "STATE"},
+            state = query({**base, "agg_level_desc": "STATE", "freq_desc": "ANNUAL", "reference_period_desc": "YEAR"},
                           f"state_{state_alpha}_{spec['commodity_desc']}.json", args.refresh, cfg["base_url"])
             series = county_rows(county, spec, cfg["acre_m2"])
             per_unit, used_class = state_value_per_yield_unit(state, spec)
