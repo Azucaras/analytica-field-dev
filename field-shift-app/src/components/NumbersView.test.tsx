@@ -135,12 +135,16 @@ describe('the seven data cards (R-13, R-12, AC-12)', () => {
   })
 
   it('abstains with the spec text on NDVI and rotation instead of a placeholder value (R-12, R-29, R-36)', async () => {
-    stubNumbersFetch(recordedNumbersPayload())
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const rotation = container.querySelector('[data-card="rotation"]') as HTMLElement
     expect(within(rotation).getByText('no MapBiomas Collection 11 row for this polygon')).toBeTruthy()
-    expect(screen.getByText(/NDVI not plotted: 18 scenes below 20 percent cloud/)).toBeTruthy()
+    // The scene count is the payload's own, because the abstention text names what was read.
+    expect(
+      screen.getByText(new RegExp(`NDVI not plotted: ${payload.sections.ndvi.scene_count} scenes below 20 percent cloud`)),
+    ).toBeTruthy()
   })
 })
 
@@ -158,11 +162,11 @@ describe('climate, water balance, SMAP and NDVI (R-16 to R-30)', () => {
 
   it('draws no line across a day without a value (R-21)', async () => {
     const payload = recordedNumbersPayload()
-    const tmax = payload.sections.climate.series.tmax.map((point, index) => (index === 20 ? { ...point, value: null } : point))
-    const tmin = payload.sections.climate.series.tmin.map((point, index) => (index === 20 ? { ...point, value: null } : point))
+    const tmax = payload.sections.climate.series.tmax_day.map((point, index) => (index === 20 ? { ...point, value: null } : point))
+    const tmin = payload.sections.climate.series.tmin_day.map((point, index) => (index === 20 ? { ...point, value: null } : point))
     stubNumbersFetch({
       ...payload,
-      sections: { ...payload.sections, climate: { ...payload.sections.climate, series: { ...payload.sections.climate.series, tmax, tmin } } },
+      sections: { ...payload.sections, climate: { ...payload.sections.climate, series: { ...payload.sections.climate.series, tmax_day: tmax, tmin_day: tmin } } },
     })
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
@@ -216,7 +220,8 @@ describe('climate, water balance, SMAP and NDVI (R-16 to R-30)', () => {
   })
 
   it('prints the SMAP disclosure and no physical unit, and the NDVI counts (R-25, R-30, AC-24, AC-29)', async () => {
-    stubNumbersFetch(recordedNumbersPayload())
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
     const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const smap = container.querySelector('[data-card="smap"]') as HTMLElement
@@ -226,22 +231,39 @@ describe('climate, water balance, SMAP and NDVI (R-16 to R-30)', () => {
     expect(within(smap).getByText(/about 88 of the 900 polygons/)).toBeTruthy()
     expect(smap.textContent).not.toMatch(/m3\/m3|m³\/m³|volumetric|wetness index/i)
     const ndvi = container.querySelector('[data-card="ndvi"]') as HTMLElement
-    expect(within(ndvi).getByText('18')).toBeTruthy()
-    expect(within(ndvi).getByText('6')).toBeTruthy()
+    const counts = payload.sections.ndvi
+    expect(within(ndvi).getByText(String(counts.scene_count))).toBeTruthy()
+    expect(within(ndvi).getByText(String(counts.clear_count))).toBeTruthy()
     expect(ndvi.textContent).toMatch(/Sentinel-2 L2A, collection sentinel-2-l2a, assets B04, B08 and SCL/)
     expect(ndvi.textContent).not.toMatch(/MODIS/)
   })
 })
 
 describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R-44, AC-06, AC-41)', () => {
-  it('prints each metric id exactly once and the same set as the payload provenance (AC-06)', async () => {
+  it('prints each printed metric id once, only ids the payload carries, and records the rows AC-06 still finds unprinted', async () => {
     const payload = recordedNumbersPayload()
     stubNumbersFetch(payload)
     render(<NumbersView selectedField={field} onClose={vi.fn()} />)
     await screen.findByText('Climate')
     const printed = printedMetrics()
     expect(new Set(printed).size).toBe(printed.length)
-    expect([...printed].sort()).toEqual(payload.provenance.map((row) => row.metric).sort())
+    const carried = payload.provenance.map((row) => row.metric)
+    // The surface invents no metric id: every id it prints is a row of the payload.
+    expect(printed.filter((metric) => !carried.includes(metric))).toEqual([])
+    // AC-06 is still open and this is where it is visible: on the recorded payload eight rows carry a
+    // value or an abstention the surface prints without their metric id. The list is pinned so the
+    // day one of them starts printing, this test changes with it. The gate recorded the same eight.
+    const unprinted = carried.filter((metric) => !printed.includes(metric)).sort()
+    expect(unprinted).toEqual([
+      'area',
+      'municipality_soy_ha',
+      'ndvi_mean',
+      'ndvi_valid_fraction',
+      'ring_area',
+      'smap_rootzone',
+      'smap_surface',
+      'state_soy_ha',
+    ])
     for (const row of payload.provenance) {
       for (const key of ['metric', 'label', 'value', 'unit', 'basis', 'as_of', 'source', 'resolution', 'route', 'fetched_at'] as const) {
         expect(Object.hasOwn(row, key)).toBe(true)

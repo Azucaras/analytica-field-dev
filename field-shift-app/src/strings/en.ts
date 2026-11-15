@@ -345,6 +345,7 @@ export const en = {
   'numbers.provenance.col.resolution': 'Resolution',
   'numbers.provenance.col.route': 'Route',
   'numbers.provenance.col.fetched_at': 'Fetched',
+  'numbers.provenance.series_value': '{points} points',
   'numbers.gaps.heading': 'Gap register',
   'numbers.gaps.empty': 'No gaps. Every number of this field has its source.',
   'numbers.gaps.col.section': 'Section',
