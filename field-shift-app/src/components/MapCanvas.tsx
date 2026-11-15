@@ -20,6 +20,7 @@ import {
   type CompositionPreset,
   type FieldSummary,
 } from '@/lib/map-store'
+import { usePanelStore } from '@/lib/panel-store'
 import { activeBasemapAdapter, BASEMAP_ADAPTERS, type BasemapAdapter } from '@/lib/basemap-adapters'
 import { probeLayerTile } from '@/lib/tile-guard'
 import { regionAdapter, regionFromSearch, type RegionAdapter } from '@/lib/regions'
@@ -774,19 +775,42 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
     }
     const handleLeave = () => clearHover()
     const handleClick = (event: PolygonEvent) => {
+      // Block 7 revision 10 R-63: while the boundary drawing mode takes the pointer events, a press
+      // on the map adds a vertex and never selects the polygon under it.
+      if (usePanelStore.getState().draft !== null) return
       const found = currentFeature(event)
       if (!found) return
       // R-22: the map handler runs the command and never calls the store action itself.
       runCommand('select_field', { field_id: commandFieldId(found.active, found.raw) })
     }
 
+    /**
+     * Block 5.5, U5 and B8: a press on the map that lands on no polygon clears the selection. The
+     * layer scoped handler above only runs when the press hits the fill layer, so a press on empty
+     * map, on the basemap or on a label never deselected anything.
+     */
+    const handleMapClick = (event: PolygonEvent) => {
+      const store = useMapStore.getState()
+      if (usePanelStore.getState().draft !== null) {
+        usePanelStore.getState().addVertex([event.lngLat.lng, event.lngLat.lat])
+        return
+      }
+      if (store.selectedPolygonId === null) return
+      // The same feature reader the layer scoped handler uses, so the two agree on what the press
+      // hit: a press with no polygon under it clears, and a press on one never clears what the
+      // command just selected.
+      if (!currentFeature(event)) store.clearPolygonSelection()
+    }
+
     map.on('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
     map.on('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
     map.on('click', POLYGON_FILL_LAYER_ID, handleClick)
+    map.on('click', handleMapClick)
     return () => {
       map.off('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
       map.off('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
       map.off('click', POLYGON_FILL_LAYER_ID, handleClick)
+      map.off('click', handleMapClick)
       clearHover()
     }
   }, [mapReady, regionId])
