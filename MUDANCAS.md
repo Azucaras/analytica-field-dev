@@ -63,6 +63,10 @@ do dia. Nas camadas que só têm valor em terra (umidade do solo, vegetação e 
 mapa base é desenhada por cima, então os pixels de 1 km do litoral não invadem mais o mar nem os lagos. O painel
 Comando agora lista os comandos com um exemplo pronto de cada um.
 
+Saíram da lista de camadas a umidade do solo SMAP L3 e as duas reflectâncias HLS (Landsat e Sentinel-2): em
+qualquer data elas cobrem só faixas ou retalhos do mapa. A camada que abre ligada passou a ser a umidade do solo
+SMAP L4, que cobre o mundo todo.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.
