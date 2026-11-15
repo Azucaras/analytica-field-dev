@@ -506,3 +506,113 @@ describe('a selected polygon (R-03, R-49, Table B, AC-50)', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })
+
+/**
+ * R-12, AC-11: an abstained row names the missing input, its source and its cause. The payload's
+ * `reason` is the cause when the route sends one; otherwise the cause is the section's own gap
+ * row, which is where the route records why the input is missing.
+ */
+describe('abstention texts name the missing input, its source and its cause (R-12, AC-11)', () => {
+  function cellText(container: HTMLElement, metric: string): string {
+    return container.querySelector<HTMLElement>(`[data-metric="${metric}"]`)?.textContent ?? ''
+  }
+
+  function gapCause(payload: NumbersPayload, section: string, needle: string): string {
+    const gap = payload.gaps.find((entry) => entry.section === section && entry.cause.includes(needle))
+    expect(gap, `${section} gap whose cause contains ${needle}`).toBeDefined()
+    return gap?.cause ?? ''
+  }
+
+  it('prints the SMAP abstention with the palette source and the SMAP gap cause', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const smap = container.querySelector('[data-card="smap"]') as HTMLElement
+    const text = smap.querySelector('p.numbers-abstain')?.textContent ?? ''
+    expect(text).toContain('SMAP palette not read')
+    expect(text).toContain(payload.sections.smap.source)
+    expect(text).toContain(gapCause(payload, 'smap', 'palette ramp'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('prints the municipal abstention with the SIDRA source and the municipal gap cause', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'municipality_soy_ha')
+    expect(text).toContain('Municipal value not read')
+    expect(text).toContain(payload.sections.municipality.source)
+    expect(text).toContain(gapCause(payload, 'municipality', 'municipality code'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('prints the share abstention with the SIDRA source and the municipal gap cause', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'polygon_share')
+    expect(text).toContain('Share not computed')
+    expect(text).toContain(payload.sections.municipality.source)
+    expect(text).toContain(gapCause(payload, 'municipality', 'municipality code'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('prints the state abstention with the SIDRA source and the state gap cause, not the municipal one', async () => {
+    const payload = recordedNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'state_soy_ha')
+    expect(text).toContain('State value not read')
+    expect(text).toContain(payload.sections.municipality.source)
+    expect(text).toContain(gapCause(payload, 'municipality', 'state code'))
+    expect(text).not.toContain(gapCause(payload, 'municipality', 'municipality code'))
+    expect(text).not.toContain('No value')
+  })
+
+  it('prints the section reason ahead of the gap cause when the payload sends one', async () => {
+    const payload = recordedNumbersPayload()
+    const reason = 'the SIDRA municipal request answered with no row for this code'
+    stubNumbersFetch({
+      ...payload,
+      sections: { ...payload.sections, municipality: { ...payload.sections.municipality, reason } },
+    })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const rows = [
+      ['municipality_soy_ha', 'Municipal value not read'],
+      ['state_soy_ha', 'State value not read'],
+      ['polygon_share', 'Share not computed'],
+    ] as const
+    for (const [metric, label] of rows) {
+      const text = cellText(container, metric)
+      expect(text, metric).toContain(label)
+      expect(text, metric).toContain(reason)
+      expect(text, metric).toContain(payload.sections.municipality.source)
+      expect(text, metric).not.toContain('municipality code is unresolved')
+    }
+  })
+
+  it('names the normals input and source and says the reason was not recorded when neither carries one', async () => {
+    const payload = recordedNumbersPayload()
+    const normals = { ...payload.sections.climate.normals }
+    for (const key of ['rain_median', 'rain_min', 'rain_max', 'rain_rank', 'rain_percentile', 'hot_days', 'hot_days_median'] as const) {
+      normals[key] = { value: null }
+    }
+    delete normals.error
+    stubNumbersFetch({
+      ...payload,
+      sections: { ...payload.sections, climate: { ...payload.sections.climate, error: null, normals } },
+    })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = cellText(container, 'rain_median')
+    expect(text).toContain('Normals not computed')
+    expect(text).toContain(payload.sections.climate.source)
+    expect(text).toContain('the reason was not recorded')
+    expect(text).not.toContain('No value')
+  })
+})
