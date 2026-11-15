@@ -33,20 +33,30 @@ DEFAULT_OUT = ROOT.parent / "field-shift-app" / "backend" / "fixtures" / "climat
 
 POWER_SOURCE = "https://power.larc.nasa.gov/"
 PAM_SOURCE = "https://apisidra.ibge.gov.br/"
+NASS_SOURCE = "https://quickstats.nass.usda.gov/"
 RONI_SOURCE = "https://www.cpc.ncep.noaa.gov/data/indices/RONI.ascii.txt"
 
-# Pilot fields (spec R-04): same footprint as Field 01 of field-scenarios.json.
+# Synthetic pilot fields, the same footprint as Field 01 of field-scenarios.json.
 PILOT_FIELD_WIDTH_DEG = 0.025
 PILOT_FIELD_HEIGHT_DEG = 0.02
 PILOT_FIELDS = (
     {"id": "rs-tupancireta-01", "name": "Field 04", "code": 4322202},
     {"id": "ba-lem-01", "name": "Field 05", "code": 2919553},
+    {"id": "il-mclean-01", "name": "Field 06", "code": 17113},
+    {"id": "tx-lubbock-01", "name": "Field 07", "code": 48303},
 )
 # Climate rows taken from the composites, in display order.
+# The months differ by region (Sep-Dec and Jan-Apr in Brazil, Oct-Mar and Apr-Sep in the US), so
+# every row carries `months` = [first, last] and the layer text names them.
 CLIMATE_METRICS = (
-    ("early_rain_mm_anom_pct", "Rain Sep to Dec, strong El Nino years vs 1991 to 2020"),
-    ("late_cdd_days_anom", "Longest dry spell Jan to Apr, strong El Nino years vs 1991 to 2020"),
+    ("early_rain_mm_anom_pct", "early", "Rain {months}, strong El Nino years vs 1991 to 2020"),
+    ("late_cdd_days_anom", "late", "Longest dry spell {months}, strong El Nino years vs 1991 to 2020"),
 )
+MONTH_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def month_span(months: list[int]) -> str:
+    return f"{MONTH_ABBR[months[0] - 1]} to {MONTH_ABBR[months[-1] - 1]}"
 SMALL_SAMPLE_BELOW = 3
 
 
@@ -87,14 +97,15 @@ def enso_fixture(recorded_at: str) -> dict[str, Any]:
     }
 
 
-def climate_rows(code: int, power_as_of: str, pam_as_of: str, support: str) -> list[dict[str, Any]]:
+def climate_rows(code: int, power_as_of: str, pam_as_of: str, support: str, season: dict[str, Any],
+                 us: bool = False) -> list[dict[str, Any]]:
     comps = repo.frame("composites.parquet")
     strong = comps[(comps.code == code) & (comps.enso_class == "el_nino_strong")]
     crops_cfg = load_config("crops.yaml")["crops"]
     rows: list[dict[str, Any]] = []
 
     def row(metric, layer, number, unit, basis, as_of, source, n, years, crop_code=None, crop_name=None,
-            assumption=False) -> dict[str, Any]:
+            assumption=False, months=None) -> dict[str, Any]:
         return {
             "metric": metric,
             "layer": layer,
@@ -104,7 +115,8 @@ def climate_rows(code: int, power_as_of: str, pam_as_of: str, support: str) -> l
             "basis": basis,
             "as_of": as_of,
             "source": source,
-            "support": support if basis == "modelled" else "municipality, IBGE PAM",
+            "support": support if basis == "modelled" else ("county, USDA NASS" if us else "municipality, IBGE PAM"),
+            "months": months,
             "n_years": n,
             "years": years,
             "crop_code": crop_code,
@@ -113,13 +125,16 @@ def climate_rows(code: int, power_as_of: str, pam_as_of: str, support: str) -> l
             "small_sample": n is not None and n < SMALL_SAMPLE_BELOW,
         }
 
-    for metric, layer in CLIMATE_METRICS:
+    for metric, part, layer in CLIMATE_METRICS:
         hit = strong[(strong.kind == "climate") & (strong.metric == metric)]
         if hit.empty or pd.isna(hit.iloc[0]["mean"]):
             continue
         r = hit.iloc[0]
-        rows.append(row(metric, layer, r["mean"], "days" if r["unit"] == "days" else r["unit"], "modelled",
-                        power_as_of, POWER_SOURCE, int(r["n"]), [int(y) for y in str(r["years"]).split(",") if y]))
+        months = season["sub_seasons"][part]
+        rows.append(row(metric, layer.format(months=month_span(months)), r["mean"],
+                        "days" if r["unit"] == "days" else r["unit"], "modelled", power_as_of, POWER_SOURCE,
+                        int(r["n"]), [int(y) for y in str(r["years"]).split(",") if y],
+                        months=[months[0], months[-1]]))
 
     for _, r in strong[strong.kind == "yield"].iterrows():
         if pd.isna(r["mean"]) or int(r["n"]) == 0:
@@ -127,7 +142,7 @@ def climate_rows(code: int, power_as_of: str, pam_as_of: str, support: str) -> l
         crop_code = int(r["crop_code"])
         name_en = crops_cfg[crop_code]["name_en"]
         rows.append(row("yield_anomaly_pct", f"{name_en} yield vs trend, strong El Nino years", r["mean"], "%",
-                        "reported", pam_as_of, PAM_SOURCE, int(r["n"]),
+                        "reported", pam_as_of, NASS_SOURCE if us else PAM_SOURCE, int(r["n"]),
                         [int(y) for y in str(r["years"]).split(",") if y], crop_code, name_en,
                         r["crop_source"] == "suposicao"))
     return rows
@@ -139,15 +154,21 @@ def municipality_fixture(code: int, recorded_at: str) -> dict[str, Any]:
     prog = payload["season_progress"]
     last = next(d for d in reversed(prog["days"]) if d["current_mm"] is not None)
     power_meta = repo.file_meta("power_daily.parquet")
-    support = f"municipality centroid; {power_meta.get('grid_note', 'POWER grid-cell average')}"
-    pam = repo.frame("pam.parquet")
-    pam_as_of = str(int(pam[pam.code == code].year.max()))
+    us = mun.get("country") == "US"
+    unit_name = "county" if us else "municipality"
+    support = f"{unit_name} centroid; {power_meta.get('grid_note', 'POWER grid-cell average')}"
+    stats = repo.optional("nass.parquet") if us else repo.frame("pam.parquet")
+    stats = stats[stats.code == code] if stats is not None else None
+    stats_as_of = str(int(stats.year.max())) if stats is not None and not stats.empty else None
     crop_year = int(payload["current_crop_year"]["crop_year"])
+    season = payload["season"]
+    start_month = season["season_months"][0]
 
-    rows = climate_rows(code, prog["last_observed"], pam_as_of, support)
+    rows = climate_rows(code, prog["last_observed"], stats_as_of, support, season, us)
     rows.append({
         "metric": "season_rain_to_date_mm",
-        "layer": "Rain since 1 Sep vs 1991 to 2020 normal",
+        "layer": f"Rain since 1 {MONTH_ABBR[start_month - 1]} vs 1991 to 2020 normal",
+        "months": [start_month, start_month],
         "value": f"{last['current_mm']:.0f} mm vs {last['baseline_mean_mm']:.0f} mm",
         "number": round(float(last["current_mm"]), 1),
         "unit": "mm",
@@ -165,7 +186,7 @@ def municipality_fixture(code: int, recorded_at: str) -> dict[str, Any]:
     return {
         "contract_version": CONTRACT_VERSION,
         "recorded_at": recorded_at,
-        "municipality": {k: mun[k] for k in ("code", "name", "name_official", "uf", "region_id", "region_name",
+        "municipality": {k: mun.get(k) for k in ("code", "name", "name_official", "uf", "country", "region_id", "region_name",
                                              "enso_signal", "centroid_lon", "centroid_lat")},
         "crop_year": crop_year,
         "crop_year_label": crop_year_label(crop_year),
@@ -183,9 +204,11 @@ def municipality_fixture(code: int, recorded_at: str) -> dict[str, Any]:
             "basis": "modelled",
             "source": POWER_SOURCE,
             "support": support,
+            "start_month": start_month,
         },
         "rows": rows,
-        "source": {"climate": POWER_SOURCE, "yield": PAM_SOURCE, "rules": "field-shift-pipeline/config/analysis.yaml"},
+        "source": {"climate": POWER_SOURCE, "yield": NASS_SOURCE if us else PAM_SOURCE,
+                   "rules": "field-shift-pipeline/config/analysis.yaml"},
     }
 
 

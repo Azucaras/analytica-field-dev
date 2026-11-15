@@ -229,6 +229,15 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
   const [metric, setMetric] = useState(CLIMATE_PANELS[0]);
   const comps = d.climate.composites;
   const name = d.municipality.name_official ?? d.municipality.name;
+  // Each region has its own months (Sep-Apr in Brazil, the Oct-Sep water year in the US), so the
+  // label says which months it covers instead of assuming the Brazilian season.
+  const metricLabel = (m: string) => {
+    const s = d.season;
+    const months = !s ? null : m.startsWith("early") ? s.sub_seasons.early : m.startsWith("late") ? s.sub_seasons.late : s.season_months;
+    if (!months?.length || !t.metricBase[m]) return t.metrics[m] ?? m;
+    const names = t.rotations.monthNames;
+    return `${t.metricBase[m]}, ${names[months[0] - 1]}–${names[months[months.length - 1] - 1]}`;
+  };
   const timeline = useMemo(
     () =>
       d.climate.seasons.map((s) => ({
@@ -277,11 +286,11 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
           {CLIMATE_PANELS.filter((m) => comps[m]).map((m) => (
             <CompositeBars
               key={m}
-              title={t.metrics[m] ?? m}
+              title={metricLabel(m)}
               sub={t.units[comps[m].unit] ?? comps[m].unit}
               rows={comps[m].by_class}
               unit={comps[m].unit}
-              explainSubject={t.metrics[m] ?? m}
+              explainSubject={metricLabel(m)}
             />
           ))}
         </div>
@@ -289,12 +298,12 @@ function MunicipalitySections({ d }: { d: MunicipalityPayload }) {
           <div className="fp-seg" role="tablist" style={{ flexWrap: "wrap", marginBottom: 12 }}>
             {CLIMATE_PANELS.map((m) => (
               <button key={m} type="button" role="tab" aria-selected={metric === m} onClick={() => setMetric(m)}>
-                {t.metrics[m]}
+                {metricLabel(m)}
               </button>
             ))}
           </div>
           <AnomalyTimeline
-            title={t.metrics[metric]}
+            title={metricLabel(metric)}
             sub={`${t.units[comps[metric]?.unit] ?? ""} · NASA POWER`}
             unit={comps[metric]?.unit ?? "%"}
             points={timeline}

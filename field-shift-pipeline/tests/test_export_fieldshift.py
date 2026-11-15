@@ -45,7 +45,7 @@ class TestWrittenFixtures:
     def test_pilot_centres_equal_the_ibge_centroids(self):
         regions = pd.read_parquet(REGIONS).set_index("code")
         fields = json.loads((FIXTURES / "pilot-fields.json").read_text(encoding="utf-8"))["fields"]
-        assert [f["id"] for f in fields] == ["rs-tupancireta-01", "ba-lem-01"]
+        assert [f["id"] for f in fields] == ["rs-tupancireta-01", "ba-lem-01", "il-mclean-01", "tx-lubbock-01"]
         for f in fields:
             row = regions.loc[f["municipality_code"]]
             assert f["center"] == [round(row.centroid_lon, 6), round(row.centroid_lat, 6)]

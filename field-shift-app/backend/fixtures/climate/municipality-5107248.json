@@ -1,11 +1,12 @@
 {
   "contract_version": "fieldshift-climate-1",
-  "recorded_at": "2026-11-14T22:21:05+00:00",
+  "recorded_at": "2026-11-15T14:17:44+00:00",
   "municipality": {
     "code": 5107248,
     "name": "Santa Carmem",
     "name_official": "Santa Carmem",
     "uf": "MT",
+    "country": "BR",
     "region_id": "mt",
     "region_name": "Mato Grosso",
     "enso_signal": "unclassified",
@@ -22,10 +23,10 @@
   },
   "season_progress": {
     "start": "2026-09-01",
-    "last_observed": "2026-11-11",
-    "rain_mm": 209.1,
-    "normal_mm": 289.0,
-    "analog_mm": 248.8,
+    "last_observed": "2026-11-12",
+    "rain_mm": 212.9,
+    "normal_mm": 296.6,
+    "analog_mm": 254.5,
     "n_baseline": 30,
     "n_analog": 5,
     "analog_years": [
@@ -37,7 +38,8 @@
     ],
     "basis": "modelled",
     "source": "https://power.larc.nasa.gov/",
-    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data"
+    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+    "start_month": 9
   },
   "rows": [
     {
@@ -47,9 +49,13 @@
       "number": -16.0,
       "unit": "%",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        9,
+        12
+      ],
       "n_years": 5,
       "years": [
         1983,
@@ -70,9 +76,13 @@
       "number": 4.5,
       "unit": "days",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        1,
+        4
+      ],
       "n_years": 5,
       "years": [
         1983,
@@ -96,6 +106,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 3,
       "years": [
         1998,
@@ -117,6 +128,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -137,6 +149,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 3,
       "years": [
         1998,
@@ -158,6 +171,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -171,11 +185,15 @@
     {
       "metric": "season_rain_to_date_mm",
       "layer": "Rain since 1 Sep vs 1991 to 2020 normal",
-      "value": "209 mm vs 289 mm",
-      "number": 209.1,
+      "months": [
+        9,
+        9
+      ],
+      "value": "213 mm vs 297 mm",
+      "number": 212.9,
       "unit": "mm",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
       "n_years": 30,

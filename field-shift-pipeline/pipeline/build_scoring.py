@@ -34,6 +34,7 @@ from pipeline.common import (
     base_parser,
     load_config,
     log,
+    region_calendars,
     setup_logging,
     write_parquet,
 )
@@ -62,6 +63,7 @@ def water_stats_for(
     profile: list[dict],
     sw: dict,
     cy_enso: pd.DataFrame,
+    start_month: int = 7,
 ) -> tuple[dict[str, dict[str, dict]], pd.DataFrame]:
     """Run the daily soil water balance for every rotation; summarise per ENSO class.
 
@@ -70,13 +72,24 @@ def water_stats_for(
     """
     start = pd.Timestamp(sw["start"])
     d = daily_code[daily_code.date >= start].sort_values("date")
-    last_full_end = pd.Timestamp(d.date.max().year - (0 if d.date.max().month >= 7 else 1), 6, 30)
-    d = d[d.date <= last_full_end]
+    # Keep whole crop years only: cut at the last day before the most recent crop-year start.
+    last = d.date.max()
+    year_start = pd.Timestamp(last.year - (0 if last.month >= start_month else 1), start_month, 1)
+    d = d[d.date < year_start]
+    # A gap (a missing POWER solar day, say) inside the latest crop year drops that whole year rather
+    # than being filled in; a gap further back is an error.
+    gaps = d[d.ET0.isna() | d.PRECTOTCORR.isna()]
+    if not gaps.empty:
+        first = gaps.date.min()
+        cut = pd.Timestamp(first.year - (0 if first.month >= start_month else 1), start_month, 1)
+        if cut >= year_start - pd.DateOffset(years=1):
+            log.info("soil water: dropping crop year from %s (POWER gap on %s)", cut.date(), first.date())
+            d = d[d.date < cut]
     if d.ET0.isna().any() or d.PRECTOTCORR.isna().any():
         raise SystemExit(f"gaps in rain/ET0 between {d.date.min().date()} and {d.date.max().date()}")
     tew = soilwater.tew_mm(profile, sw["ze_m"])
     taw = {cid: soilwater.taw_mm(profile, spec["root"]["zr_m"]) for cid, spec in crops.items()}
-    first_full = start.year + (1 if start.month > 7 else 0) + 1  # first crop year fully simulated
+    first_full = int(ev.crop_year(pd.Series([start]), start_month).iloc[0]) + 1  # first crop year fully simulated
     obs = cy_enso[~cy_enso.forecast.fillna(False).astype(bool)][["crop_year", "enso_class"]]
     years, months, days = d.date.dt.year.to_numpy(), d.date.dt.month.to_numpy(), d.date.dt.day.to_numpy()
 
@@ -88,7 +101,7 @@ def water_stats_for(
         sched = soilwater.daily_schedule(months, days, cal, crops, taw)
         sim = soilwater.simulate(d.PRECTOTCORR.to_numpy(), d.ET0.to_numpy(), sched["kc"], sched["taw"],
                                  sched["p"], sched["cropped"], tew, sw["min_rain_fraction_et0"])
-        monthly = soilwater.crop_year_summary(years, months, sim, sched["cropped"])
+        monthly = soilwater.crop_year_summary(years, months, sim, sched["cropped"], start_month)
         monthly = monthly[monthly.crop_year >= first_full].merge(obs, on="crop_year", how="inner")
         yearly = monthly.groupby(["crop_year", "enso_class"]).agg(
             deficit_mm=("deficit_mm", "sum"), demand_mm=("demand_mm", "sum"),
@@ -106,6 +119,17 @@ def water_stats_for(
                 "by_month": [{"month": int(k), "deficit_mm": float(v)} for k, v in m.items() if v > 0.05],
             }
     return out, pd.concat(per_year, ignore_index=True)
+
+
+def revenue_per_ha_nass(nass: pd.DataFrame | None, code: int, years: int) -> dict[int, float]:
+    """Mean nominal US$/ha over the last ``years`` NASS years (see pipeline/fetch_nass.py)."""
+    if nass is None:
+        return {}
+    r = nass[(nass.code == code) & (nass.variable == "revenue_per_ha")].dropna(subset=["value"])
+    if r.empty:
+        return {}
+    r = r[r.year > r.year.max() - years]
+    return {int(k): float(v) for k, v in r.groupby("crop_code").value.mean().items()}
 
 
 def revenue_per_ha(pam: pd.DataFrame, code: int, years: int) -> dict[int, float]:
@@ -133,6 +157,9 @@ def main() -> None:
     regions = pd.read_parquet(PROCESSED_DIR / "regions.parquet")
     daily = pd.read_parquet(PROCESSED_DIR / "power_daily.parquet")
     pam = pd.read_parquet(PROCESSED_DIR / "pam.parquet")
+    nass_path = PROCESSED_DIR / "nass.parquet"
+    nass = pd.read_parquet(nass_path) if nass_path.exists() else None
+    calendars = region_calendars()
     cy = pd.read_parquet(PROCESSED_DIR / "crop_year_enso.parquet")
     comps = pd.read_parquet(PROCESSED_DIR / "composites.parquet")
     soil_path = PROCESSED_DIR / "soil_profile.parquet"
@@ -142,23 +169,32 @@ def main() -> None:
 
     daily["ET0"] = daily_et0(daily, regions)
     log.info("ET0: %.0f%% of days computable (solar radiation gaps elsewhere)", 100 * daily.ET0.notna().mean())
-    clim = ev.monthly_climate_by_class(daily, cy, heavy_mm)
+    # Monthly climate by ENSO class, with each region's own crop-year boundary.
+    clim = pd.concat([
+        ev.monthly_climate_by_class(daily[daily.code == r.code], cy, heavy_mm,
+                                    calendars[r.region_id]["crop_year_start_month"])
+        for r in regions.itertuples()
+    ], ignore_index=True)
 
     rows, sw_years = [], []
     for r in regions.itertuples():
         code, region = int(r.code), r.region_id
         if region not in cfg["rotations"] or region not in cfg["calendars"]:
-            # No candidate rotations or crop calendar are configured for this region (Santa Carmem,
-            # added for Field Shift): nothing is scored, rather than borrowing another region's list.
+            # No candidate rotations or crop calendar for this region (Santa Carmem): nothing is
+            # scored, rather than borrowing another region's list.
             log.info("%s: no rotations configured for region %s; not scored", r.name, region)
             continue
-        rev = revenue_per_ha(pam, code, cfg["meta"]["revenue_years"])
+        if getattr(r, "country", "BR") == "US":
+            rev = revenue_per_ha_nass(nass, code, load_config("nass.yaml")["revenue_years"])
+        else:
+            rev = revenue_per_ha(pam, code, cfg["meta"]["revenue_years"])
+        start_month = calendars[region]["crop_year_start_month"]
         calendar = {k: v for k, v in cfg["calendars"][region].items() if k != "source"}
         water: dict[str, dict] = {}
         if soil is not None and (soil.code == code).any():
             profile = soil[soil.code == code].to_dict("records")
             water, yearly = water_stats_for(daily[daily.code == code], cfg["rotations"][region], cfg["crops"],
-                                            calendar, profile, cfg["soil_water"], cy)
+                                            calendar, profile, cfg["soil_water"], cy, start_month)
             sw_years.append(yearly.assign(code=code))
         for cls in ENSO_CLASSES:
             c = clim[(clim.code == code) & (clim.enso_class == cls)].set_index("month")

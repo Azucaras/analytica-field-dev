@@ -11,7 +11,7 @@ export function YieldEvidence({ crops, provenance }: { crops: CropEvidence[]; pr
   if (!crops.length) return null;
   const crop = crops[Math.min(active, crops.length - 1)];
   const name = (c: CropEvidence) => (locale === "en" ? c.name_en : c.name_pt);
-  const seasonLabel = crop.season === "winter" ? t.yield.winter : t.yield.summer;
+  const seasonLabel = crop.season === "winter" ? t.yield.winter : crop.season === "us" ? t.yield.usSeason : t.yield.summer;
 
   return (
     <div>
@@ -33,15 +33,15 @@ export function YieldEvidence({ crops, provenance }: { crops: CropEvidence[]; pr
         />
         <AnomalyTimeline
           title={t.yield.seriesTitle(name(crop))}
-          sub={`IBGE PAM, tabela ${crop.pam_table}`}
+          sub={crop.pam_table ? t.yield.sourcePam(crop.pam_table) : t.yield.sourceNass}
           unit="%"
           points={crop.series.map((s) => ({
             year: s.crop_year,
             value: s.anomaly_pct,
             enso_class: s.enso_class,
             extra: [
-              { label: t.yield.kgha, value: fmt(s.yield_kg_ha) },
-              { label: t.yield.trend, value: fmt(s.trend_kg_ha) },
+              { label: crop.yield_unit ?? t.yield.kgha, value: fmt(s.yield_value, crop.yield_unit && crop.yield_unit !== "kg/ha" ? 1 : 0) },
+              { label: t.yield.trend, value: fmt(s.trend_value, crop.yield_unit && crop.yield_unit !== "kg/ha" ? 1 : 0) },
             ],
           }))}
         />

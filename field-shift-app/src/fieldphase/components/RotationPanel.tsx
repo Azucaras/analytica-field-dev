@@ -144,7 +144,13 @@ function RotationCard({
         ))}
       </div>
 
-      <CalendarStrip r={r} climate={climate} cropName={cropName} abbr={(id) => rotations.crops[id]?.abbr ?? cropName(id).slice(0, 2)} />
+      <CalendarStrip
+        r={r}
+        climate={climate}
+        months={rotations.month_order ?? MONTHS}
+        cropName={cropName}
+        abbr={(id) => rotations.crops[id]?.abbr ?? cropName(id).slice(0, 2)}
+      />
 
       <ul className="fp-explain">
         {why.map((w, i) => (
@@ -164,21 +170,24 @@ function RotationCard({
 function CalendarStrip({
   r,
   climate,
+  months,
   cropName,
   abbr,
 }: {
   r: RotationResult;
   climate: MonthClimate[];
+  months: number[];
   cropName: (id: string) => string;
   abbr: (id: string) => string;
 }) {
   const { t, fmt } = useI18n();
   const heavy = new Map(climate.map((c) => [c.month, c.heavy_days]));
+  const title = t.rotations.calendar(t.rotations.monthNames[months[0] - 1], t.rotations.monthNames[months[11] - 1]);
   return (
-    <div className="fp-rot-cal" aria-label={t.rotations.calendar}>
-      <div className="fp-tile-label">{t.rotations.calendar}</div>
+    <div className="fp-rot-cal" aria-label={title}>
+      <div className="fp-tile-label">{title}</div>
       <div className="fp-rot-cal-grid">
-        {MONTHS.map((m, i) => {
+        {months.map((m) => {
           const entries = r.calendar[String(m)] ?? [];
           const h = heavy.get(m);
           const label = entries.length
@@ -193,7 +202,7 @@ function CalendarStrip({
                   </span>
                 ))}
               </div>
-              <div className="fp-rot-cal-month">{t.rotations.months[i]}</div>
+              <div className="fp-rot-cal-month">{t.rotations.monthNames[m - 1].charAt(0).toUpperCase()}</div>
               {!entries.length && h != null && h >= 0.5 && <div className="fp-rot-cal-heavy">{fmt(h, 1)}</div>}
             </div>
           );

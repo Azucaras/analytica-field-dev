@@ -76,11 +76,35 @@ def pilot_municipalities() -> list[dict[str, Any]]:
                     **mun,
                     "region_id": region["id"],
                     "region_name": region["name"],
+                    "country": region.get("country", "BR"),
                     "enso_signal": region["enso_signal"],
                     "hazards": list(region["hazards"]),
                 }
             )
     return rows
+
+
+def region_calendars() -> dict[str, dict[str, Any]]:
+    """Season calendar of every region: its own `calendar:` block, else the Brazilian defaults.
+
+    Keys: crop_year_start_month, season_months, sub_seasons, ndvi_peak_months, source.
+    """
+    regions = load_config("regions.yaml")
+    analysis = load_config("analysis.yaml")
+    default = {
+        "crop_year_start_month": regions["meta"]["crop_year_start_month"],
+        "season_months": regions["meta"]["season_months"],
+        "sub_seasons": {k: v for k, v in analysis["sub_seasons"].items() if k != "source"},
+        "ndvi_peak_months": analysis["ndvi"]["peak_months"],
+        "source": analysis["sub_seasons"]["source"].strip(),
+    }
+    out = {}
+    for region in regions["regions"]:
+        cal = {**default, **region.get("calendar", {})}
+        cal["sub_seasons"] = {k: v for k, v in cal["sub_seasons"].items() if k != "source"}
+        cal["source"] = str(cal["source"]).strip()
+        out[region["id"]] = cal
+    return out
 
 
 def fetch_text(url: str, cache_name: str, refresh: bool = False) -> str:

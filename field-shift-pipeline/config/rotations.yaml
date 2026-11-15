@@ -97,6 +97,74 @@ crops:
     kc: {ini: 0.35, mid: 1.175, end: 0.60, range_mid: [1.15, 1.20], range_end: [0.70, 0.50], fao56_row: "Cotton (fibre group Kc ini)"}
     root: {zr_m: 1.7, range_m: [1.0, 1.7], p: 0.65, fao56_row: "Cotton"}
 
+  # ---- United States (block 6). Revenue and yield anomalies come from USDA NASS (config/nass.yaml,
+  # project codes 84000x). Kc and root values are the same FAO-56 rows as the Brazilian entries;
+  # winter wheat uses its own FAO-56 Table 12 rows (Kc ini 0.4 with frozen soils, 0.7 without).
+  milho_us:
+    name_pt: Milho
+    abbr: Cn
+    name_en: Corn
+    revenue_pam_code: 840001
+    anomaly_pam_code: 840001
+    kc: {ini: 0.30, mid: 1.20, end: 0.475, range_end: [0.60, 0.35], fao56_row: "Maize, Field (grain)"}
+    root: {zr_m: 1.7, range_m: [1.0, 1.7], p: 0.55, fao56_row: "Maize, Field (grain)"}
+  soja_us:
+    name_pt: Soja
+    abbr: Sb
+    name_en: Soybean
+    revenue_pam_code: 840002
+    anomaly_pam_code: 840002
+    kc: {ini: 0.40, mid: 1.15, end: 0.50, fao56_row: "Soybeans (legumes group Kc ini)"}
+    root: {zr_m: 1.3, range_m: [0.6, 1.3], p: 0.5, fao56_row: "Soybeans"}
+  soja_safrinha_us:
+    name_pt: Soja (após o trigo)
+    abbr: Ss
+    name_en: Double-crop soybean
+    revenue_pam_code: 840002
+    anomaly_pam_code: 840002
+    kc: {ini: 0.40, mid: 1.15, end: 0.50, fao56_row: "Soybeans (legumes group Kc ini)"}
+    root: {zr_m: 1.3, range_m: [0.6, 1.3], p: 0.5, fao56_row: "Soybeans"}
+  trigo_inverno_frio:
+    name_pt: Trigo de inverno
+    abbr: Ti
+    name_en: Winter wheat
+    revenue_pam_code: 840003
+    anomaly_pam_code: 840003
+    kc: {ini: 0.40, mid: 1.15, end: 0.325, range_end: [0.25, 0.40], fao56_row: "Winter Wheat, with frozen soils"}
+    root: {zr_m: 1.8, range_m: [1.5, 1.8], p: 0.55, fao56_row: "Winter Wheat"}
+  trigo_inverno:
+    name_pt: Trigo de inverno
+    abbr: Tw
+    name_en: Winter wheat
+    revenue_pam_code: 840003
+    anomaly_pam_code: 840003
+    kc: {ini: 0.70, mid: 1.15, end: 0.325, range_end: [0.25, 0.40], fao56_row: "Winter Wheat, with non-frozen soils"}
+    root: {zr_m: 1.8, range_m: [1.5, 1.8], p: 0.55, fao56_row: "Winter Wheat"}
+  sorgo_us:
+    name_pt: Sorgo
+    abbr: So
+    name_en: Grain sorghum
+    revenue_pam_code: 840004
+    anomaly_pam_code: 840004
+    kc: {ini: 0.30, mid: 1.05, end: 0.55, range_mid: [1.00, 1.10], fao56_row: "Sorghum - grain"}
+    root: {zr_m: 2.0, range_m: [1.0, 2.0], p: 0.55, fao56_row: "Sorghum - grain"}
+  sorgo_safrinha_us:
+    name_pt: Sorgo (após o trigo)
+    abbr: Sr
+    name_en: Double-crop sorghum
+    revenue_pam_code: 840004
+    anomaly_pam_code: 840004
+    kc: {ini: 0.30, mid: 1.05, end: 0.55, range_mid: [1.00, 1.10], fao56_row: "Sorghum - grain"}
+    root: {zr_m: 2.0, range_m: [1.0, 2.0], p: 0.55, fao56_row: "Sorghum - grain"}
+  algodao_us:
+    name_pt: Algodão
+    abbr: Ag
+    name_en: Upland cotton
+    revenue_pam_code: 840005
+    anomaly_pam_code: 840005
+    kc: {ini: 0.35, mid: 1.175, end: 0.60, range_mid: [1.15, 1.20], range_end: [0.70, 0.50], fao56_row: "Cotton (fibre group Kc ini)"}
+    root: {zr_m: 1.7, range_m: [1.0, 1.7], p: 0.65, fao56_row: "Cotton"}
+
 kc_source: "FAO-56 (Allen et al., 1998), Table 12, https://www.fao.org/4/x0490e/x0490e0b.htm"
 
 # Rooting depth Zr and depletion fraction p: FAO-56 Table 22, read from
@@ -145,6 +213,22 @@ calendars:
 # Candidates per region. Each lists the crops in the order they enter the field within one crop
 # year; `override` changes one crop's window for this rotation only (e.g. a cover crop that must
 # end before an early maize sowing). Consecutive crops may share a month (harvest A, sow B).
+  # USDA NASS, Usual Planting and Harvesting Dates for U.S. Field Crops, Agricultural Handbook 628
+  # (1997), state tables. Month = the month holding the midpoint of the "most active" window.
+  # Double-crop entries are not in the handbook and carry their own `source: suposicao`.
+  us_cornbelt:
+    source: USDA NASS AH-628 (1997), Illinois
+    milho_us: {sow: 5, harvest: 10}            # Apr 30 - May 18; Oct 9 - Nov 3
+    soja_us: {sow: 5, harvest: 10}             # May 15 - Jun 9; Oct 1 - Oct 19
+    trigo_inverno_frio: {sow: 10, harvest: 7}  # Oct 13 - Oct 29; Jun 30 - Jul 8
+    soja_safrinha_us: {sow: 7, harvest: 10, source: suposicao}
+  us_plains:
+    source: USDA NASS AH-628 (1997), Texas (state level, not Lubbock County)
+    algodao_us: {sow: 5, harvest: 11}          # May 5 - Jun 6; Oct 1 - Dec 2
+    sorgo_us: {sow: 4, harvest: 8}             # Mar 22 - May 23; Jul 19 - Oct 10
+    trigo_inverno: {sow: 10, harvest: 6}       # Sep 16 - Oct 21; Jun 10 - Jun 30
+    sorgo_safrinha_us: {sow: 6, harvest: 10, source: suposicao}
+
 rotations:
   rs:
     - id: soja_trigo
@@ -171,3 +255,21 @@ rotations:
       crops: [algodao]
     - id: milho_pousio
       crops: [milho]
+  us_cornbelt:
+    - id: milho_pousio
+      crops: [milho_us]
+    - id: soja_pousio
+      crops: [soja_us]
+    - id: trigo_pousio
+      crops: [trigo_inverno_frio]
+    - id: trigo_soja
+      crops: [trigo_inverno_frio, soja_safrinha_us]
+  us_plains:
+    - id: algodao
+      crops: [algodao_us]
+    - id: sorgo_pousio
+      crops: [sorgo_us]
+    - id: trigo_pousio
+      crops: [trigo_inverno]
+    - id: trigo_sorgo
+      crops: [trigo_inverno, sorgo_safrinha_us]

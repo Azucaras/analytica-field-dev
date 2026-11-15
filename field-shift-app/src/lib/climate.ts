@@ -39,6 +39,8 @@ export const climateRowSchema = z.object({
   crop_name_en: z.string().nullable(),
   assumption: z.boolean(),
   small_sample: z.boolean(),
+  /** First and last month the row covers; the regions have different seasons. */
+  months: z.tuple([z.number(), z.number()]).nullable().optional(),
 })
 
 export const fieldClimateSchema = z.object({
@@ -54,6 +56,7 @@ export const fieldClimateSchema = z.object({
     analog_years: z.array(z.number()),
     basis,
     source: z.string(),
+    start_month: z.number().optional(),
   }),
   rows: z.array(climateRowSchema),
 })

@@ -10,7 +10,7 @@ import type { FeatureCollection } from "geojson";
 
 export type EnsoClass = "el_nino_strong" | "el_nino_moderate" | "neutral" | "la_nina";
 export type Strength = "none" | "weak" | "moderate" | "strong" | "very_strong";
-export type CropSeason = "summer" | "winter";
+export type CropSeason = "summer" | "winter" | "us";
 /** "suposicao" marks an unsourced assumption and must surface as a warning in the UI. */
 export type SourceTag = string;
 
@@ -145,12 +145,15 @@ export interface CropEvidence {
   season: CropSeason;
   source: SourceTag;
   assumption: boolean;
-  pam_table: number;
+  /** SIDRA table for Brazilian crops; null for USDA NASS. */
+  pam_table: number | null;
+  /** "kg/ha" for IBGE PAM, the NASS unit ("BU / ACRE", "LB / ACRE") for the US. */
+  yield_unit?: string;
   series: {
     crop_year: number;
     enso_crop_year: number;
-    yield_kg_ha: number;
-    trend_kg_ha: number;
+    yield_value: number;
+    trend_value: number;
     anomaly_pct: number;
     enso_class: EnsoClass | null;
   }[];
@@ -338,8 +341,19 @@ export interface RotationsBlock {
   crops: Record<string, { name_pt: string; name_en: string; abbr?: string | null; cover_crop?: boolean | null }>;
   by_class: Partial<Record<EnsoClass, RotationResult[]>>;
   climate_by_class: Partial<Record<EnsoClass | "all", MonthClimate[]>>;
-  assumptions: { scope: string; region: string; source: string }[];
+  assumptions: { scope: string; region: string; source: string; crop?: string }[];
+  /** Calendar display order: the region's crop year (Jul-Jun in Brazil, Oct-Sep in the US). */
+  month_order?: number[];
   provenance: Record<string, string>;
+}
+
+/** The months behind every seasonal label of a region. */
+export interface SeasonInfo {
+  crop_year_start_month: number;
+  season_months: number[];
+  sub_seasons: { early: number[]; late: number[] };
+  ndvi_peak_months: number[];
+  source: string;
 }
 
 export interface TerrainBlock {
@@ -349,6 +363,7 @@ export interface TerrainBlock {
 
 export interface MunicipalityPayload {
   municipality: Municipality & { hazards: string[] };
+  season?: SeasonInfo;
   current_crop_year: Partial<CropYearEnso> & { crop_year: number };
   season_progress: {
     start: string;

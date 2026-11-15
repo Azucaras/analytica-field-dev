@@ -36,7 +36,8 @@ class ClimateEndpointTests(unittest.TestCase):
         fields = response.json()["fields"]
         self.assertEqual(
             [field["id"] for field in fields],
-            ["mt-santa-carmem-01", "mt-santa-carmem-02", "mt-santa-carmem-03", "rs-tupancireta-01", "ba-lem-01"],
+            ["mt-santa-carmem-01", "mt-santa-carmem-02", "mt-santa-carmem-03", "rs-tupancireta-01", "ba-lem-01",
+             "il-mclean-01", "tx-lubbock-01"],
         )
         for field in fields[:3]:
             self.assertEqual(field["municipality_code"], 5107248)

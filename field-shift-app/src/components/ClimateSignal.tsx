@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import type { FieldClimate, Loadable } from '@/lib/climate'
-import { t } from '@/strings'
+import { monthName, t } from '@/strings'
 
 type Bar = { key: string; label: string; value: number | null }
 
@@ -28,7 +28,7 @@ export function ClimateSignal({ climate }: { climate: Loadable<FieldClimate> | n
 
   const { municipality, season_progress: progress, crop_year_label: season } = climate.data
   const bars: Bar[] = [
-    { key: 'rain', label: t('climate.signal.rain_so_far'), value: progress.rain_mm },
+    { key: 'rain', label: t('climate.signal.rain_so_far', { month: monthName(progress.start_month ?? 9) }), value: progress.rain_mm },
     { key: 'normal', label: t('climate.signal.normal'), value: progress.normal_mm },
     { key: 'analog', label: t('climate.signal.analog'), value: progress.analog_mm },
   ]

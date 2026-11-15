@@ -159,19 +159,21 @@ def forecast_class(strength_row: pd.Series, strong_bins: list[str], moderate_bin
 # --------------------------------------------------------------------------------------------
 
 
-def yield_anomalies(series: pd.DataFrame, min_years: int) -> pd.DataFrame:
-    """Linear-trend anomalies for one municipality x crop yield series (columns year, yield).
+def yield_anomalies(series: pd.DataFrame, min_years: int, col: str = "yield_kg_ha") -> pd.DataFrame:
+    """Linear-trend anomalies for one municipality x crop yield series (columns year, ``col``).
 
     Only positive, flag-free yields enter the trend. Returns an empty frame when there are fewer
-    than ``min_years`` of them.
+    than ``min_years`` of them. The trend column is ``col`` with "yield" replaced by "trend". The
+    anomaly is a percentage, so the unit of the series does not matter.
     """
-    s = series.dropna(subset=["yield_kg_ha"])
-    s = s[s.yield_kg_ha > 0].sort_values("year")
+    trend_col = col.replace("yield", "trend", 1)
+    s = series.dropna(subset=[col])
+    s = s[s[col] > 0].sort_values("year")
     if len(s) < min_years:
-        return s.iloc[0:0].assign(trend_kg_ha=[], anomaly_pct=[])
-    slope, intercept = np.polyfit(s.year, s.yield_kg_ha, 1)
+        return s.iloc[0:0].assign(**{trend_col: [], "anomaly_pct": []})
+    slope, intercept = np.polyfit(s.year, s[col], 1)
     trend = slope * s.year + intercept
-    return s.assign(trend_kg_ha=trend, anomaly_pct=100 * (s.yield_kg_ha - trend) / trend)
+    return s.assign(**{trend_col: trend, "anomaly_pct": 100 * (s[col] - trend) / trend})
 
 
 def main_crops(area: pd.DataFrame, last_years: int, min_share: float) -> list[int]:

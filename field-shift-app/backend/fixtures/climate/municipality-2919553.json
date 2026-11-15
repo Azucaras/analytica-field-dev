@@ -1,11 +1,12 @@
 {
   "contract_version": "fieldshift-climate-1",
-  "recorded_at": "2026-11-14T22:21:05+00:00",
+  "recorded_at": "2026-11-15T14:17:44+00:00",
   "municipality": {
     "code": 2919553,
     "name": "Luis Eduardo Magalhaes",
     "name_official": "Luís Eduardo Magalhães",
     "uf": "BA",
+    "country": "BR",
     "region_id": "matopiba",
     "region_name": "MATOPIBA",
     "enso_signal": "deficit",
@@ -22,10 +23,10 @@
   },
   "season_progress": {
     "start": "2026-09-01",
-    "last_observed": "2026-11-11",
-    "rain_mm": 93.5,
-    "normal_mm": 169.2,
-    "analog_mm": 186.1,
+    "last_observed": "2026-11-12",
+    "rain_mm": 95.6,
+    "normal_mm": 175.1,
+    "analog_mm": 191.6,
     "n_baseline": 30,
     "n_analog": 5,
     "analog_years": [
@@ -37,7 +38,8 @@
     ],
     "basis": "modelled",
     "source": "https://power.larc.nasa.gov/",
-    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data"
+    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+    "start_month": 9
   },
   "rows": [
     {
@@ -47,9 +49,13 @@
       "number": -17.9,
       "unit": "%",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        9,
+        12
+      ],
       "n_years": 5,
       "years": [
         1983,
@@ -70,9 +76,13 @@
       "number": 4.5,
       "unit": "days",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        1,
+        4
+      ],
       "n_years": 5,
       "years": [
         1983,
@@ -96,6 +106,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -116,6 +127,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -136,6 +148,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -156,6 +169,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -176,6 +190,7 @@
       "as_of": "2025",
       "source": "https://apisidra.ibge.gov.br/",
       "support": "municipality, IBGE PAM",
+      "months": null,
       "n_years": 2,
       "years": [
         2010,
@@ -189,11 +204,15 @@
     {
       "metric": "season_rain_to_date_mm",
       "layer": "Rain since 1 Sep vs 1991 to 2020 normal",
-      "value": "94 mm vs 169 mm",
-      "number": 93.5,
+      "months": [
+        9,
+        9
+      ],
+      "value": "96 mm vs 175 mm",
+      "number": 95.6,
       "unit": "mm",
       "basis": "modelled",
-      "as_of": "2026-11-11",
+      "as_of": "2026-11-12",
       "source": "https://power.larc.nasa.gov/",
       "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
       "n_years": 30,

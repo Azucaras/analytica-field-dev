@@ -12,6 +12,9 @@ Two official IBGE routes to the same boundary, tried in order:
 The API resets connections from outside Brazil, so (2) is what a cloud runner ends up using. Which
 route produced each row is recorded in the ``geometry_source`` column.
 
+US counties (``country: US`` in regions.yaml) come from the Census Bureau cartographic boundary file
+for 2023 (``cb_2023_us_county_500k.zip``, about 12 MB), matched on the 5-digit FIPS code.
+
 Outputs:
     data/processed/regions.parquet   one row per municipality, centroid + bbox
     data/processed/regions.geojson   simplified outlines (~100 m tolerance) for the web map
@@ -46,6 +49,9 @@ UF_MESH_URL = (
     "https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/"
     "municipio_{year}/UFs/{uf}/{uf}_Municipios_{year}.zip"
 )
+CENSUS_COUNTY_URL = "https://www2.census.gov/geo/tiger/GENZ2023/shp/cb_2023_us_county_500k.zip"
+CENSUS_LABEL = "US Census Bureau cartographic boundary file 2023 (1:500k)"
+
 # Simplification tolerance for the map outline only, in degrees (~100 m). Centroids and bounds are
 # always computed from the full-resolution geometry.
 MAP_TOLERANCE_DEG = 0.001
@@ -137,6 +143,18 @@ def geometry_from_uf_mesh(code: int, uf: str, refresh: bool) -> dict[str, Any]:
     raise LookupError(f"municipality {code} not found in the {uf} {MESH_YEAR} mesh")
 
 
+def geometry_from_census(code: int, refresh: bool) -> tuple[dict[str, Any], str]:
+    """County outline and its official name ("McLean County") from the Census file."""
+    import shapefile  # pyshp
+
+    path = fetch_file(CENSUS_COUNTY_URL, "census_cb_2023_us_county_500k.zip", refresh)
+    with shapefile.Reader(str(path)) as reader:
+        for rec, shp in zip(reader.iterRecords(fields=["GEOID", "NAMELSAD"]), reader.iterShapes()):
+            if int(rec["GEOID"]) == code:
+                return shp.__geo_interface__, rec["NAMELSAD"]
+    raise LookupError(f"county {code:05d} not found in the Census 2023 file")
+
+
 def resolve_geometry(code: int, uf: str, refresh: bool) -> tuple[dict[str, Any], str]:
     """Return (geometry, source label), preferring the API and falling back to the UF mesh."""
     try:
@@ -164,7 +182,12 @@ def main() -> None:
 
     for mun in pilot_municipalities():
         code = int(mun["code"])
-        geometry, geometry_source = resolve_geometry(code, mun["uf"], args.refresh)
+        official = None
+        if mun["country"] == "US":
+            geometry, official = geometry_from_census(code, args.refresh)
+            geometry_source = CENSUS_LABEL
+        else:
+            geometry, geometry_source = resolve_geometry(code, mun["uf"], args.refresh)
         lon, lat = centroid(geometry)
         min_lon, min_lat, max_lon, max_lat = bounds(geometry)
 
@@ -176,6 +199,8 @@ def main() -> None:
             "mesoregion": mun["mesoregion"],
             "region_id": mun["region_id"],
             "region_name": mun["region_name"],
+            "country": mun["country"],
+            "name_official": official,
             "enso_signal": mun["enso_signal"],
             "hazards": ",".join(mun["hazards"]),
             "centroid_lon": round(lon, 4),
@@ -188,7 +213,7 @@ def main() -> None:
         }
         rows.append(row)
         features.append(simplified_feature(geometry, {k: row[k] for k in (
-            "code", "name", "uf", "region_id", "enso_signal", "centroid_lon", "centroid_lat")}))
+            "code", "name", "uf", "region_id", "country", "enso_signal", "centroid_lon", "centroid_lat")}))
 
     df = pd.DataFrame(rows)
     write_parquet(

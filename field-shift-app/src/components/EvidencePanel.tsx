@@ -2,7 +2,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ClimateRow } from '@/lib/climate'
 import { en } from '@/strings/en'
-import { t, translationKeyFor } from '@/strings'
+import { monthName, t, translationKeyFor } from '@/strings'
 
 export type EvidenceBasis = 'observed' | 'retrieved' | 'reported' | 'modelled' | 'entered'
 
@@ -28,7 +28,12 @@ function climateLayer(row: ClimateRow): string {
     return t('climate.metric.yield_anomaly_pct', { crop: t(translationKeyFor(crop) ?? crop) })
   }
   const key = `climate.metric.${row.metric}`
-  return Object.hasOwn(en, key) ? t(key) : row.layer
+  if (!Object.hasOwn(en, key) || !row.months) return row.layer
+  const [first, last] = row.months
+  return t(key, {
+    months: t('climate.month_span', { from: monthName(first), to: monthName(last) }),
+    month: monthName(first),
+  })
 }
 
 function ClimateTable({ municipality, rows }: { municipality: string; rows: ClimateRow[] }) {

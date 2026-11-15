@@ -17,6 +17,10 @@
 season_offset:
   summer: 0
   winter: 1
+  # US regions run an Oct-Sep crop year labelled by harvest year: winter wheat (sown Oct, cut
+  # Jun-Jul) and the summer crops (sown Apr-Jun, cut Sep-Nov) both fall in the crop year of the
+  # NASS year, so neither is shifted.
+  us: 0
 
 crops:
   2713:  {name_pt: Soja,            name_en: Soybean,          season: summer, source: suposicao}
@@ -32,3 +36,12 @@ crops:
   83384: {name_pt: Canola,          name_en: Canola,           season: winter, source: suposicao}
   2699:  {name_pt: Cevada,          name_en: Barley,           season: winter, source: suposicao}
   109180: {name_pt: Triticale,      name_en: Triticale,        season: winter, source: suposicao}
+
+  # ---- United States (USDA NASS Quick Stats, config/nass.yaml) ----------------------------------
+  # Season windows: USDA NASS, Usual Planting and Harvesting Dates for U.S. Field Crops, Agricultural
+  # Handbook 628 (1997), state tables for Illinois and Texas.
+  840001: {name_pt: Milho (grão),      name_en: Corn (grain),    season: us, source: USDA NASS AH-628 (1997)}
+  840002: {name_pt: Soja,              name_en: Soybeans,        season: us, source: USDA NASS AH-628 (1997)}
+  840003: {name_pt: Trigo de inverno,  name_en: Winter wheat,    season: us, source: USDA NASS AH-628 (1997)}
+  840004: {name_pt: Sorgo (grão),      name_en: Sorghum (grain), season: us, source: USDA NASS AH-628 (1997)}
+  840005: {name_pt: Algodão,           name_en: Upland cotton,   season: us, source: USDA NASS AH-628 (1997)}

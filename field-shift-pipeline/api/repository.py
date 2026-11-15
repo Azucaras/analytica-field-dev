@@ -176,16 +176,29 @@ def enso_payload() -> dict[str, Any]:
 
 
 def _with_official_names(regions: pd.DataFrame) -> pd.DataFrame:
-    """Add ``name_official``: IBGE's accented name as SIDRA returns it ("Tupanciretã"), falling
-    back to the ASCII config name when PAM is not built."""
+    """Add ``name_official``: IBGE's accented name as SIDRA returns it ("Tupanciretã"), or the
+    Census name for a US county ("McLean County"), falling back to the config name."""
     out = regions.copy()
+    census = out["name_official"] if "name_official" in out else pd.Series(None, index=out.index)
     try:
         pam = frame("pam.parquet")
         names = pam.drop_duplicates("code").set_index("code").municipality.str.replace(r"\s*\(\w{2}\)$", "", regex=True)
-        out["name_official"] = out.code.map(names).fillna(out.name)
+        out["name_official"] = census.fillna(out.code.map(names)).fillna(out.name)
     except DataMissing:
-        out["name_official"] = out.name
+        out["name_official"] = census.fillna(out.name)
+    if "country" not in out:
+        out["country"] = "BR"
+    out["country"] = out["country"].fillna("BR")
     return out
+
+
+def _season_info(region_id: str) -> dict[str, Any]:
+    """The months behind every seasonal label of this region (they differ between BR and US)."""
+    from pipeline.common import region_calendars
+
+    c = region_calendars()[region_id]
+    return {"crop_year_start_month": c["crop_year_start_month"], "season_months": c["season_months"],
+            "sub_seasons": c["sub_seasons"], "ndvi_peak_months": c["ndvi_peak_months"], "source": c["source"]}
 
 
 def municipalities_payload() -> dict[str, Any]:
@@ -194,7 +207,7 @@ def municipalities_payload() -> dict[str, Any]:
     geojson = json.loads(geo_path.read_text(encoding="utf-8")) if geo_path.exists() else None
     return clean({
         "municipalities": records(regions, [
-            "code", "name", "name_official", "uf", "region_id", "region_name", "enso_signal", "hazards",
+            "code", "name", "name_official", "uf", "country", "region_id", "region_name", "enso_signal", "hazards",
             "centroid_lon", "centroid_lat", "min_lon", "min_lat", "max_lon", "max_lat",
             "geometry_source"]),
         "geojson": geojson,
@@ -232,8 +245,9 @@ def municipality_payload(code: int) -> dict[str, Any]:
             "season": first.season,
             "source": first.crop_source,
             "assumption": first.crop_source == "suposicao",
-            "pam_table": int(first.table),
-            "series": records(g, ["crop_year", "enso_crop_year", "yield_kg_ha", "trend_kg_ha",
+            "pam_table": int(first.table) if int(first.table) else None,
+            "yield_unit": first.get("yield_unit", "kg/ha"),
+            "series": records(g, ["crop_year", "enso_crop_year", "yield_value", "trend_value",
                                   "anomaly_pct", "enso_class"]),
             "composite": records(c, ["enso_class", "n", "mean", "median", "minus_neutral", "years"]),
         })
@@ -246,8 +260,10 @@ def municipality_payload(code: int) -> dict[str, Any]:
                     "early_rx5_mm", "early_rx5_mm_anom_pct", "season_gwetroot", "season_gwetroot_anom",
                     "season_tmax_c", "season_tmax_c_anom"]
     climate_comps = comps[comps.kind == "climate"]
+    is_us = mun.get("country") == "US"
     return clean({
         "municipality": mun,
+        "season": _season_info(mun["region_id"]),
         "current_crop_year": {
             "crop_year": current_cy,
             **(records(current)[0] if not current.empty else {}),
@@ -283,8 +299,10 @@ def municipality_payload(code: int) -> dict[str, Any]:
         },
         "yield": {"crops": crops_out},
         "provenance": {
-            "climate": "NASA POWER daily (grid-cell average at the IBGE centroid); ETCCDI indices",
-            "yield": "IBGE PAM via SIDRA (tables 1612, 839); linear-trend anomalies",
+            "climate": ("NASA POWER daily (grid-cell average at the "
+                        f"{'Census county' if is_us else 'IBGE municipal'} centroid); ETCCDI indices"),
+            "yield": ("USDA NASS Quick Stats, county survey; linear-trend anomalies" if is_us
+                      else "IBGE PAM via SIDRA (tables 1612, 839); linear-trend anomalies"),
             "baseline_crop_years": file_meta("climate_seasonal.parquet").get("baseline_crop_years"),
             "rules": "config/analysis.yaml, config/crops.yaml",
         },
@@ -337,7 +355,10 @@ def rotations_block(code: int, current: pd.DataFrame | None = None) -> dict[str,
         "crops": {cid: {k: cfg["crops"][cid].get(k) for k in ("name_pt", "name_en", "abbr", "cover_crop")} for cid in crop_ids},
         "by_class": by_class,
         "climate_by_class": climate,
-        "assumptions": [{"scope": "calendar", "region": region, "source": cal_source}] if cal_source == "suposicao" else [],
+        "assumptions": ([{"scope": "calendar", "region": region, "source": cal_source}] if cal_source == "suposicao" else [])
+        + [{"scope": "calendar", "region": region, "crop": cid, "source": "suposicao"}
+           for cid in crop_ids if (cfg["calendars"][region].get(cid) or {}).get("source") == "suposicao"],
+        "month_order": _month_order(region),
         "provenance": {
             "kc": cfg["kc_source"],
             "calendar": f"config/rotations.yaml calendars.{region} (source: {cal_source})",
@@ -345,8 +366,11 @@ def rotations_block(code: int, current: pd.DataFrame | None = None) -> dict[str,
             "soil": file_meta("rotation_scores.parquet").get("soil_source"),
             "roots": file_meta("rotation_scores.parquet").get("root_source"),
             "water_model": file_meta("rotation_scores.parquet").get("water_model"),
-            "revenue": file_meta("rotation_scores.parquet").get("revenue_source"),
-            "yield_anomalies": "IBGE PAM yield anomalies by ENSO class (composites)",
+            "revenue": ("USDA NASS: county yield x state value of production per harvested acre / state "
+                        "yield, last 5 years, nominal US$" if region.startswith("us_")
+                        else file_meta("rotation_scores.parquet").get("revenue_source")),
+            "yield_anomalies": (("USDA NASS" if region.startswith("us_") else "IBGE PAM")
+                                + " yield anomalies by ENSO class (composites)"),
             "limitations": "one-bucket soil water balance with modelled soil properties (SoilGrids) and "
                            "maximum rooting depth from sowing; gross revenue, not margin; "
                            "scores are relative among these candidates",
@@ -365,6 +389,14 @@ def ranked_rotations(code: int, enso_class: str, weights: dict[str, float]) -> l
     if s.empty:
         raise KeyError((code, enso_class))
     return clean(scoring.rank([json.loads(x) for x in s.result], weights))
+
+
+def _month_order(region: str) -> list[int]:
+    """Calendar display order: the region's crop year, e.g. Jul-Jun in Brazil, Oct-Sep in the US."""
+    from pipeline.common import region_calendars
+
+    start = region_calendars()[region]["crop_year_start_month"]
+    return [(start - 1 + i) % 12 + 1 for i in range(12)]
 
 
 def _rotations_status(code: int) -> str:

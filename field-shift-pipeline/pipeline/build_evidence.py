@@ -33,6 +33,7 @@ from pipeline.common import (
     base_parser,
     load_config,
     log,
+    region_calendars,
     setup_logging,
     write_parquet,
 )
@@ -75,15 +76,21 @@ def main() -> None:
     args = base_parser(__doc__ or "").parse_args()
     setup_logging(args.verbose)
 
-    regions_cfg = load_config("regions.yaml")["meta"]
     cfg = load_config("analysis.yaml")
     baseline = tuple(cfg["baseline_crop_years"])
-    start_month = regions_cfg["crop_year_start_month"]
-    season_months = regions_cfg["season_months"]
 
     regions = _read("regions.parquet")
     daily = _read("power_daily.parquet")
     pam = _read("pam.parquet")
+    nass_path = PROCESSED_DIR / "nass.parquet"
+    nass = pd.read_parquet(nass_path) if nass_path.exists() else None
+    country_of = {int(r.code): getattr(r, "country", "BR") or "BR" for r in regions.itertuples()}
+    if nass is None and "US" in country_of.values():
+        log.warning("nass.parquet missing (run pipeline.fetch_nass with NASS_API_KEY): no US yields")
+
+    # Each region has its own season calendar (config/regions.yaml); Brazil's is the default.
+    calendars = region_calendars()
+    cal_of = {int(r.code): calendars[r.region_id] for r in regions.itertuples()}
     enso = _read("enso_seasonal.parquet")
     outlook = _read("enso_strength_forecast.parquet")
 
@@ -91,7 +98,11 @@ def main() -> None:
     ce = cfg["crop_year_enso"]
     cy_enso = ev.crop_year_enso(enso, ce["reference_season"], ce["strong_classes"])
     cy_enso["forecast"] = False
-    current_cy = int(ev.crop_year(daily.date.tail(1), start_month).iloc[0])
+    last_day = daily.date.tail(1)
+    labels = {int(ev.crop_year(last_day, c["crop_year_start_month"]).iloc[0]) for c in cal_of.values()}
+    if len(labels) > 1:
+        raise SystemExit(f"regions disagree on the current crop year {sorted(labels)}: check their calendars")
+    current_cy = labels.pop()
     if current_cy not in set(cy_enso.crop_year) or cy_enso.set_index("crop_year").loc[current_cy, "provisional"]:
         row = outlook[outlook.season == ce["reference_season"]]
         if row.empty:
@@ -109,8 +120,11 @@ def main() -> None:
              cy_enso.set_index("crop_year").loc[current_cy].to_dict())
 
     # ---- Climate ----------------------------------------------------------------------------
-    sub_seasons = {k: v for k, v in cfg["sub_seasons"].items() if k != "source"}
-    climate = ev.seasonal_climate(daily, season_months, sub_seasons, cfg["rain_indices"], start_month)
+    climate = pd.concat([
+        ev.seasonal_climate(daily[daily.code == code], c["season_months"], c["sub_seasons"], cfg["rain_indices"],
+                            c["crop_year_start_month"])
+        for code, c in cal_of.items()
+    ], ignore_index=True)
     climate = ev.add_anomalies(climate, CLIMATE_METRICS, baseline)
     climate = climate.merge(cy_enso[["crop_year", "enso_class", "forecast"]], on="crop_year", how="left")
 
@@ -124,18 +138,27 @@ def main() -> None:
     enso_by_cy = cy_enso.set_index("crop_year").enso_class
     yields = []
     for code in regions.code:
-        mun = pam[pam.code == code]
-        area = mun[(mun.table == 1612) & (mun.variable == "area_planted_ha")]
+        if country_of[int(code)] == "US":
+            if nass is None:
+                continue
+            mun = nass[nass.code == code]
+            area = mun[mun.variable == "area_planted_ha"].dropna(subset=["value"])
+            yield_var = "yield_native"
+        else:
+            mun = pam[pam.code == code]
+            area = mun[(mun.table == 1612) & (mun.variable == "area_planted_ha")]
+            yield_var = "yield_kg_ha"
         # Largest planted area first; that order is what the UI shows.
-        main = ev.main_crops(area[["year", "crop_code", "value"]], 5, ya["min_area_share"])
+        main = ev.main_crops(area[["year", "crop_code", "value"]], 5, ya["min_area_share"]) if not area.empty else []
         if 2711 in main:  # maize total -> use the per-harvest series from table 839 instead
             at = main.index(2711)
             main[at:at] = sorted(mun[mun.table == 839].crop_code.unique().tolist())
         for crop_code in [c for c in main if c in known]:
             spec = known[crop_code]
-            s = mun[(mun.crop_code == crop_code) & (mun.variable == "yield_kg_ha") & (mun.flag == "")]
-            s = s[["year", "value", "crop", "table"]].rename(columns={"value": "yield_kg_ha"})
-            an = ev.yield_anomalies(s, ya["min_years"])
+            s = mun[(mun.crop_code == crop_code) & (mun.variable == yield_var) & (mun.flag == "")]
+            unit = "kg/ha" if yield_var == "yield_kg_ha" else (s.unit.iloc[0] if not s.empty else "")
+            s = s[["year", "value", "crop", "table"]].rename(columns={"value": "yield_value"})
+            an = ev.yield_anomalies(s, ya["min_years"], col="yield_value").assign(yield_unit=unit)
             if an.empty:
                 continue
             offset = offsets[spec["season"]]
@@ -145,6 +168,7 @@ def main() -> None:
                 enso_crop_year=an.year + offset,
             ))
     yields = pd.concat(yields, ignore_index=True).rename(columns={"year": "crop_year"})
+    log.info("yield series: %s", yields.groupby("code").crop_code.nunique().to_dict())
     yields["enso_class"] = yields.enso_crop_year.map(enso_by_cy)
     # A winter crop of the latest PAM year would map onto the forecast year: keep it out.
     forecast_years = set(cy_enso[cy_enso.forecast].crop_year)
@@ -164,12 +188,12 @@ def main() -> None:
     composites = pd.concat(comps, ignore_index=True)
 
     # ---- Season to date ---------------------------------------------------------------------
-    season_days = sum(pd.Period(f"2001-{m:02d}").days_in_month for m in season_months)
     strong_years = cy_enso[(cy_enso.enso_class == "el_nino_strong") & ~cy_enso.forecast].crop_year.tolist()
     progress = pd.concat([
-        ev.season_progress(daily, int(code), season_months[0], season_days, current_cy,
-                           baseline, strong_years, start_month)
-        for code in regions.code
+        ev.season_progress(daily, code, c["season_months"][0],
+                           sum(pd.Period(f"2001-{m:02d}").days_in_month for m in c["season_months"]),
+                           current_cy, baseline, strong_years, c["crop_year_start_month"])
+        for code, c in cal_of.items()
     ], ignore_index=True)
 
     meta = {
@@ -207,8 +231,10 @@ def main() -> None:
                 bridge = short[["date", "rain"]] if not short.empty else pd.DataFrame(columns=["date", "rain"])
                 p = ev.ensemble_progress(p, bridge, ext[["date", "member", "rain"]])
             if not seas.empty:
+                c = cal_of[code]
                 outlook_rows.append(ev.monthly_outlook(seas[["date", "member", "rain"]], daily, code,
-                                                       season_months, baseline, strong_years, start_month))
+                                                       c["season_months"], baseline, strong_years,
+                                                       c["crop_year_start_month"]))
             extended_progress.append(p)
         progress = pd.concat(extended_progress, ignore_index=True)
         fmeta = {**meta, "source": "Meteomatics Weather API; normals from NASA POWER 1991-2020",
@@ -229,8 +255,11 @@ def main() -> None:
         nd = pd.read_parquet(nd_path)
         ncfg = cfg["ndvi"]
         nbase = tuple(ncfg["baseline_crop_years"])
-        ndvi_cy = ev.ndvi_by_crop_year(nd, ncfg["peak_months"], ncfg["min_valid_fraction"],
-                                       ncfg["min_composites"], start_month)
+        ndvi_cy = pd.concat([
+            ev.ndvi_by_crop_year(nd[nd.code == code], c["ndvi_peak_months"], ncfg["min_valid_fraction"],
+                                 ncfg["min_composites"], c["crop_year_start_month"])
+            for code, c in cal_of.items() if (nd.code == code).any()
+        ], ignore_index=True)
         ndvi_cy = ev.add_anomalies(ndvi_cy, ["ndvi_peak"], nbase)
         means = ndvi_cy[(ndvi_cy.crop_year >= nbase[0]) & (ndvi_cy.crop_year <= nbase[1])].groupby("code").ndvi_peak.mean()
         ndvi_cy["ndvi_peak_anom_pct"] = 100 * ndvi_cy.ndvi_peak_anom / ndvi_cy.code.map(means)
@@ -240,9 +269,9 @@ def main() -> None:
         composites = pd.concat([composites, vc.assign(kind="vegetation", metric="ndvi_peak_anom_pct", unit="%",
                                                      crop_code=None, crop=None)], ignore_index=True)
         nprog = pd.concat([
-            ev.ndvi_progress(nd, int(code), season_months, current_cy, nbase, strong_years,
-                             ncfg["min_valid_fraction"], start_month)
-            for code in regions.code
+            ev.ndvi_progress(nd, code, c["season_months"], current_cy, nbase, strong_years,
+                             ncfg["min_valid_fraction"], c["crop_year_start_month"])
+            for code, c in cal_of.items() if (nd.code == code).any()
         ], ignore_index=True)
         vmeta = {**meta, "baseline_crop_years": f"{nbase[0]}-{nbase[1]}",
                  "source": "MODIS MOD13Q1 v061 NDVI via Microsoft Planetary Computer, stable cropland"}
@@ -254,7 +283,8 @@ def main() -> None:
 
     write_parquet(cy_enso, "crop_year_enso.parquet", meta)
     write_parquet(climate, "climate_seasonal.parquet", {**meta, "source": "NASA POWER PRECTOTCORR, GWETROOT, T2M_MAX"})
-    write_parquet(yields, "yield_anomalies.parquet", {**meta, "source": "IBGE PAM tables 1612, 839"})
+    write_parquet(yields, "yield_anomalies.parquet",
+                  {**meta, "source": "IBGE PAM tables 1612, 839 (Brazil); USDA NASS Quick Stats (US)"})
     write_parquet(composites, "composites.parquet", meta)
     write_parquet(progress, "season_progress.parquet", {**meta, "source": "NASA POWER PRECTOTCORR"})
 

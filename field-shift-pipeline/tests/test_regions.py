@@ -98,13 +98,15 @@ class TestRegionsConfig:
 
     def test_both_pilot_municipalities_are_present(self):
         muns = pilot_municipalities()
-        assert {m["code"] for m in muns} == {4322202, 2919553, 5107248}
+        assert {m["code"] for m in muns} == {4322202, 2919553, 5107248, 17113, 48303}
 
     def test_each_municipality_carries_its_region_signal(self):
         by_code = {m["code"]: m for m in pilot_municipalities()}
         assert by_code[4322202]["enso_signal"] == "excess"
         assert by_code[2919553]["enso_signal"] == "deficit"
         assert by_code[5107248]["enso_signal"] == "unclassified"
+        assert by_code[48303]["enso_signal"] == "excess"
+        assert by_code[17113]["enso_signal"] == "unclassified"
 
     def test_the_two_pilots_have_opposite_signals(self):
         """The whole premise of the tool is the Brazilian ENSO dipole."""
