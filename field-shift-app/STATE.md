@@ -12,7 +12,7 @@ Atualizado em 2026-11-15. O histórico detalhado de cada etapa está no git e na
 | Remoção das restrições | O formulário de restrições saiu; cada linha de evidência mostra a própria base | fechado em 2026-11-14 |
 | Bloco 4 | El Niño e evidência climática real no mapa; talhões 04 (RS) e 05 (BA) | fechado em 2026-11-14 |
 | Bloco 5 | Análise completa do Field Phase na mesma página; português por padrão; previsão Meteomatics | fechado em 2026-11-14 |
-| Bloco 6 | Estados Unidos: McLean (IL) e Lubbock (TX), talhões 06 e 07 | código pronto; faltam os dados do NASS e a Meteomatics dos condados |
+| Bloco 6 | Estados Unidos: McLean (IL) e Lubbock (TX), talhões 06 e 07 | dados do NASS dentro em 2026-11-15; falta a Meteomatics dos condados |
 
 Testes no fechamento do bloco 6: pipeline 164, backend 19, front-end 112, `tsc` e build sem erro.
 
@@ -37,8 +37,9 @@ Testes no fechamento do bloco 6: pipeline 164, backend 19, front-end 112, `tsc` 
 
 ## Pendências
 
-- Rodar `pipeline.fetch_nass` (chave do NASS) e `pipeline.fetch_meteomatics` para os condados dos EUA, depois
-  `build_evidence`, `build_scoring` e as duas exportações.
+- Rodar `pipeline.fetch_meteomatics` para os condados dos EUA, depois `build_evidence` e as duas exportações.
+- Nos EUA, as rotações com trigo (McLean) e com sorgo (Lubbock) ficam sem nota, porque essas culturas têm menos
+  de 1% da área plantada recente e o método só calcula a produtividade das culturas principais.
 - McLean não espelha Lubbock: o inverno lá também fica mais chuvoso no El Niño. Trocar por um condado mais ao
   norte, se o contraste for importante.
 - Datas de plantio do Brasil pela CONAB; notas em escala fixa; CHIRPS e MapBiomas; validação contra produtividade.

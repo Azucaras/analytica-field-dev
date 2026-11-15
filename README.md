@@ -127,6 +127,8 @@ On Linux or macOS the backend interpreter is `.venv/bin/python`.
   Brazilian pilots mirror each other.
 - Scores are relative within one place and kind of year, so small differences look large. Gross revenue is used,
   not margin.
+- A rotation is scored only when every crop in it is a main crop of the place (at least 1 percent of the recent
+  planted area). Wheat in McLean and sorghum in Lubbock fall below that, so those rotations stay unranked.
 - The scores have not been checked against observed yields.
 
 ## Ownership
