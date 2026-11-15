@@ -1,0 +1,9 @@
+AC-08 (R-09)
+method: tests
+command: cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_08_imerg_thirty_minutes_uses_datetime_tokens_on_the_thirty_minute_grid (test_layers.TileContractTests.test_ac_08_imerg_thirty_minutes_uses_datetime_tokens_on_the_thirty_minute_grid) ... ok
+
+verdict: PASS

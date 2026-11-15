@@ -1,21 +1,17 @@
-AC-44 load defaults, resize behaviour and reload, with storage keys before and after every press
-
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
-of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
-(wave4-source-hashes.txt). CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
-Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
-because the card forbids PNGs in the repository.
-
-step | viewport | data-collapsed | toggle name | aria-expanded | cards | localStorage keys | sessionStorage keys | URL search
-1440 load | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-press on 1440 toggle -> collapse | 1440x900 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
-resize to 360 | 360x640 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
-press on 360 toggle -> expand | 360x640 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-resize to 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-780 load | 780x900 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
-press on 780 toggle -> expand | 780x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-resize to 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-reload at 1440 | 1440x900 | false | Collapse Rotation outlook | true | 3 | [] | [] | ''
-reload at 360 | 360x640 | true | Expand Rotation outlook | false | 0 | [] | [] | ''
-
-The toggle writes no storage key at any step, so a reload returns the default of the width.
+AC-44 (R-51, R-52)
+method: computer use with a reload and a resize
+command: chrome via CDP
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+load defaults: 1440x900 expanded (cards 3, list true), 780x900 collapsed (cards 0, list false), 360x640 collapsed.
+collapse at 1440x900, then a viewport change to 360x640: still collapsed, cards 0, list false.
+expand at 360x640, then a viewport change to 1440x900: still expanded, cards 3, list true.
+from the 780x900 load state (collapsed): one press on the toggle expanded it (cards 3, list true), a viewport change
+  to 1440x900 left it expanded.
+reload at 1440x900 after all of the above: back to the default, expanded.
+storage before and after every press: localStorage 0 keys, sessionStorage 0 keys, the URL is unchanged (?date=2026-11-12).
+limitation: the viewport changes in this harness are CDP Emulation.setDeviceMetricsOverride calls, and this Chromium
+delivers neither a window resize event nor a media-query change to the page (measured: window.__mq empty after two
+changes). The panel-state clauses above therefore hold because the React state is kept, which is what the criterion
+judges; see AC-33 for the clause that needs the media-query event.
+verdict: PASS on the clauses measured above

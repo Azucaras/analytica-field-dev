@@ -1,0 +1,9 @@
+AC-41 (R-05 optical rule, M-17)
+method: tests
+command: cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_41_optical_walk_ignores_blank_bodies_and_stops_at_the_first_imagery_date (test_layers.TileContractTests.test_ac_41_optical_walk_ignores_blank_bodies_and_stops_at_the_first_imagery_date) ... ok
+
+verdict: PASS

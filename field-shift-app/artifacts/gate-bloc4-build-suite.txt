@@ -1,0 +1,12 @@
+$ npx tsc -b --noEmit
+npm notice run field-shift-app@0.0.0 npx
+npm notice run 'tsc' -b --noEmit
+tsc exit=0
+
+$ npx vitest run
+ Test Files  21 passed (21)
+      Tests  203 passed (203)
+   Duration  5.13s (environment 50%, tests 34%, setup 8%, import 5%, transform 2%, worker 1%)
+
+$ npm run build
+/usr/sbin/bash: line 5: /usr/bin/time: No such file or directory

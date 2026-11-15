@@ -1,0 +1,93 @@
+AC-29 (R-35, R-36, R-47)
+method: computer use at 1440x900, 780x900 and 360x640, both dock and panel states
+command: chrome via CDP, one GET per state, rects in px
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+Field 01 selected (the load default) so the rotation panel keeps the block 3 content height; the Field 03 run with
+the notice mounted and the fields panel expanded is recorded after the table and its intersections are all 0.00 px2.
+
+1440x900 panel expanded, dock expanded (load default)
+  dock       x 22.00 to 1006.00, y 457.81 to 549.81  (984.00 x 92.00)
+  toggle     not present at this width
+  panel      x 22.00 to 1006.00, y 557.81 to 884.00  (984.00 x 326.19), collapsed false, cards 3
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 0.00
+
+1440x900 panel collapsed, dock expanded
+  dock       x 22.00 to 1006.00, y 641.00 to 733.00  (984.00 x 92.00)
+  toggle     not present at this width
+  panel      x 22.00 to 1006.00, y 741.00 to 884.00  (984.00 x 143.00), collapsed true, cards 0
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 0.00
+
+780x900 panel collapsed, dock expanded (load default)
+  dock       x 22.00 to 395.00, y 641.00 to 733.00  (373.00 x 92.00)
+  toggle     x 22.00 to 66.00, y 589.00 to 633.00  (44.00 x 44.00)
+  panel      x 22.00 to 395.00, y 741.00 to 884.00  (373.00 x 143.00), collapsed true, cards 0
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 0.00
+
+780x900 panel expanded, dock expanded
+  dock       x 22.00 to 395.00, y 450.00 to 542.00  (373.00 x 92.00)
+  toggle     x 22.00 to 66.00, y 398.00 to 442.00  (44.00 x 44.00)
+  panel      x 22.00 to 395.00, y 542.81 to 884.00  (373.00 x 341.19), collapsed false, cards 3
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 0.00
+
+780x900 panel expanded, dock collapsed
+  dock       not mounted (collapsed: the region Timeline is unmounted)
+  toggle     x 22.00 to 395.00, y 490.81 to 534.81  (373.00 x 44.00)
+  panel      x 22.00 to 395.00, y 542.81 to 884.00  (373.00 x 341.19), collapsed false, cards 3
+  intersection px2: rotationToggle/coveragePill 0.00
+
+780x900 panel collapsed, dock collapsed
+  dock       not mounted (collapsed: the region Timeline is unmounted)
+  toggle     x 22.00 to 395.00, y 689.00 to 733.00  (373.00 x 44.00)
+  panel      x 22.00 to 395.00, y 741.00 to 884.00  (373.00 x 143.00), collapsed true, cards 0
+  intersection px2: rotationToggle/coveragePill 0.00
+
+360x640 panel collapsed, dock collapsed (load default)
+  dock       not mounted (collapsed: the region Timeline is unmounted)
+  toggle     x 8.00 to 296.00, y 224.00 to 268.00  (288.00 x 44.00)
+  panel      x 8.00 to 352.00, y 489.00 to 632.00  (344.00 x 143.00), collapsed true, cards 0
+  intersection px2: rotationToggle/coveragePill 0.00
+
+360x640 panel collapsed, dock expanded
+  dock       x 8.00 to 296.00, y 224.00 to 316.00  (288.00 x 92.00)
+  toggle     x 8.00 to 52.00, y 224.50 to 268.50  (44.00 x 44.00)
+  panel      x 8.00 to 352.00, y 489.00 to 632.00  (344.00 x 143.00), collapsed true, cards 0
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 0.00
+
+360x640 panel expanded, dock expanded
+  dock       x 8.00 to 296.00, y 224.00 to 316.00  (288.00 x 92.00)
+  toggle     x 8.00 to 52.00, y 224.50 to 268.50  (44.00 x 44.00)
+  panel      x 8.00 to 352.00, y 440.00 to 632.00  (344.00 x 192.00), collapsed false, cards 3
+  intersection px2: dock/attribution 0.00, dock/navControl 0.00, dock/layerRail 0.00, dock/fieldsStack 0.00, dock/topStrip 0.00, rotationToggle/coveragePill 1.47
+
+360x640 panel expanded, dock collapsed
+  dock       not mounted (collapsed: the region Timeline is unmounted)
+  toggle     x 8.00 to 296.00, y 224.00 to 268.00  (288.00 x 44.00)
+  panel      x 8.00 to 352.00, y 440.00 to 632.00  (344.00 x 192.00), collapsed false, cards 3
+  intersection px2: rotationToggle/coveragePill 1.47
+
+gaps against the contract:
+  1440 expanded: bottom 549.81 = panel top 557.81 minus 8.00; top 457.81 clears y 450 by 7.81; height 92.00.
+  1440 collapsed panel: bottom 733.00 = panel top 741.00 minus 8.00; gap 8.00, within 2 px; height 92.00.
+  780 first paint: bottom 733.00 = collapsed panel top 741.00 minus 8.00; top 641.00 (the contract records 642
+    for the 142 px header; the measured header is 142.00 px and the panel border makes the panel 143.00, so the
+    dock lands 1.00 px above the recorded y 642, inside the 2 px tolerance). Toggle x 22.00 to 66.00, y 589.00 to
+    633.00: 44.00 wide, left edge 22.00, inside the clear centre x 234 to 546 with zero intersection.
+  780 panel expanded: dock y 450.00 to 542.00 (the y 450 floor binds), bottom 0.81 px above the panel top 542.81;
+    toggle x 22.00 to 66.00, y 398.00 to 442.00, 8.00 px above the dock top, zero intersection with the clear centre.
+  780 dock collapsed with the panel expanded: toggle 373.00 x 44.00, y 490.81 to 534.81 (the contract says 490.81 to 534.81).
+  780 dock collapsed with the panel collapsed: toggle y 689.00 to 733.00 (the contract says 690 to 734; 1.00 px, inside 2 px).
+  360 collapsed: toggle 288.00 x 44.00 at y 224.00; 60.00 px above block 3 right edge column top 328.00.
+  360 expanded: dock 288.00 x 92.00, y 224.00 to 316.00; 12.00 px above the column; toggle inside at 8.00 to 52.00,
+    224.50 to 268.50 (0.50 px from the 224 and 268 the contract names).
+
+Field 03 run (notice mounted, fields panel expanded), intersections of the dock and toggle with the notice, the
+fields stack, the attribution, the navigation control, the layer rail, the top strip and the rotation toggle:
+  1440x900 expanded and collapsed: all 0.00 px2; notice 1018.00,60.00 400.00x64.50; fields stack 0.00,72.00 320x55.
+  780x900 at first paint and after the panel press: all 0.00 px2.
+  360x640 expanded, panel collapsed and expanded: all 0.00 px2.
+F1 state (360x640, dock expanded, rotation panel expanded, Command open), the orchestrator gate note:
+  toggle 8.00,224.50 44.00x44.00; block 3 R-40 column 8.00,328.00 288.00x104.00 (the right edge column measured
+  8.00,328.00 288.00x104.00); dock 8.00,224.00 288.00x92.00; intersection toggle/column 0.00 px2, dock/column
+  0.00 px2. Option A holds: nothing stands between the band and the column.
+verdict: PASS

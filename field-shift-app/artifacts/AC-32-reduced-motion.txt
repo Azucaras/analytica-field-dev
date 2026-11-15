@@ -1,33 +1,21 @@
-AC-32 reduced motion at 1440x900 and at 360x640 after the press that expands the dock
-
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server (vite, http://127.0.0.1:5173/)
-of the main checkout, whose seven block 4 source files are byte-identical to branch block4/wave4-dock-home
-(wave4-source-hashes.txt). CDP viewport emulation at the named width, deviceScaleFactor 1, page foregrounded.
-Boxes are [x, y, width, height] in CSS px from getBoundingClientRect. No PNG is recorded: the spec names
-screenshots, the card forbids images in the repository, so every shot is replaced by the rectangle and key log
-the gate can re-measure. Where a name of the spec's artifact list is a .png, this file is its text substitute.
-
-Emulation.setEmulatedMedia features [{name: prefers-reduced-motion, value: reduce}] before the load.
-
-viewport 1440x900: matchMedia('(prefers-reduced-motion: reduce)').matches = True
-   dock             transition-duration 0s, animation-duration 0s
-   dateRow          transition-duration 0s, animation-duration 0s
-   rangeRow         transition-duration 0s, animation-duration 0s
-   timelineToggle   not mounted at this width
-   rotationPanel    transition-duration 0s, animation-duration 0s
-   railRow          transition-duration 0s, animation-duration 0s
-   railTrigger      transition-duration 0s, animation-duration 0s
-   chosen date at the start 2026-11-14, after 3.0 s with no date press 2026-11-14
-
-viewport 360x640: matchMedia('(prefers-reduced-motion: reduce)').matches = True
-   dock             transition-duration 0s, animation-duration 0s
-   dateRow          transition-duration 0s, animation-duration 0s
-   rangeRow         transition-duration 0s, animation-duration 0s
-   timelineToggle   transition-duration 0s, animation-duration 0s
-   rotationPanel    transition-duration 0s, animation-duration 0s
-   railRow          transition-duration 0s, animation-duration 0s
-   railTrigger      transition-duration 0s, animation-duration 0s
-   chosen date at the start 2026-11-14, after 3.0 s with no date press 2026-11-14
-
-No timer writes the date: the front end of block 4 has no setInterval or setTimeout at all
-(grep -rn 'setInterval\|setTimeout' src/components/TimelineDock.tsx src/components/ScenarioCards.tsx src/App.tsx src/lib/timeline.ts returns nothing).
+AC-32 (R-39)
+method: computer use with reduced motion emulated, 1440x900 and 360x640 after the press
+command: CDP Emulation.setEmulatedMedia prefers-reduced-motion: reduce
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+matchMedia(prefers-reduced-motion: reduce).matches = true in both runs.
+1440x900, computed transition-duration|animation-duration:
+  dock 0s|0s, date row 0s|0s, range row 0s|0s, rotation panel 0s|0s, rail row 0s|0s, rotation toggle 0s|0s
+360x640, dock collapsed:
+  panel 0s|0s, rail row 0s|0s, rotation toggle 0s|0s, timeline toggle 0s|0s
+360x640, dock expanded by a press (the nodes exist to be measured):
+  dock 0s|0s, date row 0s|0s, range row 0s|0s, panel 0s|0s, rail row 0s|0s, rotation toggle 0s|0s, timeline toggle 0s|0s
+chosen date at the start of the observation and after 3.2 s with no date control pressed: 2026-11-12 and 2026-11-12.
+timer spy, installed with Page.addScriptToEvaluateOnNewDocument before the load (setTimeout and setInterval wrapped,
+  every callback's source and fire count recorded), then a 4.0 s observation with no press:
+  timers created 2: one interval at 30000 ms whose source is the Vite dev-server websocket ping
+  ("if (socket.readyState === socket.OPEN) socket.send(JSON.stringify({ type: \"ping\" }))"), fired 0,
+  and one timeout at 0 ms whose source is Vite's style cleanup ("lastInsertedStyle = void 0"), fired 1.
+  No app timer is created, and no recorded callback names or writes the chosen date; the date stayed 2026-11-12.
+  The two timers belong to the Vite dev server, not to the app bundle.
+verdict: PASS

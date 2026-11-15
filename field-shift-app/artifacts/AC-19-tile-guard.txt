@@ -1,0 +1,16 @@
+AC-19 (R-23, R-25)
+method: tests
+command: npx vitest run and cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/MapCanvas.block4.test.tsx > R-23 the app refuses a tile the proxy should not have served (AC-19) > rejects a tile whose X-Tile-Date is later than the chosen date 60ms
+  src/components/MapCanvas.block4.test.tsx > R-23 the app refuses a tile the proxy should not have served (AC-19) > does not draw a 200 with a zero byte body and reports unavailable 60ms
+  src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > draws a dated observation for the chosen date 3ms
+  src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > rejects a tile whose X-Tile-Date is later than the chosen date 0ms
+  src/lib/tile-guard.test.ts > tile guard, the app half of R-23 (AC-19) > does not draw a 200 with a zero byte body and reports unavailable 0ms
+
+vitest / unittest lines quoted from this run:
+  test_r_25_offline_serves_the_newest_cached_tile_not_after_the_chosen_date (test_layers.TileContractTests.test_r_25_offline_serves_the_newest_cached_tile_not_after_the_chosen_date) ... ok
+
+verdict: PASS

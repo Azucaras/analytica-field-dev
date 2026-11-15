@@ -1,0 +1,23 @@
+AC-11 (R-14)
+method: cli + tests
+command: curl -s 'http://127.0.0.1:8010/layers?date=2026-11-12' (the gate backend ran on 8010; the spec names 8000)
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+$ curl -s 'http://127.0.0.1:8010/layers?date=2026-11-12'
+{"chosen_date":"2026-11-12","axis":{"start":"2015-04-01","end":"2026-11-14","default":"2026-11-14"},"layers":[{"id":"smap-l3","label":"SMAP soil moisture","kind":"tile","basis":"retrieved","resolution":"9 km","matrix":"GoogleMapsCompatible_Level6","max_zoom":6,"cadence":"P1D","lookback_days":7,"time_format":"date","optical":false,"window_days":1,"status":"earlier","effective_date":"2026-11-11","age_days":1,"last_observation":null},{"id":"smap-l4-surface","label":"SMAP L4 surface soil moisture","kind":"tile","basis":"modelled","resolution":"9 km","matrix":"GoogleMapsCompatible_Level6","max_zoom":6,"cadence":"P1D","lookback_days":7,"time_format":"date","optical":false,"window_days":1,"status":
+
+$ curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8010/layers/grace-mascon/coverage?days=30'
+400
+$ curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8010/layers/smap-l3/coverage?days=30'
+400
+$ curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8010/tiles/smap-l3/9/0/0?date=2026-11-12'  (z above max_zoom)
+400
+$ curl -s -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8010/tiles/smap-soil-moisture/6/22/34?date=2026-11-11'  (alias)
+HTTP/1.1 200 OK
+x-tile-date: 2026-11-11
+
+the response is an object with chosen_date, axis and layers; grace-mascon coverage 400; smap-l3 coverage 400.
+vitest / unittest lines quoted from this run:
+  test_ac_11_layers_is_an_object_and_coverage_rejects_non_optical_layers (test_layers.TileContractTests.test_ac_11_layers_is_an_object_and_coverage_rejects_non_optical_layers) ... ok
+  test_ac_11_layers_leaves_the_date_fields_null_when_there_is_no_observation (test_layers.TileContractTests.test_ac_11_layers_leaves_the_date_fields_null_when_there_is_no_observation) ... ok
+verdict: PASS

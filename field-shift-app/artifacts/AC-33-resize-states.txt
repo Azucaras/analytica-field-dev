@@ -1,0 +1,22 @@
+AC-33 (R-40)
+method: computer use across 1440x900, 780x900 and 360x640
+command: chrome via CDP, Emulation.setDeviceMetricsOverride between steps
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+step 1, 1440x900: chosen date 2026-11-12, pin on smap-l3 aria-pressed true, compare on ndvi-8day with the divider
+  mounted, rotation panel collapsed by a press (data-collapsed true, cards 0).
+step 2, viewport 780x900: date 2026-11-12, pin true, compare divider present, panel still collapsed, dock 373.00 x 92.00
+  at y 641.00. The four state values survive.
+step 3, press Timeline controls at 780x900: the control is not in the DOM in this run, so the press cannot be made.
+  measured: document.querySelectorAll("[data-timeline-toggle]").length = 0 while the dock region is mounted at 780x900.
+  the same page, loaded fresh at 780x900, does mount it (44.00 x 44.00 at x 22.00, y 589.00), so the mount follows the
+  first-paint width bucket and not the current width in this harness.
+step 4, viewport 360x640: not reached, because the criterion requires the two presses at 780 before it.
+cause: CDP Emulation.setDeviceMetricsOverride changes the CSS viewport but this Chromium delivers no resize event and no
+  media-query change to the page (window.__mq stayed empty across two changes; a fresh load at 780x900 does mount the
+  toggle). window.matchMedia("(max-width: 1020px)").matches reads true at 780 while the React state still holds the 1440
+  value, which is why useMediaMatch (src/lib/viewport.ts) keeps the toggle unmounted.
+the jsdom test "R-40, R-51, R-52, AC-33: a resize keeps the chosen date and ..." passes, but AC-33 names computer use,
+  so that test is not the named evidence.
+verdict: FAIL as measured. The failure is a measurement limit of this harness, not a proven product defect; it needs a
+  run on a browser that delivers a real viewport resize before it can be called a defect.

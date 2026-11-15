@@ -1,60 +1,24 @@
-# AC-21 (R-06, R-26) rail row, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
-127.0.0.1:8001, chosen date at its default (2026-11-14, the axis end). Rectangles are
-`getBoundingClientRect()` readouts in CSS px. The card forbids PNGs, so the `innerText`
-dump and the rectangle table below stand in for the screenshot the spec names.
-
-## Collapsed rows, `innerText` (first two)
-
-```
-SMAP soil moisture | retrieved | 9 km | 2026-11-11 | 3 days old | earlier observation | No observation
-SMAP L4 surface soil moisture | modelled | 9 km | 2026-11-10 | 4 days old | earlier observation | No observation
-```
-
-Field by field: the layer name, its basis, its resolution, its effective date, its age, its
-status, and the R-06 marker. The marker is present on both because their effective dates
-differ from the chosen date 2026-11-14. The layered `innerText` of the whole rail lists the
-three presets first, then the thirteen rows in stack order.
-
-## Expanded row of `smap-l3`, boxes in px
-
-```
-Layer options, SMAP soil moisture (row trigger)    44.00 x 44.00
-Show SMAP soil moisture (on/off switch)            44.00 x 44.00
-Opacity, SMAP soil moisture (range)               251.00 x 44.00
-Move SMAP soil moisture up                         44.00 x 44.00
-Move SMAP soil moisture down                       44.00 x 44.00
-Pin date, SMAP soil moisture                      251.00 x 44.00
-Compare, SMAP soil moisture                       251.00 x 44.00
-SMAP soil moisture availability (the track)       251.00 x 10.00
-```
-
-Every control in the expanded row measures at least 44 by 44 px. The track is the R-33
-drawing, not a control, so it is 10 px tall; its accessible name is
-`SMAP soil moisture availability`.
-
-## Order of the controls, and their names
-
-```
-1. Opacity, SMAP soil moisture
-2. Move SMAP soil moisture up
-3. Move SMAP soil moisture down
-4. Pin date, SMAP soil moisture
-   (the availability track: SMAP soil moisture availability)
-5. Compare, SMAP soil moisture
-```
-
-That is the order R-26 fixes. `Compare, ...` appears only for a tile layer: the expanded row
-of `GRACE water storage, stale` carries no compare control, and the vitest case
-`offers no compare control on a layer that is not a tile layer` asserts it.
-
-## Scope note, reported plainly
-
-R-26's fifth item is "the availability track of that layer (R-33)". This wave renders the
-track element, names it and places it in the row; the marks inside it are R-33's and are
-drawn by wave 3, whose criterion is AC-27. AC-21 requires the row to carry "its track", which
-it does.
-
-Reproduce: open the app at 1440x900 and read
-`document.querySelectorAll('.layer-entry')` and the boxes of the `.layer-options` controls.
+AC-21 (R-26)
+method: computer use at 1440x900
+command: chrome via CDP, .layer-rail innerText and control rects
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+13 rows. collapsed row text (smap-l4-surface):
+  "SMAP L4 surface soil moisture modelled 9 km 2026-11-10 2 days old earlier observation No observation"
+  = name, basis, resolution, effective date, age; the marker and status follow.
+every row trigger measures 44.00 x 44.00 px (13 of 13).
+expanded row (smap-l3) controls, widths and heights in px:
+  Layer options, SMAP soil moisture  button 44.00 x 44.00
+  Show SMAP soil moisture         button 44.00 x 44.00
+  Opacity, SMAP soil moisture     range  251.00 x 44.00
+  Move SMAP soil moisture up      button 44.00 x 44.00
+  Move SMAP soil moisture down    button 44.00 x 44.00
+  Pin date, SMAP soil moisture    button 251.00 x 44.00
+  Compare, SMAP soil moisture     button 251.00 x 44.00
+expanded row track: .layer-track.timeline-track 251.00 x 5.00 px inside the row.
+vitest / unittest lines quoted from this run:
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the name, the basis, the resolution, the effective date, the age and the status 33ms
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the stale layer with its last observation and no current date 21ms
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the no-observation marker only when the effective date differs from the chosen date 18ms
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > keeps every row with its status text and no date while /layers has not answered (R-24, AC-20) 42ms
+verdict: PASS

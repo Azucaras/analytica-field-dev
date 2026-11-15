@@ -1,0 +1,9 @@
+AC-06 (R-07)
+method: tests
+command: cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_06_all_candidates_404_reports_none_in_lookback_with_no_body (test_layers.TileContractTests.test_ac_06_all_candidates_404_reports_none_in_lookback_with_no_body) ... ok
+
+verdict: PASS

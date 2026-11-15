@@ -1,49 +1,18 @@
-# AC-18 (R-22) compare mode, 1440x900, computer use
-
-Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
-127.0.0.1:8001. Compare is turned on from the rail row of `ndvi-8day`, side B is set through
-`Compare date, MODIS NDVI, 8 day`, and the divider is moved with a pointer-equivalent input
-event on `Compare divider`.
-
-One substitution is reported plainly: the spec pins side A at 2026-11-12 through the
-`?date=YYYY-MM-DD` query, which is R-28 and belongs to wave 3, so this wave's build has no
-query pin. Side A is therefore the chosen date the app loads at, 2026-11-14, which is what
-R-22 actually requires ("Side A SHALL be the chosen date"). The rule under test is unchanged.
-
-```
-A. Compare on for ndvi-8day
-   `Compare, MODIS NDVI, 8 day` aria-pressed          = true
-   side A label                                       = 2026-11-13, 1 day old
-   side B label (default, seven days before)          = 2026-11-07, 7 days old
-   `Compare divider` value                            = 50
-   compare sources in the style                       = [ndvi-8day~compare-a, ndvi-8day~compare-b]
-   side A source tiles                                = ...?date=2026-11-13
-   side B source tiles                                = ...?date=2026-11-07
-   elements carrying a numeric delta                  = 0
-   camera centre before                               = [-55.27, -11.91]
-   zoom before                                        = 11
-
-B. `Compare date, MODIS NDVI, 8 day` set to 2026-10-01
-   side A label                                       = 2026-11-13, 1 day old   (unchanged)
-   side B label                                       = 2026-10-01, 44 days old
-   side B source tiles                                = ...?date=2026-10-01
-
-C. `Compare divider` moved to 70 with a pointer-equivalent event
-   divider value                                      = 70
-   camera centre after                                = [-55.27, -11.91]   (unchanged)
-   zoom after                                         = 11                (unchanged)
-   bounds of compare-a                                = [-55.5172, -12.0611, -55.27, -11.7588]
-   bounds of compare-b                                = [-55.27, -12.0611, -55.0228, -11.7588]
-```
-
-Both sides carry their own date and age, side B follows its input, the divider moves with
-the pointer, the camera centre and zoom do not change, and no numeric delta renders
-(F-34's numeric half is CO-B4-04, block 6).
-
-How the split is drawn: two raster sources of the same layer, each with the `bounds` of its
-half of the current viewport, split at the divider fraction. Moving the divider rewrites the
-two `bounds` through `source.setSourceProperty`, which does not touch the camera.
-
-Reproduce: turn on `MODIS NDVI, 8 day`, expand `Layer options, MODIS NDVI, 8 day`, press
-`Compare, MODIS NDVI, 8 day`, then set `Compare date, MODIS NDVI, 8 day` and drag
-`Compare divider`.
+AC-18 (R-22)
+method: computer use at 1440x900
+command: chrome via CDP, pointer drag on the divider
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+compare on for ndvi-8day, side A 2026-11-12, side B typed into Compare date:
+  default side B (7 days before): "2026-11-12, today" and "2026-11-05, 7 days old"
+  side B set to 2026-10-29: "2026-11-12, today" and "2026-10-29, 14 days old"
+  divider: input range named "Compare divider", 44 x 900 px at x 698, aria-valuenow 50
+  pointer drag to x 900: aria-valuenow 100, divider x 1418
+  camera before the drag: lng -55.27, lat -11.91, zoom 11; after: lng -55.27, lat -11.91, zoom 11
+  [data-delta] and [class*=delta] elements: 0; the word delta does not appear in the page text
+vitest / unittest lines quoted from this run:
+  src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > turns compare on for one tile layer and gives each side its own date label 398ms
+  src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > follows the Compare date input on side B 228ms
+  src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > moves the divider with the pointer without moving the camera and with no numeric delta 148ms
+  src/components/CompareMode.test.tsx > R-22 compare mode (AC-18) > draws both sides from two dates of the same layer 110ms
+verdict: PASS

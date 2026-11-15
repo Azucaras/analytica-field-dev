@@ -1,0 +1,10 @@
+AC-16 (R-20)
+method: tests
+command: npx vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/MapCanvas.block4.test.tsx > R-20 a date change re-resolves only what changed (AC-16) > requests only the layer whose effective date changed, and nothing for a pinned layer 68ms
+  src/components/MapCanvas.block4.test.tsx > R-20 a date change re-resolves only what changed (AC-16) > keeps a pinned layer on its own date 68ms
+
+verdict: PASS

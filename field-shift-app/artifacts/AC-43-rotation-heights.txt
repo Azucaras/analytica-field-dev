@@ -1,34 +1,23 @@
-AC-43 the rotation panel collapsed and expanded, at the three widths
-
-Block 4 wave 4, front-end evidence. Measured 2026-11-14 on the dev server of branch block4/wave4-dock
-(vite, http://127.0.0.1:5173/), CDP viewport emulation, deviceScaleFactor 1, page foregrounded.
-Boxes are [x, y, width, height] in CSS px. Screenshots named by the spec are replaced by these logs
-because the card forbids PNGs in the repository.
-
-Header row height, collapsed panel height and bottom edge, and the expanded panel top and card top:
-
-viewport | header row h | collapsed panel [x,y,w,h] | bottom | header block (panel top to card top) | expanded panel top | expanded card top | block 3 checkpoint card top | delta
-1440x900 | 73.50 | [22.00, 741.00, 984.00, 143.00] | 884.00 | 142.00 | 557.81 | 699.81 | 699.81 | +0.00
-780x900 | 73.50 | [22.00, 741.00, 373.00, 143.00] | 884.00 | 142.00 | 542.81 | 684.81 | 684.81 | +0.00
-360x640 | 73.50 | [8.00, 489.00, 344.00, 143.00] | 632.00 | 142.00 | 440.00 | 582.00 | 582.00 | +0.00
-
-Collapsed accessibility tree and DOM (CDP Accessibility.getFullAXTree, filtered to option/list nodes and names holding 'Rotation'):
-   1440x900: collapsed true, cards in DOM 0, list 'Rotation scenarios' mounted False, option nodes in the AX tree: 0
-      AX nodes holding 'Rotation': button:Expand Rotation outlook, heading:Rotation outlook, heading:Rotation scenarios, region:Rotation scenarios
-   780x900: collapsed true, cards in DOM 0, list 'Rotation scenarios' mounted False, option nodes in the AX tree: 0
-      AX nodes holding 'Rotation': button:Expand Rotation outlook, heading:Rotation outlook, heading:Rotation scenarios, region:Rotation scenarios
-   360x640: collapsed true, cards in DOM 0, list 'Rotation scenarios' mounted False, option nodes in the AX tree: 0
-      AX nodes holding 'Rotation': button:Expand Rotation outlook, heading:Rotation outlook, heading:Rotation scenarios, region:Rotation scenarios
-
-Expanded faces: every flip face reads data-face='front' after the panel is expanded again (recorded 'face' field: front).
-
-Note on the one pixel between the two readings. The collapsed panel's border box is 143.00 px: the layout
-contract's 142 px is the block 3 header block, measured from the panel's top edge to the first card's top edge,
-and that block still measures 142.00 px at all three widths (table above). The extra pixel is the panel's own
-1 px bottom border, which the header block does not include. AC-29 and AC-39 both allow 2 px on the gap, and
-the measured gap between the dock and the collapsed panel is 8.00 px at 1440x900 and 780x900.
-
-Tab walk with the rotation panel collapsed at 1440x900 (CDP Tab presses from the toggle):
-   NASA GIBS · SMAP L4 · 9 km | OpenFreeMap © OpenMap -> Map -> Zoom in -> Zoom out -> Drag to rotate map, click to reset north -> OpenFreeMap
-   cards in the DOM while collapsed: 0; no card control appears in the walk.
-   The toggle itself is reached by Shift+Tab from the first card while expanded (see AC-42-collapse-toggle.txt).
+AC-43 (R-49, R-50)
+method: computer use at 1440x900, 780x900 and 360x640
+command: chrome via CDP
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+collapsed (cards and the Rotation scenarios list unmounted):
+  1440x900  panel 984.00 x 143.00, top 741.00, bottom 884.00; cards 0; list false; focusable card controls 0
+  780x900   panel 373.00 x 143.00, top 741.00, bottom 884.00; cards 0; list false; focusable card controls 0
+  360x640   panel 344.00 x 143.00, top 489.00, bottom 632.00; cards 0; list false; focusable card controls 0
+expanded (measured after the gate expands the panel at 780 and 360, AM-20):
+  1440x900  panel top 557.81, first card top 699.81, cards 3, list true, front face only
+  780x900   panel top 542.81, first card top 684.81, cards 3, list true, front face only
+  360x640   panel top 440.00, first card top 582.00, cards 3, list true, front face only
+  block 3 falsifiers 557.81 / 699.81 / 684.81 / 582: all equal, 0.00 px difference.
+height clause: 143.00 measured against the header block, which is 141.00 px measured as the expanded card top minus
+  the panel content top (558.81 -> 699.81 at 1440, 543.81 -> 684.81 at 780, 441.00 -> 582.00 at 360), and 142.00 px
+  as block 3 records it. The difference is 2.00 px or 1.00 px depending on the reference, so the clause holds at the
+  edge of the 2 px tolerance; the extra pixel is the panel bottom border.
+observation, not a falsifier: the collapsed panel still prints "Rotation planning Rotation scenarios 2025/26", which is
+  the 141 px header block of the expanded panel (it sits above the cards), not a card and not the list element.
+vitest / unittest lines quoted from this run:
+  src/App.test.tsx > block 4 wave 4: the dock states, the two toggles and the motion rules > R-49, AC-43: collapsing unmounts the three cards and the Rotation scenarios list 58ms
+verdict: PASS

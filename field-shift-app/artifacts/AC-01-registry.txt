@@ -1,0 +1,14 @@
+AC-01 (R-01, R-03)
+method: tests
+command: cd backend && python -m unittest -v
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  test_ac_01_block_one_id_is_an_alias_and_the_excluded_products_are_absent (test_layers.RegistryTests.test_ac_01_block_one_id_is_an_alias_and_the_excluded_products_are_absent) ... ok
+  test_ac_01_every_gibs_id_is_in_the_identifier_file_of_the_frozen_fetch (test_layers.RegistryTests.test_ac_01_every_gibs_id_is_in_the_identifier_file_of_the_frozen_fetch) ... ok
+  test_ac_01_registry_holds_the_thirteen_layers_of_tables_a_to_c (test_layers.RegistryTests.test_ac_01_registry_holds_the_thirteen_layers_of_tables_a_to_c) ... ok
+
+identifier file: artifacts/gibs-identifiers-2026-11-14.txt, 1330 lines (wc -l)
+alias: curl -D - /tiles/smap-soil-moisture/6/22/34?date=2026-11-11 -> HTTP/1.1 200 OK, x-tile-date: 2026-11-11
+registry entries: 13 (GET /layers returns 13 rows); ECOSTRESS, LPRM AMSR2 and the NDH map are absent (tests above)
+verdict: PASS

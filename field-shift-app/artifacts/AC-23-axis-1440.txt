@@ -1,65 +1,21 @@
-# AC-23 (R-28), the axis, the default, the ?date= pin and the clamp, 1440x900
-
-Method: the real app in Chromium at 1440x900, dev server 127.0.0.1:5199, backend
-127.0.0.1:8001, plus `npx vitest run` for the same rules in jsdom.
-
-The axis comes from `GET /layers` (`axis: {start, end, default}`) and the store keeps
-`chosenDate: null` meaning "the axis default", so no control invents a date.
-
-## A. Default load, no query
-
-```
-url                                = http://127.0.0.1:5199/
-`Go to date` value                 = 2026-11-14
-`Go to date` min / max             = 2015-04-01 / 2026-11-14
-`Timeline date` aria-valuetext     = 2026-11-14, 3 days old
-season label                       = 2026/27
-status region                      = absent (no clamp happened)
-```
-
-## B. `?date=2026-11-12`
-
-```
-url                                = http://127.0.0.1:5199/?date=2026-11-12
-`Go to date` value                 = 2026-11-12
-`Timeline date` aria-valuetext     = 2026-11-12, 1 day old
-season label                       = 2026/27
-/`layers` request                  = GET /layers?date=2026-11-12 (recorded from the fetch log)
-status region                      = absent
-```
-
-## C. `?date=2015-03-01`, before the axis start
-
-```
-url                                = http://127.0.0.1:5199/?date=2015-03-01
-`Go to date` value                 = 2015-04-01
-`Timeline date` aria-valuetext     = 2015-04-01, today
-season label                       = 2014/15
-role="status" text                 = Date limited to 2015-04-01
-```
-
-The live region is mounted only while a clamp message is owed, so at a normal load the DOM
-holds no `role="status"` node.
-
-## D. Typing a date outside the axis into `Go to date`
-
-The date input carries min 2015-04-01 and max 2026-11-14 (R-45). A typed 2015-03-01 clamps
-to 2015-04-01 and raises the same polite message. Covered by
-`src/components/TimelineDock.test.tsx > clamps a typed date outside the axis and says which
-bound it used (AC-23)`.
-
-## vitest
-
-```
-src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin (5 tests)  PASS
-src/App.test.tsx > opens at the axis end by default (AC-23)                                   PASS
-src/App.test.tsx > opens at ?date=2026-11-12 and asks /layers for that date (AC-23)          PASS
-src/App.test.tsx > clamps a query before the axis and shows the polite limit message (AC-23)  PASS
-```
-
-## Note on the axis values
-
-The axis bounds are the registry's own (latest declared_end of any layer, 2026-11-14), read
-from the `/layers` response. The recorded fallback axis in
-`artifacts/fixtures/layers-response-2026-11-12.json` carries the same three values, so the
-first paint before `/layers` answers shows the same bounds.
+AC-23 (R-28)
+method: tests + computer use at 1440x900
+command: chrome via CDP + npx vitest run
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+browser, 1440x900:
+  input min 2015-04-01, max 2026-11-14, range aria-valuemax 4245 (days)
+  default chosen date on a plain load: 2026-11-14
+  ?date=2026-11-12 opened at 2026-11-12
+  typed 2015-03-01 -> chosen date 2015-04-01, live region text "Date limited to 2015-04-01"
+vitest / unittest lines quoted from this run:
+  src/components/TimelineDock.test.tsx > R-37 and R-33: the dock controls > clamps a typed date outside the axis and says which bound it used (AC-23) 31ms
+  src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > uses the axis default when the query holds no date 1ms
+  src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > sets the chosen date from an on-axis ?date= 1ms
+  src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps a date before the axis start and names the bound 0ms
+  src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps a date after the axis end and names the bound 0ms
+  src/lib/timeline.test.ts > AC-23 / R-28: the axis, the default and the ?date= pin > clamps through clampToAxis and ignores a malformed value 0ms
+  src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > opens at the axis end by default (AC-23) 27ms
+  src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > opens at ?date=2026-11-12 and asks /layers for that date (AC-23) 29ms
+  src/App.test.tsx > block 4 wave 3: the timeline replaces the season control > clamps a query before the axis and shows the polite limit message (AC-23) 26ms
+verdict: PASS

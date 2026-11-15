@@ -1,0 +1,14 @@
+AC-05 (R-06)
+method: tests + computer use
+command: chrome via CDP at 1440x900, dates 2026-11-12 and 2026-11-11
+measured: 2026-11-14, block 4 gate, spec revision 8 (raw sha256 dd1aa5a0...), gate tree 5238d19 (main + wave 1 to 4 + the band patch)
+------------------------------------------------------------------------------
+vitest / unittest lines quoted from this run:
+  src/components/LayerRail.test.tsx > R-26 the collapsed row (AC-21, front half) > shows the no-observation marker only when the effective date differs from the chosen date 18ms
+
+browser, 1440x900, row smap-l3:
+  chosen 2026-11-12: "SMAP soil moisture retrieved 9 km 2026-11-11 1 day old earlier observation No observation"
+  chosen 2026-11-11: "SMAP soil moisture retrieved 9 km 2026-11-11 today on date"   (no marker)
+the test covers the marker on an earlier-date row and its absence on an on-date row (imerg-daily); the browser
+covers the same row at both dates, which is the reading the criterion names.
+verdict: PASS
