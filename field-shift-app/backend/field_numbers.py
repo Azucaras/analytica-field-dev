@@ -428,7 +428,7 @@ def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Win
     section["normals"] = normals
     rows.extend(normals_rows)
     section["state"] = "ok" if any(item["value"] is not None for item in section["aggregates"].values()) \
-        or normals["rain_median"]["value"] is not None else "abstained"
+        or (normals.get("rain_median") or {}).get("value") is not None else "abstained"
     return section, rows, series, window
 
 
