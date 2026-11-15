@@ -2,23 +2,13 @@ import { useState } from 'react'
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { EmptyDescription } from '@/components/ui/empty'
 import type { FieldSummary } from '@/lib/map-store'
+import type { SelectedPolygonChip } from '@/lib/polygon-chip'
 import { t, translationKeyFor } from '@/strings'
 
 export const FIELDS_CHIP_ROW_ID = 'fields-chip-row'
 
 /** R-28: the polygon carried by the fields header chip, as the active region names it. */
-export type SelectedPolygonChip = {
-  /** The `select_field` id of the polygon, `trazo:12345` or `csb:381825001868504`. */
-  fieldId: string
-  /** The class name of the table, or `null` when the class is not in the table. */
-  name: string | null
-  hex: string
-  /**
-   * R-21 and R-28: the painted year of a United States null or absent class, which prints
-   * `No CDL class for {Y}`. `null` for every other unmapped value, which prints `class not mapped`.
-   */
-  noCdlYear?: number | null
-}
+export type { SelectedPolygonChip }
 
 type FieldsPanelProps = {
   fields: FieldSummary[]
