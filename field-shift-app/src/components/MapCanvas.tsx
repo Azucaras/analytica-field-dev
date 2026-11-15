@@ -224,6 +224,54 @@ function applyComposition(map: MapLibreMap, composition: CompositionPreset) {
   }
 }
 
+export const WATER_MASK_LAYER_ID = 'land-only-water-mask'
+const SATELLITE_WATER = '#17324a'
+
+/**
+ * Land-only products (soil moisture, vegetation, land surface temperature) have kilometre
+ * pixels, and a pixel on the coast spills its colour over the sea when zoomed in. The basemap's
+ * own water polygons are drawn above those layers as a mask; layers that do have values over
+ * water (rain, reflectance) are raised above the mask again, in their stack order.
+ */
+export function placeWaterMask(
+  map: MapLibreMap,
+  catalog: readonly LayerCatalogEntry[],
+  stack: string[],
+  composition: CompositionPreset,
+) {
+  const landOn = stack.some((id) => catalog.find((entry) => entry.id === id)?.surface === 'land')
+  const water = (map.getStyle().layers ?? []).find(
+    (layer) => layer.type === 'fill' && (layer as { 'source-layer'?: string })['source-layer'] === 'water',
+  ) as { id: string; source?: string; filter?: unknown } | undefined
+  if (!landOn || !water?.source) {
+    if (map.getLayer(WATER_MASK_LAYER_ID)) map.removeLayer(WATER_MASK_LAYER_ID)
+    return
+  }
+  const colour = composition === 'map'
+    ? (map.getPaintProperty(water.id, 'fill-color') as string | undefined) ?? '#a0c8f0'
+    : SATELLITE_WATER
+  if (!map.getLayer(WATER_MASK_LAYER_ID)) {
+    map.addLayer({
+      id: WATER_MASK_LAYER_ID,
+      type: 'fill',
+      source: water.source,
+      'source-layer': 'water',
+      ...(water.filter ? { filter: water.filter as never } : {}),
+      paint: { 'fill-color': colour, 'fill-opacity': 1 },
+    })
+  } else {
+    map.setPaintProperty(WATER_MASK_LAYER_ID, 'fill-color', colour)
+  }
+  map.moveLayer(WATER_MASK_LAYER_ID)
+  for (let index = stack.length - 1; index >= 0; index -= 1) {
+    const id = stack[index]
+    if (catalog.find((entry) => entry.id === id)?.surface === 'land') continue
+    for (const key of [rasterLayerId(id), `${rasterLayerId(id)}${COMPARE_SUFFIX.a}`, `${rasterLayerId(id)}${COMPARE_SUFFIX.b}`]) {
+      if (map.getLayer(key)) map.moveLayer(key)
+    }
+  }
+}
+
 /** R-18: the stack list puts its first item on top, so the list is applied bottom up. */
 function applyOrder(map: MapLibreMap, order: string[]) {
   for (let index = order.length - 1; index >= 0; index -= 1) {
@@ -880,9 +928,10 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
 
     // R-18: only the layers still on the map take part in the stack order.
     applyOrder(map, order.filter((id) => visibleIds.has(id)))
+    placeWaterMask(map, catalog, order.filter((id) => visibleIds.has(id)), composition)
     // R-36: whatever raster was just inserted, the polygon pair stays above the imagery.
     raisePolygonLayers(map)
-  }, [mapReady, catalog, layerOn, opacity, order, pinnedDates, compare, decisions])
+  }, [mapReady, catalog, layerOn, opacity, order, pinnedDates, compare, decisions, composition])
 
   return (
     <section className="map-panel" role="region" aria-label={t('map.field_map')}>

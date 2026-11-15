@@ -4,6 +4,7 @@ import json
 import math
 import os
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -99,6 +100,7 @@ def _layer(
     optical: bool,
     reserve: str | None = None,
     window_days: float | int | None = None,
+    surface: str = "any",
 ) -> dict[str, Any]:
     """One registry entry, with the fields fixed by the Data contracts section."""
     return {
@@ -119,6 +121,9 @@ def _layer(
         "blank_threshold_bytes": 5000 if optical else None,
         "reserve": reserve,
         "window_days": window_days,
+        # "land" for products with no values over water (soil moisture, vegetation, land surface
+        # temperature); the map hides the sea above them. "any" for rain and reflectance.
+        "surface": surface,
     }
 
 
@@ -129,13 +134,13 @@ LAYER_REGISTRY: dict[str, dict[str, Any]] = {
     for entry in (
         _layer("smap-l3", "SMAP_L3_Passive_Enhanced_Day_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
                "SMAP soil moisture", "retrieved", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-11", "tile", False,
-               reserve="backend/reserve/smap-soil-moisture.png", window_days=1),
+               reserve="backend/reserve/smap-soil-moisture.png", window_days=1, surface="land"),
         _layer("smap-l4-surface", "SMAP_L4_Analyzed_Surface_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
                "SMAP L4 surface soil moisture", "modelled", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-10", "tile", False,
-               window_days=1),
+               window_days=1, surface="land"),
         _layer("smap-l4-root", "SMAP_L4_Analyzed_Root_Zone_Soil_Moisture", "GoogleMapsCompatible_Level6", 6,
                "SMAP L4 root-zone soil moisture", "modelled", "9 km", "P1D", 7, "date", "2015-03-31", "2026-11-10", "tile", False,
-               window_days=1),
+               window_days=1, surface="land"),
         _layer("imerg-daily", "IMERG_Precipitation_Rate", "GoogleMapsCompatible_Level6", 6,
                "IMERG precipitation, daily", "retrieved", "about 11 km", "P1D", 7, "date", "2000-06-01", "2026-11-13", "tile", False,
                window_days=1),
@@ -144,19 +149,19 @@ LAYER_REGISTRY: dict[str, dict[str, Any]] = {
                "2026-01-19T20:30:00Z", "2026-11-14T12:30:00Z", "tile", False, window_days=0.02),
         _layer("ndvi-8day", "MODIS_Terra_NDVI_8Day", "GoogleMapsCompatible_Level9", 9,
                "MODIS NDVI, 8 day", "retrieved", "250 m", "P1D", 16, "date", "2025-02-12", "2026-11-13", "tile", False,
-               window_days=8),
+               window_days=8, surface="land"),
         _layer("evi-8day", "MODIS_Terra_EVI_8Day", "GoogleMapsCompatible_Level9", 9,
                "MODIS EVI, 8 day", "retrieved", "250 m", "P1D", 16, "date", "2025-02-12", "2026-11-13", "tile", False,
-               window_days=8),
+               window_days=8, surface="land"),
         _layer("ndvi-monthly", "MODIS_Terra_L3_NDVI_Monthly", "GoogleMapsCompatible_Level7", 7,
-               "MODIS NDVI, monthly", "retrieved", "250 m", "P1M", 62, "date", "2000-03-01", "2026-10-01", "tile", False,
-               window_days=31),
+               "MODIS NDVI, monthly", "retrieved", "1 km", "P1M", 62, "date", "2000-03-01", "2026-10-01", "tile", False,
+               window_days=31, surface="land"),
         _layer("lst-terra", "MODIS_Terra_L3_Land_Surface_Temp_Daily_Day", "GoogleMapsCompatible_Level7", 7,
                "MODIS land surface temperature, Terra", "retrieved", "1 km", "P1D", 7, "date", "2000-02-25", "2026-11-13", "tile", False,
-               window_days=1),
+               window_days=1, surface="land"),
         _layer("lst-aqua", "MODIS_Aqua_Land_Surface_Temp_Day", "GoogleMapsCompatible_Level7", 7,
                "MODIS land surface temperature, Aqua", "retrieved", "1 km", "P1D", 7, "date", "2002-07-03", "2026-11-14", "tile", False,
-               window_days=1),
+               window_days=1, surface="land"),
         _layer("hls-l30", "HLS_L30_Nadir_BRDF_Adjusted_Reflectance", "GoogleMapsCompatible_Level12", 12,
                "HLS Landsat reflectance, 30 m", "retrieved", "30 m", "P1D", 30, "date", "2013-03-22", "2026-11-06", "tile", True,
                window_days=1),
@@ -358,12 +363,20 @@ class TileResolution:
     attempts: list[str] = field(default_factory=list)
 
 
+# One pooled client for every upstream call. Opening a new HTTPS connection per tile cost about
+# 0.3 s on top of the request itself. httpx.Client is safe to share between threads.
+_upstream_client = httpx.Client(
+    timeout=httpx.Timeout(10.0, connect=5.0),
+    follow_redirects=True,
+    limits=httpx.Limits(max_connections=32, max_keepalive_connections=16),
+)
+
+
 def _http_fetch(url: str) -> httpx.Response:
     global _upstream_requests
     with _tile_lock:
         _upstream_requests += 1
-    with httpx.Client(timeout=10.0, follow_redirects=True) as client:
-        return client.get(url)
+    return _upstream_client.get(url)
 
 
 # Tests replace this hook with a recorded transport (the spec's mock transports).
@@ -415,12 +428,22 @@ def resolve_effective_date(
     chosen_day = chosen.date() if isinstance(chosen, datetime) else chosen
     attempts: list[str] = []
     for token in _candidate_tokens(entry, chosen_day):
+        # A 400 or 404 means GIBS has no granule for that date at all, whatever the tile, so a
+        # date already found missing is skipped for every other tile of the layer.
+        if (entry["id"], token) in _missing_dates:
+            continue
         attempts.append(token)
+        url = _upstream_url(entry, token, z, x, y)
         try:
-            response = fetch(_upstream_url(entry, token, z, x, y))
+            response = fetch(url)
+            # GIBS answers an occasional 5xx that a second request a moment later does not repeat.
+            if response.status_code >= 500:
+                response = fetch(url)
         except httpx.HTTPError:
             return TileResolution(status="unavailable", attempts=attempts)
         status = response.status_code
+        if status in (400, 404):
+            _missing_dates.add((entry["id"], token))
         if status == 200:
             threshold = entry["blank_threshold_bytes"]
             if threshold is not None and len(response.content) <= threshold:
@@ -440,10 +463,13 @@ def resolve_effective_date(
 
 
 _resolution_cache: dict[tuple[str, str, int, int, int], tuple[datetime, TileResolution]] = {}
+# (layer id, date token) pairs GIBS answered 400 or 404 for. Cleared with the resolution cache.
+_missing_dates: set[tuple[str, str]] = set()
 
 
 def _clear_resolution_cache() -> None:
     _resolution_cache.clear()
+    _missing_dates.clear()
 
 
 def _resolve_cached(entry: dict[str, Any], chosen: date, z: int, x: int, y: int) -> TileResolution:
@@ -453,7 +479,10 @@ def _resolve_cached(entry: dict[str, Any], chosen: date, z: int, x: int, y: int)
     if cached is not None and now - cached[0] < TILE_CACHE_TTL:
         return cached[1]
     resolution = resolve_effective_date(entry, chosen, z=z, x=x, y=y)
-    _resolution_cache[key] = (now, resolution)
+    # An upstream failure is not remembered: one bad answer would otherwise mark the layer
+    # unavailable for the whole day.
+    if resolution.status != "unavailable":
+        _resolution_cache[key] = (now, resolution)
     return resolution
 
 
@@ -572,6 +601,7 @@ def _layer_row(entry: dict[str, Any], chosen: date, z: int, x: int, y: int) -> d
         "time_format": entry["time_format"],
         "optical": entry["optical"],
         "window_days": entry["window_days"],
+        "surface": entry["surface"],
         "status": status,
         "effective_date": effective_date,
         "age_days": age_days,
@@ -596,10 +626,15 @@ def list_layers(
         raise HTTPException(status_code=400, detail="Invalid tile coordinates")
 
     chosen_day = _parse_chosen(chosen)
+    # Each layer walks its own dates against GIBS; done one after another a cold date took about
+    # 10 s, so the layers are resolved side by side. The response keeps the registry order.
+    entries = list(LAYER_REGISTRY.values())
+    with ThreadPoolExecutor(max_workers=len(entries)) as pool:
+        rows = list(pool.map(lambda entry: _layer_row(entry, chosen_day, z, x, y), entries))
     return {
         "chosen_date": chosen_day.isoformat(),
         "axis": dict(AXIS),
-        "layers": [_layer_row(entry, chosen_day, z, x, y) for entry in LAYER_REGISTRY.values()],
+        "layers": rows,
     }
 
 
@@ -707,7 +742,13 @@ def get_tile(
     return Response(
         content=content,
         media_type=_tile_media_type(entry),
-        headers={"X-Tile-Source": source, "X-Tile-Date": resolution.effective_date or ""},
+        headers={
+            "X-Tile-Source": source,
+            "X-Tile-Date": resolution.effective_date or "",
+            # The URL carries the date, so the image behind it does not change; the browser can
+            # keep it instead of asking again on every pan and zoom.
+            "Cache-Control": "public, max-age=3600",
+        },
     )
 
 

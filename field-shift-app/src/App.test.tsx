@@ -443,6 +443,24 @@ describe('the command panel', () => {
   })
 })
 
+describe('the command help', () => {
+  it('lists each command and fills the form from its example', async () => {
+    mockApi()
+    const user = userEvent.setup()
+    render(<App />)
+
+    await fieldList()
+    await user.click(rail('command'))
+    const help = screen.getByRole('region', { name: 'Available commands' })
+    expect(within(help).getAllByRole('button')).toHaveLength(4)
+    await user.click(within(help).getByRole('button', { name: 'Use the set_composition example' }))
+    expect((screen.getByRole('textbox', { name: 'Command name' }) as HTMLInputElement).value).toBe('set_composition')
+    expect((screen.getByRole('textbox', { name: 'JSON arguments' }) as HTMLInputElement).value).toBe('{"preset":"satellite"}')
+    await user.click(screen.getByRole('button', { name: 'Run command' }))
+    expect(useMapStore.getState().composition).toBe('satellite')
+  })
+})
+
 describe('rotation flip cards', () => {
   it('flips one card to its facts and back without touching the others', async () => {
     mockApi()

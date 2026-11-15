@@ -24,6 +24,8 @@ export type LayersResponseLayer = {
   time_format: LayerTimeFormat
   optical: boolean
   window_days: number | null
+  /** `land` when the product has no values over water; the map hides the sea above it. Older responses omit it. */
+  surface?: 'land' | 'any'
   status: LayerStatus
   effective_date: string | null
   age_days: number | null

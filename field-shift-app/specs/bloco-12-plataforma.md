@@ -33,6 +33,21 @@ problems were present on the team's `main` before the Field Phase work was merge
 - The timeline printed the raw layer status `unavailable`.
 - Panel text is mostly 10 to 13 px, up from 7 to 9 px.
 
+## Layer loading and the sea
+
+- `/layers` resolved its 13 layers one after another, each walking dates against GIBS over a new HTTPS
+  connection: about 10 s for every new date. The layers are now resolved in parallel over one pooled client
+  (1.3 to 3.8 s cold, measured on 2026-11-15), and a date GIBS answered 400 or 404 for is not asked again for
+  other tiles of the same layer.
+- A failed walk (connection error or 5xx) was cached for 24 hours, so one bad answer left a layer
+  `unavailable` for the day. Failures are no longer cached, and a 5xx is asked once more. This changes AC-09
+  of block 4: a 5xx now costs two requests at the same URL before the walk stops.
+- Dated tiles carry `Cache-Control: public, max-age=3600`.
+- Land-only products (SMAP, MODIS NDVI and EVI, MODIS land surface temperature) are marked `surface: "land"` in
+  the registry. The map draws the basemap's water polygons above them, so a kilometre pixel on the coast no
+  longer spills over the sea; rain and reflectance stay above the mask.
+- MODIS NDVI monthly is MOD13A3, a 1 km product (GIBS layer metadata); the registry said 250 m.
+
 ## What this replaces
 
 The position rules of blocks 2 to 5 (R-35, R-36, R-40, R-41, R-46, R-48, R-49 and the anchor tables) no longer

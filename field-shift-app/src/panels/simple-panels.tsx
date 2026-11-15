@@ -40,5 +40,40 @@ export function CommandPanel() {
   const inputRef = useRef<HTMLInputElement | null>(null)
   // Opening the panel puts the cursor in the command name.
   useEffect(() => { inputRef.current?.focus() }, [])
-  return <AgentBar commandNameInputRef={inputRef} draft={draft} onDraftChange={setDraft} />
+  const { fields } = useAppData()
+  // One ready example per command; the field example uses a field of the active region.
+  const examples: Array<{ name: string; args: Record<string, string> }> = [
+    { name: 'select_field', args: { field_id: fields[0]?.id ?? 'mt-santa-carmem-01' } },
+    { name: 'set_composition', args: { preset: 'satellite' } },
+    { name: 'open_panel', args: { panel: 'evidence' } },
+    { name: 'apply_filter', args: { filter: 'ranked' } },
+  ]
+  return (
+    <div className="fs-stack">
+      <AgentBar commandNameInputRef={inputRef} draft={draft} onDraftChange={setDraft} />
+      <section aria-label={t('agent.help_title')} className="fs-command-help">
+        <h3>{t('agent.help_title')}</h3>
+        <p className="fs-muted">{t('agent.help_hint')}</p>
+        <ul>
+          {examples.map(({ name, args }) => (
+            <li key={name}>
+              <button
+                aria-label={t('agent.use_example', { name })}
+                className="fs-command-example"
+                onClick={() => {
+                  setDraft({ commandName: name, argumentsText: JSON.stringify(args) })
+                  inputRef.current?.focus()
+                }}
+                type="button"
+              >
+                <code data-dynamic-content>{name}</code>
+                <code className="fs-command-args" data-dynamic-content>{JSON.stringify(args)}</code>
+              </button>
+              <p className="fs-muted">{t(`agent.help.${name}`)}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  )
 }

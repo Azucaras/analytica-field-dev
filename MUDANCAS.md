@@ -54,6 +54,15 @@ Na mesma mudança: os talhões de Cass County deixaram de mostrar chaves de trad
 talhão escolhido; o SMAP aparece em pixels nítidos com o tamanho do pixel indicado; o divisor do comparar virou
 uma linha com alça que se arrasta.
 
+## Camadas mais rápidas e sem dados no mar
+
+A cada data nova, o backend consultava a NASA camada por camada, abrindo uma conexão nova a cada tentativa: cerca
+de 10 s até a lista de camadas aparecer. Agora as camadas são consultadas ao mesmo tempo, numa conexão
+reaproveitada (de 1,3 a 3,8 s), e uma falha momentânea da NASA não deixa mais a camada "indisponível" pelo resto
+do dia. Nas camadas que só têm valor em terra (umidade do solo, vegetação e temperatura da superfície), a água do
+mapa base é desenhada por cima, então os pixels de 1 km do litoral não invadem mais o mar nem os lagos. O painel
+Comando agora lista os comandos com um exemplo pronto de cada um.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.
