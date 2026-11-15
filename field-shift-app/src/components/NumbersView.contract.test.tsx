@@ -6,13 +6,33 @@
  * Each defect test renders the one section reader it names, so a failure points at that section
  * and not at the first card that happens to be rendered. The smoke test at the end is the one that
  * would have caught all five at once: it mounts the surface exactly as the app does.
+ *
+ * The last block is the payload follow-up (t_4b5447cf): the climate card's resolution line had never
+ * printed, because the section sent `null` while its own rows and Table E carried the value.
  */
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ClimateCard, ClimateChart, NumbersView, ProvenanceTable, RotationCard, SoilCard } from './NumbersView'
-import { formatMetric, type NumbersPayload } from '@/lib/numbers'
+import { formatMetric, type ClimateSection, type NumbersPayload } from '@/lib/numbers'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { recordedNumbersPayload, RECORDED_FIELD_ID } from '@/test/numbers-recorded'
+import offlineCapture from '../../artifacts/block6/numbers-offline-payload.json'
+
+/**
+ * The response of the same route with `power.larc` unreachable (R-48, AC-47).
+ *
+ * It is a capture, not hand written: `artifacts/block6/numbers-offline-payload.json` is the JSON
+ * body of `POST /fields/mt-santa-carmem-01/numbers` for the request below, produced by the shipped
+ * `build_numbers` over the recorded block 6 transport with `offline_hosts=("power.larc",)`, a
+ * temporary cache and `MAPBIOMAS_DB`, and the clock frozen at `2026-11-15T03:00Z`. Every section
+ * but soil and fragment is unavailable or abstained, `query.window` and `water_balance.window`
+ * are null, and the surface has to render that wire shape instead of the `ok` one.
+ */
+const OFFLINE = offlineCapture as unknown as NumbersPayload
+
+function offlineNumbersPayload(): NumbersPayload {
+  return structuredClone(OFFLINE)
+}
 
 const field: FieldSummary = {
   id: 'mt-santa-carmem-01',
@@ -177,5 +197,141 @@ describe('the smoke test the four defects needed', () => {
 
     expect(container.querySelectorAll('[data-provenance-metric]')).toHaveLength(payload.provenance.length)
     expect(container.querySelectorAll('[data-gap-index]')).toHaveLength(payload.gaps.length)
+  })
+})
+
+describe('the climate resolution line the null payload never triggered (R-10, Table E)', () => {
+  it('prints the resolution the section carries, from the recorded payload', () => {
+    const payload = recordedNumbersPayload()
+    expect(payload.sections.climate.resolution).toBe('0.5 degree cell')
+
+    const { container } = render(<ClimateCard climate={payload.sections.climate} window={payload.query.window} />)
+    expect(container.querySelector('.numbers-resolution')?.textContent).toBe('Resolution: 0.5 degree cell.')
+  })
+})
+
+describe('the normals reader the unavailable payload broke (Table E, R-12)', () => {
+  // Table E requires `normals` in every climate state. The unavailable section this route sends when
+  // POWER is offline carries it with the reason; a payload from a build before that fix carries no key
+  // at all, and the card must not dereference it.
+  it('prints the abstain text with its reason and renders an older payload without the key', () => {
+    const payload = recordedNumbersPayload()
+    const unavailable: ClimateSection = {
+      ...payload.sections.climate,
+      state: 'unavailable',
+      as_of: null,
+      fetched_at: null,
+      cached: false,
+      error: 'ConnectError',
+      window: null,
+      // The wire shape of the unavailable section: no series families, no aggregates (the route sends `{}`).
+      series: {} as ClimateSection['series'],
+      aggregates: {},
+      normals: { of_years: 0, excluded_years: [], error: 'ConnectError' },
+    }
+
+    expect(() => render(<ClimateCard climate={unavailable} window={payload.query.window} />)).not.toThrow()
+    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
+    // The same section carries no series families, so the chart prints its empty text rather than throwing.
+    expect(screen.getByText('No valid day in the window.')).toBeTruthy()
+
+    // An older build's payload: the type says the key is there, the wire did not carry it.
+    cleanup()
+    const older = structuredClone(unavailable) as Partial<ClimateSection>
+    delete older.normals
+    expect(() => render(<ClimateCard climate={older as ClimateSection} window={payload.query.window} />)).not.toThrow()
+    expect(screen.getAllByText('Normals not computed: ConnectError.').length).toBeGreaterThan(0)
+  })
+})
+
+describe('the offline surface the route sends when POWER is unreachable (R-48, AC-47)', () => {
+  it('mounts the whole surface from the captured offline payload and prints every card or its empty state', async () => {
+    const payload = offlineNumbersPayload()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+
+    // The section states the capture carries, so a reader knows which wire shape this test renders.
+    expect(
+      Object.fromEntries(Object.entries(payload.sections).map(([name, section]) => [name, section.state])),
+    ).toEqual({
+      climate: 'unavailable',
+      water_balance: 'unavailable',
+      smap: 'abstained',
+      ndvi: 'unavailable',
+      soil: 'ok',
+      rotation: 'unavailable',
+      municipality: 'abstained',
+      fragment: 'ok',
+    })
+    expect(payload.query.window).toEqual({
+      start: null,
+      end: null,
+      days: null,
+      valid_days: null,
+      dropped_days: null,
+    })
+    expect(payload.sections.water_balance.window).toBeNull()
+
+    // The seven cards the surface renders, each with its heading (the eight sections share one card per family).
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-card]'))
+    expect(cards.map((card) => card.dataset.card)).toEqual([
+      'climate',
+      'water',
+      'smap',
+      'ndvi',
+      'soil',
+      'rotation',
+      'municipal',
+    ])
+    for (const card of cards) {
+      expect(within(card).getByRole('heading', { level: 3 })).toBeTruthy()
+    }
+
+    const card = (id: string) => container.querySelector<HTMLElement>(`[data-card="${id}"]`) as HTMLElement
+
+    // The climate card abstains with the section reason, and its chart prints the empty text.
+    expect(within(card('climate')).getAllByText('Climate source unavailable: ConnectError.').length).toBeGreaterThan(0)
+    expect(within(card('climate')).getAllByText('Normals not computed: ConnectError.').length).toBe(7)
+    expect(within(card('climate')).getByText('No valid day in the window.')).toBeTruthy()
+
+    // The water card has no window to print, so it prints the abstention with the same reason and no window line.
+    expect(card('water').querySelector('.numbers-window')).toBeNull()
+    expect(within(card('water')).getByText('Climate source unavailable: ConnectError.')).toBeTruthy()
+
+    // The remaining cards print their empty states from the reason the section carries.
+    expect(within(card('smap')).getByText('SMAP palette not read: No value.')).toBeTruthy()
+    expect(
+      within(card('ndvi')).getByText(
+        'NDVI not plotted: No value scenes below 20 percent cloud, best valid fraction not read. At least two scenes at or above 0.5 are needed.',
+      ),
+    ).toBeTruthy()
+    expect(within(card('rotation')).getByText('no MapBiomas Collection 11 row for this polygon')).toBeTruthy()
+    expect(within(card('municipal')).getByText('Municipal value not read: No value.')).toBeTruthy()
+    // The capture's municipality section omits `share` altogether (the route only sends one beside a
+    // municipality row), so the share cell paints no number and no `null`. Giving that cell its own
+    // abstention text is t_e60dd62e's card, which owns the abstention copy; this test only holds the
+    // offline surface to rendering it without a crash and without a printed null.
+
+    // The soil section is the one that reads ok offline, and it prints its own numbers.
+    expect(
+      within(card('soil')).getByText(formatMetric('soil.clay.0_5', payload.sections.soil.depths[0].clay_g_kg)),
+    ).toBeTruthy()
+
+    // The provenance table and the gap register still print the payload's own rows, one gap per section.
+    expect(container.querySelectorAll('[data-provenance-metric]')).toHaveLength(payload.provenance.length)
+    expect(container.querySelectorAll('[data-gap-index]')).toHaveLength(payload.gaps.length)
+    expect(payload.gaps).toHaveLength(7)
+  })
+
+  it('prints no literal `null` token anywhere on the offline surface (AC-11 falsifier)', async () => {
+    stubNumbersFetch(offlineNumbersPayload())
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+
+    const text = container.textContent ?? ''
+    expect(text).not.toMatch(/\bnull\b/)
+    // The header window fact has no window to print either, and it prints the empty text, not a date.
+    expect(container.querySelector('.numbers-header')?.textContent).toContain('No value')
   })
 })
