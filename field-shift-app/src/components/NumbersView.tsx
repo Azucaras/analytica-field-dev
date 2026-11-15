@@ -240,9 +240,18 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
       missing: aggregate.of_days - aggregate.valid_days,
     })
   }
+  // Table E makes `normals` a key of every climate state, but a payload from a build before that fix
+  // carries no key at all: optional access keeps the card rendering its abstain text instead of throwing.
   const abstainNormal = t('numbers.abstain.normals', {
-    reason: climate.normals.error ?? climate.error ?? t('numbers.no_value'),
+    reason: climate.normals?.error ?? climate.error ?? t('numbers.no_value'),
   })
+  // An unavailable climate section sends `series: {}` (and a payload from an older build can omit it):
+  // hand the chart the three families it reads so it prints its empty text instead of throwing.
+  const chartSeries: ClimateSeries = {
+    rain_day: climate.series?.rain_day ?? [],
+    tmax_day: climate.series?.tmax_day ?? [],
+    tmin_day: climate.series?.tmin_day ?? [],
+  }
   return (
     <Card
       id="climate"
@@ -272,7 +281,7 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
           </div>
         ))}
       </dl>
-      <ClimateChart series={climate.series} />
+      <ClimateChart series={chartSeries} />
       <h4>{t('numbers.climate.normals_heading')}</h4>
       <p className="numbers-cell-statement">{t('numbers.climate.normals_statement')}</p>
       <dl className="numbers-rows">
@@ -282,7 +291,7 @@ export function ClimateCard({ climate, window }: { climate: ClimateSection; wind
             <dd>
               <Printed
                 metric={metric}
-                value={climate.normals[key]?.value ?? null}
+                value={climate.normals?.[key]?.value ?? null}
                 abstain={abstainNormal}
               />
             </dd>
