@@ -177,18 +177,19 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
     expect(screen.getByText('Basemap unavailable')).toBeTruthy()
   })
 
-  it('orders the five status lines failure, key, basemap, zoom, select (R-39)', () => {
+  it('orders the status lines key, basemap, zoom, select (R-39), and the failure line stands alone (R-12)', () => {
     setStore({
       polygonMode: { ...brScene, failure: null },
       basemapKeyMissing: true,
       basemapFailed: true,
       mapZoom: 9,
       regionId: 'br',
-      polygonSourceError: 'polygon.source_unavailable',
+      polygonSourceError: null,
     })
     render(<PolygonPanel />)
+    // R-12: a failure line means no tier paints, so the zoom and select lines are absent with it.
+    // The four lines below are the ones that can print together.
     const lines = [
-      'Polygon source unavailable',
       'Google basemap needs an API key',
       'Basemap unavailable',
       'Polygons from zoom 8',
@@ -201,6 +202,22 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
       expect(index, line).toBeGreaterThan(cursor)
       cursor = index
     }
+  })
+
+  it('orders the failure line alone, with no zoom or select line beside it (R-12)', () => {
+    setStore({
+      polygonMode: { ...brScene, failure: null },
+      basemapKeyMissing: false,
+      basemapFailed: false,
+      mapZoom: 9,
+      regionId: 'br',
+      polygonSourceError: 'polygon.source_unavailable',
+    })
+    render(<PolygonPanel />)
+    const text = screen.getByRole('region', { name: 'Polygon' }).textContent ?? ''
+    expect(text).toContain('Polygon source unavailable')
+    expect(text).not.toContain('Polygons from zoom')
+    expect(text).not.toContain('Select from zoom')
   })
 })
 
@@ -243,6 +260,50 @@ describe('the provenance, source and credit lines (R-33, R-38, AC-31)', () => {
     render(<PolygonPanel />)
     expect(screen.getByText('CDL 2025, Crop Sequence Boundaries 2025 release, retrieved')).toBeTruthy()
     expect(screen.getByText('Polygon build not available')).toBeTruthy()
+  })
+})
+
+// The measured state of the gate (AC-05, AC-09): the manifest answers, so the scene carries
+// tiers, but the tile files fail, so the map reports the source error and the region has no
+// tier that paints. R-12 says both zoom lines are then absent and the failure line prints.
+const usTiersFromManifest = {
+  detail: { minzoom: 6, maxzoom: 14 },
+  overview: { minzoom: 3, maxzoom: 5 },
+  interactiveMinzoom: 8,
+}
+
+describe('no tier available after a source error prints no zoom line (R-07, R-12, AC-05, AC-09)', () => {
+  it('AC-05: at zoom 3 the failure line prints and the zoom string is absent beside it', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 3,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('AC-09: at zoom 11 (the default view) the zoom string is absent when the US tier is absent', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 11,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('still prints the zoom line when the source answers (no regression on R-12)', () => {
+    setStore({ polygonMode: { ...usScene, tiers: usTiersFromManifest }, mapZoom: 3, polygonSourceError: null })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygons from zoom 3')).toBeTruthy()
+    expect(screen.queryByText('Polygon build not available')).toBeNull()
   })
 })
 

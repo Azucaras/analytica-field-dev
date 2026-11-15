@@ -74,10 +74,13 @@ export function PolygonPanel() {
   if (failure) statusLines.push({ key: 'failure', text: t(failure as TranslationKey) })
   if (basemapKeyMissing) statusLines.push({ key: 'key', text: t('polygon.google_key_missing') })
   if (basemapFailed) statusLines.push({ key: 'basemap', text: t('polygon.basemap_unavailable') })
-  if (lines?.zoomLine) {
+  // R-12 and AC-05, AC-09: a failure line means no tier paints. The zoom and select lines name a
+  // mounted tier, so they are absent beside the failure line, not printed next to it.
+  const tierMounted = failure === null
+  if (tierMounted && lines?.zoomLine) {
     statusLines.push({ key: 'zoom', text: t('polygon.polygons_from_zoom', { lowest: lines.zoomLine.lowest }) })
   }
-  if (lines?.selectLine) {
+  if (tierMounted && lines?.selectLine) {
     statusLines.push({
       key: 'select',
       text: t('polygon.select_from_zoom', { interactive: lines.selectLine.interactive }),

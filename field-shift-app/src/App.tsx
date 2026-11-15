@@ -486,10 +486,16 @@ function App() {
             collapsed={rotationCollapsed}
             emptyReason={isLoadingFields || isLoadingScenarios
               ? null
-              : error ?? (!selectedFieldId
-                ? t('empty.select_field')
-                : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
+              : error ?? (selectedPolygonId !== null
+                // R-26, AC-22: a polygon has no rotation scenarios of its own. It gets the
+                // scenarios empty text, not the fixture's select-a-field copy.
+                ? t('empty.no_rotation_scenarios')
+                : !selectedFieldId
+                  ? t('empty.select_field')
+                  : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)}
             isLoading={isLoadingFields || isLoadingScenarios}
+            // R-49, AC-41: the season chip belongs to block 3's map screen, not to the polygon surface.
+            seasonChip={selectedPolygonId === null}
             scenarios={scenarios}
             state={scenarioState === 'abstained' ? null : scenarioState}
             threshold={scenarioState === 'abstained' ? null : threshold}
