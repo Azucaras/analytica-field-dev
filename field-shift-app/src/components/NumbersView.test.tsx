@@ -1,6 +1,8 @@
 import { act, cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { NumbersView } from './NumbersView'
 import { useMapStore, type FieldSummary } from '@/lib/map-store'
 import { recordedNumbersPayload, RECORDED_FIELD_ID } from '@/test/numbers-recorded'
@@ -31,6 +33,22 @@ const CARD_NAMES = [
 /** Every element of the surface that carries a printed number's metric id (R-07). */
 function printedMetrics(): string[] {
   return Array.from(document.querySelectorAll<HTMLElement>('[data-metric]')).map((node) => node.dataset.metric ?? '')
+}
+
+/**
+ * The body of one exact rule of `NumbersView.css`. jsdom has no layout, so the header's width
+ * contract is pinned here as the stylesheet text a browser applies; the measured widths at 360
+ * are the browser evidence of the same rule.
+ */
+function styleRule(selector: string): string {
+  // A `?raw` import of a stylesheet reads empty under this suite's CSS handling, and
+  // `import.meta.url` is not a file URL here, so the source is read from the vitest root instead.
+  const css = readFileSync(join(process.cwd(), 'src', 'components', 'NumbersView.css'), 'utf8')
+  const at = css.indexOf(`\n${selector} {`)
+  if (at < 0) return ''
+  const open = css.indexOf('{', at)
+  const close = css.indexOf('}', open)
+  return css.slice(open + 1, close)
 }
 
 function stubNumbersFetch(payload: NumbersPayload | (() => Promise<Response>)) {
@@ -279,6 +297,25 @@ describe('provenance, gap register and the disclosure (R-07, R-08, R-41, R-42, R
     expect(ring).not.toBeNull()
     expect(ring?.textContent).toBe(`${formatMetric('ring_area', row?.value as number)} ha`)
     expect(ring?.closest('.numbers-cell')?.querySelector('[data-basis]')?.textContent).toBe('retrieved')
+  })
+
+  it('lets the Area fact wrap, so the area value prints in full and the ring area keeps its own line (R-03, AC-03)', async () => {
+    stubNumbersFetch(recordedNumbersPayload())
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const header = container.querySelector('.numbers-header') as HTMLElement
+    const area = header.querySelector<HTMLElement>('[data-metric="area"]')
+    const ring = header.querySelector<HTMLElement>('[data-metric="ring_area"]')
+    const fact = area?.closest('.numbers-header-fact') as HTMLElement | null
+    // The Area fact is the one fact with three cells, so it is the one that opts into wrapping.
+    expect(fact?.classList.contains('numbers-header-fact-area')).toBe(true)
+    // R-07: both rows are cells of the same fact, so R-03's four header values keep their places.
+    expect(ring?.closest('dd')).toBe(area?.closest('dd'))
+    // The rule that used to ellipsize the area value no longer reaches it; the fact wraps instead.
+    expect(styleRule('.numbers-header-fact-area dd')).toMatch(/flex-wrap:\s*wrap/)
+    const areaValueRule = styleRule('.numbers-header-fact-area dd > span:first-child')
+    expect(areaValueRule).toMatch(/white-space:\s*normal/)
+    expect(areaValueRule).not.toMatch(/text-overflow:\s*ellipsis/)
   })
 
   it('prints the two SMAP family rows as abstentions when the series has no day (R-07, R-12, AC-06)', async () => {

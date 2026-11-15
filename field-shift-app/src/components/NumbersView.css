@@ -125,6 +125,22 @@
   white-space: nowrap;
 }
 
+/*
+ * R-03 and AC-03: the Area fact carries three cells (the area value, its basis and the ring_area
+ * row), and the layout note allows a value to wrap but never to truncate. Its dd wraps, and the
+ * area value wraps with it, so at 360 the value prints in full on its own line and the ring cell
+ * takes the next one. The ellipsis rule above still guards the class, date and window facts.
+ */
+.numbers-header-fact-area dd {
+  flex-wrap: wrap;
+}
+
+.numbers-header-fact-area dd > span:first-child {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
 /* R-07: the ring area is a second cell inside the Area fact, so R-03's four header values keep
    their places at every width. */
 .numbers-header-ring {

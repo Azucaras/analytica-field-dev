@@ -881,7 +881,7 @@ export function NumbersView({ selectedField, onClose }: NumbersViewProps) {
                   {isPolygon && <BasisChip basis={region.basis} />}
                 </dd>
               </div>
-              <div className="numbers-header-fact">
+              <div className="numbers-header-fact numbers-header-fact-area">
                 <dt>{t('numbers.header.area')}</dt>
                 <dd>
                   {/* R-07: the area row prints here, as block 5's value or as its abstention, with its id. */}
