@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
@@ -59,8 +59,28 @@ vi.mock('maplibre-gl', () => ({
     flyTo = vi.fn()
     on = vi.fn()
     remove = vi.fn()
+    getSource = vi.fn(() => null)
+    getLayer = vi.fn(() => null)
+    getStyle = vi.fn(() => ({ layers: [] }))
+    getZoom = vi.fn(() => 11)
+    getCenter = vi.fn(() => ({ lng: -55.27, lat: -11.91 }))
+    getCanvas = () => ({ style: {} as { cursor?: string } })
+    setPaintProperty = vi.fn()
+    setLayoutProperty = vi.fn()
+    setFeatureState = vi.fn()
+    removeFeatureState = vi.fn()
+    removeControl = vi.fn()
+    queryRenderedFeatures = vi.fn(() => [])
+    off = vi.fn()
   },
   NavigationControl: class {},
+  AttributionControl: class {
+    options: unknown
+    constructor(options?: unknown) { this.options = options }
+    onAdd() { return {} }
+    onRemove() {}
+  },
+  addProtocol: vi.fn(),
   setWorkerUrl: vi.fn(),
 }))
 
@@ -120,12 +140,20 @@ function mockApi() {
   }))
 }
 
+beforeEach(() => {
+  // Block 5 makes the United States the default region (R-01) and lists only the active
+  // region's fixtures (R-24, AM-10). These block 1 to 4 cases exercise the Brazil fixtures,
+  // so they run with Brazil active, which `?region=` is the only way to choose.
+  window.history.replaceState({}, '', '/?region=br')
+  useMapStore.setState({ regionId: 'br', selectedFieldId: null, chosenDate: null })
+})
+
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
   translationTestState.useKeys = false
   window.localStorage.removeItem('fs.locale')
-  useMapStore.setState({ selectedFieldId: null, chosenDate: null })
+  useMapStore.setState({ selectedFieldId: null, chosenDate: null, regionId: 'us', selectedPolygonId: null })
   window.history.replaceState({}, '', '/')
 })
 
