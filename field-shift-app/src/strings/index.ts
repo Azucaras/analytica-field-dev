@@ -7,9 +7,21 @@ export type Locale = 'en' | 'pt-BR'
 
 const LOCALE_STORAGE_KEY = 'fs.locale'
 
+/** Portuguese unless the switch stored English. */
+/** Short month name in the current locale, 1 = January. */
+export function monthName(month: number): string {
+  return new Intl.DateTimeFormat(getLocale(), { month: 'short', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(2001, month - 1, 1)))
+    .replace('.', '')
+}
+
 function getLocale(): Locale {
-  if (typeof localStorage === 'undefined') return 'en'
-  return localStorage.getItem(LOCALE_STORAGE_KEY) === 'pt-BR' ? 'pt-BR' : 'en'
+  try {
+    if (typeof localStorage === 'undefined') return 'pt-BR'
+    return localStorage.getItem(LOCALE_STORAGE_KEY) === 'en' ? 'en' : 'pt-BR'
+  } catch {
+    return 'pt-BR'
+  }
 }
 
 export function translationKeyFor(value: string): TranslationKey | null {

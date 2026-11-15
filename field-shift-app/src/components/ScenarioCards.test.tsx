@@ -117,7 +117,7 @@ describe('ScenarioCards', () => {
     expect(options[2].getAttribute('aria-current')).not.toBe('true')
   })
 
-  it('keeps the three scenario cards in one row at a wide viewport (R-11, AC-11)', () => {
+  it('keeps the three scenario cards in one row at a wide viewport', () => {
     render(<ScenarioCards scenarios={scenarios} state="ranked" threshold={null} />)
 
     const list = screen.getByRole('list', { name: 'Rotation scenarios' })
@@ -139,7 +139,7 @@ describe('ScenarioCards', () => {
       .toEqual(['Current sequence', 'Soybean → Corn cover', 'Soybean → Cotton'])
   })
 
-  it('shows the two visuals on every front and none of the five facts (R-12, AC-07)', () => {
+  it('shows the two visuals on every front and none of the five facts', () => {
     render(<ScenarioCards scenarios={scenarios} state="ranked" threshold={null} />)
 
     const list = screen.getByRole('list', { name: 'Rotation scenarios' })
@@ -151,7 +151,7 @@ describe('ScenarioCards', () => {
     }
   })
 
-  it('renders the five labelled facts in block 2 order on the back face (R-13, AC-07)', async () => {
+  it('renders the five labelled facts in their usual order on the back face', async () => {
     const user = userEvent.setup()
     render(<ScenarioCards scenarios={scenarios} state="ranked" threshold={null} />)
 
@@ -174,7 +174,7 @@ describe('ScenarioCards', () => {
     }
   })
 
-  it('keeps the crop group basis and date per scenario and invents none (R-15, AC-10)', () => {
+  it('keeps the crop group basis and date per scenario and invents none', () => {
     render(<ScenarioCards scenarios={scenarios} state="ranked" threshold={null} />)
 
     const current = within(cardFor('Current sequence')).getByRole('group', { name: /^Crop history/ })
@@ -197,7 +197,7 @@ describe('ScenarioCards', () => {
     expect(cottonCrop.textContent).not.toMatch(/\d/)
   })
 
-  it('shows the measured SMAP strings and no derived rotation value on the front (R-14, R-38, AC-08)', () => {
+  it('shows the measured SMAP strings and no derived rotation value on the front', () => {
     render(<ScenarioCards scenarios={scenarios} state="ranked" threshold={null} />)
 
     const current = cardFor('Current sequence')
@@ -213,7 +213,7 @@ describe('ScenarioCards', () => {
     }
   })
 
-  it('decides the SMAP label from each row basis: retrieved measures, modelled marks (R-14, R-17, AC-13)', () => {
+  it('decides the SMAP label from each row basis: retrieved measures, modelled marks', () => {
     const withModelled = scenarios.map((scenario) => scenario.id !== 'soy-corn-cover'
       ? scenario
       : {

@@ -1,127 +1,137 @@
 # Field Shift
 
-Field Shift is a satellite backed field planning prototype built for the NASA Space Apps Challenge. It reads a
-small fixture of three agricultural fields, shows satellite soil moisture from NASA GIBS on a MapLibre map, and
-presents rotation scenarios with the evidence behind each one, including what is measured and what is only modelled.
+Field Shift helps a farmer decide which crop rotation to plant this season, given the El Nino that NOAA is
+tracking for 2026. It was built for the NASA Space Apps Challenge 2026, *Field Shift: Adapting Farms with NASA
+Data*.
 
-The project lives in three parts:
+The app opens on a map of fields. Pick one and you see the current ENSO state, how much rain has fallen since the
+season started compared with normal and with past strong El Nino years, and the rotation options for that field.
+The **Análise** button opens the full analysis for the field's municipality or county: forecasts, ranked rotations
+with the arithmetic behind each score, yield history by crop, vegetation, land use and slope.
 
-| Path | What it is | Runtime |
+It covers five places: Santa Carmem (MT), Tupanciretã (RS) and Luís Eduardo Magalhães (BA) in Brazil, and McLean
+County (Illinois) and Lubbock County (Texas) in the United States.
+
+## Quick start
+
+You need [Node.js](https://nodejs.org) 22 or newer, plus either [uv](https://docs.astral.sh/uv/) or Python 3.11
+to 3.15. No key, account or data download is needed: the data the app shows is in the repository.
+
+1. Get the code. On Windows, turn on long paths, because some documentation files have very long names:
+
+   ```sh
+   git clone -c core.longpaths=true https://github.com/Azucaras/analytica-field-dev.git
+   ```
+
+   The repository is private, so ask the team for access first.
+
+2. Start it. On Windows, double-click `iniciar.cmd`. Anywhere else:
+
+   ```sh
+   cd analytica-field-dev/field-shift-app
+   npm start
+   ```
+
+The first run takes a few minutes: it creates the backend's Python environment and installs the front end. Then it
+picks free ports (8000 and 5173 unless they are taken), starts the backend and the front end, and opens the
+browser. `Ctrl+C` stops both. The app opens in Portuguese; the PT/EN switch is at the end of the top bar.
+
+The only network the app uses while running is for map tiles (OpenFreeMap, OpenStreetMap and NASA GIBS, all open).
+Without internet the map background stays blank; the rest reads local data, though a fully offline run has not been tested.
+
+## What is in the repository
+
+| Folder | What it is |
+|---|---|
+| `field-shift-app` | The app: React and MapLibre front end, FastAPI backend, and the data the backend serves |
+| `field-shift-pipeline` | The data pipeline: downloads every source, builds the evidence and the rotation scores, and writes the files the backend serves |
+| `field-shift-docs` | The documentation site and the research dossier (Astro Starlight) |
+| `docs`, `plans`, `research`, `outputs` | Research notes, plans and the dossier sources |
+
+## Data
+
+| What | Source | Key |
 |---|---|---|
-| `field-shift-app` | The application: Vite, React and TypeScript front end, plus the FastAPI backend that serves the fixture and proxies the GIBS tiles | Node and Python |
-| `field-shift-docs` | The documentation site (Astro Starlight) that publishes the specs and the project write up | Node |
-| `docs`, `plans`, `research`, `outputs` | Written material: briefing, plans, prior art, research notes and the dossier | none |
+| ENSO state, history and outlook | NOAA CPC (RONI, ONI, weekly Niño 3.4, diagnostic discussion) | none |
+| Daily weather since 1981 | NASA POWER, at each municipality or county centre | none |
+| Yields, areas and revenue, Brazil | IBGE PAM (SIDRA tables 1612 and 839) | none |
+| Yields, areas and revenue, US | USDA NASS Quick Stats | free key |
+| Boundaries | IBGE (Brazil), US Census 2023 cartographic boundary file (US) | none |
+| Soil water and texture | ISRIC SoilGrids | none |
+| Vegetation, land use, elevation | MODIS NDVI, 10 m land cover, Copernicus DEM, via Microsoft Planetary Computer | none |
+| Forecasts (15 days, 46 days, seasonal) | Meteomatics | account |
+| Crop coefficients, root depths, ET0 | FAO-56 | none |
+| US planting and harvest dates | USDA NASS Agricultural Handbook 628 (1997) | none |
+| Satellite soil moisture layer on the map | NASA GIBS (SMAP) | none |
 
-## Short answer: `npm install` is not enough
+Brazil uses a July to June crop year. The US counties use the water year, October to September, because that is
+where the El Nino signal shows up in the US (the cold season) and it keeps the summer crops inside one year.
 
-`npm install` inside `field-shift-app` installs the front end only. The backend is Python and needs its own
-virtual environment and `pip install`. The docs site has a third, separate `npm install`. There is no single
-command that installs all three.
+## Refreshing the data
 
-## Requirements
+This is optional. The app already ships the data recorded on 2026-11-15. To download fresh data:
 
-- Node.js 22 or newer. Verified here with Node 26.12.0 and npm 12.2.1.
-- Python 3.11 or newer. Verified here with Python 3.14.9.
-- Network access on first run, because the tile proxy talks to NASA GIBS.
+1. Copy `field-shift-pipeline/.env.example` to `field-shift-pipeline/.env` and fill in the keys you have. The file
+   stays on your machine; git ignores it.
+   - `NASS_API_KEY`: US yields, free at https://quickstats.nass.usda.gov/api
+   - `METEOMATICS_USERNAME` and `METEOMATICS_PASSWORD`: forecasts, from a Meteomatics account
+2. On Windows, double-click `atualizar-dados.cmd`. Anywhere else:
 
-## Install and run
+   ```sh
+   cd field-shift-pipeline
+   uv sync --extra planetary
+   uv run python -m pipeline.update_all
+   ```
 
-### 1. Backend, port 8000
+It runs every step in order and ends with the two exports the app reads. A step whose key is missing is skipped and
+the app keeps its old data for it. Every download is cached in `field-shift-pipeline/data/raw/`, so the second run
+only fetches what is new; the satellite step takes about 20 minutes per place the first time. Leave a slow step out
+with `--skip planetary`, for example. Restart the app afterwards to see the new data.
 
-```sh
-cd field-shift-app
-python3 -m venv backend/.venv
-backend/.venv/bin/pip install -r backend/requirements.txt
-backend/.venv/bin/python -m uvicorn main:app --app-dir backend --port 8000
-```
+Each step can also run on its own, for example `uv run python -m pipeline.fetch_nass`; the list is in
+`field-shift-pipeline/README.md`.
 
-On Windows PowerShell the same steps are:
-
-```powershell
-cd field-shift-app
-py -m venv backend\.venv
-backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-backend\.venv\Scripts\python.exe -m uvicorn main:app --app-dir backend --port 8000
-```
-
-Check it answers before starting the front end:
-
-```sh
-curl http://localhost:8000/health
-# {"status":"ok"}
-```
-
-### 2. Front end, port 5173
+## Tests
 
 ```sh
-cd field-shift-app
-npm install
-npm run dev
+cd field-shift-app && npx tsc -b --noEmit && npx vitest run && npm run build
+cd field-shift-app/backend && .venv/Scripts/python -m unittest test_commands test_climate test_fieldphase
+cd field-shift-pipeline && uv run pytest
 ```
 
-Open http://localhost:5173. The front end calls the backend at `http://localhost:8000` by default; see the
-environment variables below to point it somewhere else.
+On Linux or macOS the backend interpreter is `.venv/bin/python`.
 
-### 3. Documentation site, optional
+## Settings
 
-```sh
-cd field-shift-docs
-npm install
-npm run dev
-```
+| Variable | Used by | Default |
+|---|---|---|
+| `VITE_API_BASE_URL` | front end | `http://localhost:8000` (`npm start` sets it for you) |
+| `TILE_UPSTREAM_URL` | backend | the NASA GIBS WMTS endpoint |
+| `TILE_CACHE_DIR` | backend | `backend/.tile-cache` |
+| `CLIMATE_FIXTURE_DIR` | backend | `backend/fixtures/climate` |
+| `FIELDPHASE_FIXTURE_DIR` | backend | `backend/fixtures/fieldphase` |
 
-## Tests and checks
+## Limits
 
-Front end, from `field-shift-app`:
+- The climate and yield evidence describes a municipality or a county, not a field. NASA POWER is a reanalysis
+  grid cell of about 50 km, and PAM and NASS are survey statistics.
+- Samples are small: five strong El Nino years in the weather record, two or three per crop in the yield records.
+  The app marks every comparison with fewer than three years.
+- Brazilian planting dates are still an assumption until the CONAB calendar is cited. US dates come from a 1997
+  USDA handbook at state level, not county level. The second crop after wheat in the US is an assumption.
+- The pilot fields outside Santa Carmem are synthetic rectangles at the centre of their municipality or county,
+  with no field-level rotation cards. Their scored rotations are in the analysis.
+- Santa Carmem's rotation cards on the map are the hand-written examples from the first version. It has no
+  scored rotations, because no candidate list or crop calendar has been set up for its region.
+- McLean County was picked for the Corn Belt, but its winters are not drier under El Nino in the record (October
+  to March rain is about 20 percent above normal in strong years), so it does not mirror Lubbock the way the two
+  Brazilian pilots mirror each other.
+- Scores are relative within one place and kind of year, so small differences look large. Gross revenue is used,
+  not margin.
+- A rotation is scored only when every crop in it is a main crop of the place (at least 1 percent of the recent
+  planted area). Wheat in McLean and sorghum in Lubbock fall below that, so those rotations stay unranked.
+- The scores have not been checked against observed yields.
 
-```sh
-npx tsc -b --noEmit     # type check, no emit
-npx vitest run          # 12 files, 97 tests
-npm run build           # production build into dist/
-```
+## Ownership
 
-Backend, from `field-shift-app/backend`:
-
-```sh
-.venv/bin/python -m unittest -q test_commands   # 8 tests
-```
-
-These are the numbers measured on the state that is committed here: tsc exit 0, 97 vitest tests green, 8 backend
-tests green, build clean.
-
-## Environment variables
-
-| Variable | Where | Default | Purpose |
-|---|---|---|---|
-| `VITE_API_BASE_URL` | front end | `http://localhost:8000` | Base URL of the backend the front end calls |
-| `TILE_UPSTREAM_URL` | backend | `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best` | Upstream origin for the tile proxy, useful for pointing at a mock |
-| `TILE_CACHE_DIR` | backend | `backend/.tile-cache` | Where proxied tiles are cached for 24 hours |
-
-No API key is required. The GIBS endpoint used here is open.
-
-## Repository contents worth knowing
-
-- `field-shift-app/specs`: the frozen specs for blocks 1, 2 and 3, each with an amendment ledger and a digest you
-  can reproduce with the `sed` command printed inside the file. Block 3 uses the spec before code rule.
-- `field-shift-app/artifacts`: the markdown checkpoints for blocks 2 and 3 and for the Constraints removal, plus
-  the json and txt measurement dumps they cite. Screenshots are produced at run time and are not versioned.
-- `field-shift-app/backend/fixtures/field-scenarios.json`: the whole data set, three fields with three scenarios
-  each. Coverage is 86, 91 and 62 percent; SMAP soil moisture is 0.28, 0.31 and 0.19 m3/m3, all retrieved.
-- `outputs/field-shift.md` and the `field-shift-docs` site: the narrative and the dossier.
-
-## Known limitations
-
-These are recorded rather than hidden, and they do not block a demo:
-
-- The `Command` button does not carry the primary fill that requirement R-02 of block 3 describes, because no
-  acceptance criterion measures it. It is an open item.
-- `Rotation suitability` is the only `modelled` row in the fixture and it belongs to a scenario that the evidence
-  panel does not render, so the modelled marker never shows on screen with this data. The behaviour is covered by
-  tests, not by the running app.
-- The block 3 carry-over list (CO-01 to CO-09) is still open: layer rail covered at 360 px width, attribution
-  positioned mid screen at 360, evidence table truncation at 400 px, no field labels on the map, 7 to 9 px body
-  type, fixture dates in 2025 against a 2026 satellite layer, and contrast of secondary labels.
-
-## Using this material
-
-The repository is private and belongs to UFRJ Analytica. Contact the team before reusing the fixture data.
+The repository is private and belongs to UFRJ Analytica. Contact the team before reusing the data.

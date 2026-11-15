@@ -25,7 +25,7 @@ function renderBars(props: Parameters<typeof CropHistoryBars>[0]) {
 }
 
 describe('CropHistoryBars', () => {
-  it('renders one equal length bar per crop in array order with the row basis and date (R-15)', () => {
+  it('renders one equal length bar per crop in array order with the row basis and date', () => {
     const { group, bars } = renderBars({ crops: ['Soybean', 'Corn'], basis: 'entered', asOf: '2025-06-30' })
 
     expect(bars).toHaveLength(2)
@@ -36,7 +36,7 @@ describe('CropHistoryBars', () => {
     expect(group.textContent).toContain('2025-06-30')
   })
 
-  it('gives every track the same grid column so both bars render equal (AC-10)', () => {
+  it('gives every track the same grid column so both bars render equal', () => {
     // jsdom has no layout, so it cannot measure a rendered track width. This test pins the
     // CSS mechanism that makes the two tracks equal: a fixed label column, never an `auto`
     // column sized by the crop name. The 1 px equality itself is measured in the browser.
@@ -73,7 +73,7 @@ describe('CropHistoryBars', () => {
     }
   })
 
-  it('renders the bars with no basis and no date when the scenario has no Crop history row (R-15)', () => {
+  it('renders the bars with no basis and no date when the scenario has no Crop history row', () => {
     for (const crops of [['Soybean', 'Corn'], ['Soybean', 'Cotton']]) {
       const { group, bars } = renderBars({ crops })
 

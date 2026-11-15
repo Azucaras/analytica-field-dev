@@ -21,6 +21,10 @@ Hard: the tool reads as Brazil-only to a judge, and the US research earns no dem
 
 Revisit if the resource drop on 2026-11-13 adds a Brazilian dataset that changes the sensor mix, or if a team member owns US field knowledge and can carry those three extra fields.
 
+## Revision of 2026-11-14 (block 4)
+
+The user decided on 2026-11-14 to add the Brazilian ENSO dipole to the demo. Santa Carmem stays the only place with rotation scenarios. Two synthetic pilot fields join it, one in Tupancireta (Rio Grande do Sul, El Nino rainfall excess) and one in Luis Eduardo Magalhaes (Bahia, El Nino rainfall deficit). They carry municipal climate evidence only: NASA POWER rainfall composites, IBGE PAM yield anomalies in strong El Nino years, and the CPC ENSO state. They carry no rotation scenario, because writing one would invent an agronomic claim before a scoring method exists. Their coverage is not measured, so they always abstain. The spec is `field-shift-app/specs/bloco-4-sinal-enso.md`.
+
 ## Alternatives considered
 
 - **One field per country.** Doubles the input surface and halves the evidence depth on each. Lost on depth.

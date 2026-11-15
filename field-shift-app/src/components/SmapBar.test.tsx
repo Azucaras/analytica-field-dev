@@ -21,7 +21,7 @@ function renderBar(overrides: Partial<Parameters<typeof SmapBar>[0]> = {}) {
 }
 
 describe('SmapBar', () => {
-  it('draws a retrieved fixture value as measured and keeps the fixture string as text (R-14, AC-08)', () => {
+  it('draws a retrieved fixture value as measured and keeps the fixture string as text', () => {
     expect(SMAP_SCALE_MAX).toBe(0.5)
 
     const { group, fill } = renderBar()
@@ -36,7 +36,7 @@ describe('SmapBar', () => {
     expect(group.textContent).not.toContain('assumes')
   })
 
-  it('treats observed, retrieved and entered as the measured bases (R-14)', () => {
+  it('treats observed, retrieved and entered as the measured bases', () => {
     for (const basis of ['observed', 'retrieved', 'entered'] as const) {
       const { fill } = renderBar({ basis })
       expect(fill.style.width, basis).toBe('56%')
@@ -44,7 +44,7 @@ describe('SmapBar', () => {
     }
   })
 
-  it('scales every fixture value against the same maximum (R-14)', () => {
+  it('scales every fixture value against the same maximum', () => {
     expect(renderBar({ value: '0.19 m³/m³' }).fill.style.width).toBe('38%')
     cleanup()
     expect(renderBar({ value: '0.31 m³/m³' }).fill.style.width).toBe('62%')
@@ -56,7 +56,7 @@ describe('SmapBar', () => {
     expect(group.getAttribute('aria-label')).toBe('SMAP soil moisture, 0.28 m³/m³, retrieved')
   })
 
-  it('marks a modelled row, draws 0 px and prints no digit (R-17, AC-13)', () => {
+  it('marks a modelled row, draws 0 px and prints no digit', () => {
     const { group, fill } = renderBar({ basis: 'modelled', value: '0.46' })
 
     expect(fill.style.width).toBe('0px')
@@ -68,7 +68,7 @@ describe('SmapBar', () => {
     expect(group.getAttribute('aria-label')).toBe('SMAP soil moisture (modelled)')
   })
 
-  it('draws 0 px with the literal label for null, Not entered and a missing row (R-16, R-17)', () => {
+  it('draws 0 px with the literal label for null, Not entered and a missing row', () => {
     const cases = [
       { name: 'null value', overrides: { value: null, basis: 'retrieved' as const }, literal: 'No observation' },
       { name: 'Not entered value', overrides: { value: 'Not entered', basis: 'entered' as const }, literal: 'Not entered' },
@@ -86,7 +86,7 @@ describe('SmapBar', () => {
     }
   })
 
-  it('keeps the track mounted and empty in every unmeasured state (R-17)', () => {
+  it('keeps the track mounted and empty in every unmeasured state', () => {
     for (const overrides of [{ value: null }, { value: 'Not entered' }, { value: undefined }, { basis: 'modelled' as const, value: '0.46' }]) {
       const { container } = renderBar(overrides)
       const track = container.querySelector('.smap-track') as HTMLElement
@@ -97,7 +97,7 @@ describe('SmapBar', () => {
     }
   })
 
-  it('names the empty states with the same literal as the visible one (R-17, AC-13)', () => {
+  it('names the empty states with the same literal as the visible one', () => {
     expect(renderBar({ value: undefined, basis: undefined }).group.getAttribute('aria-label'))
       .toBe('SMAP soil moisture, Not reported for this option')
     cleanup()

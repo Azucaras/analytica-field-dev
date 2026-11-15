@@ -1,0 +1,231 @@
+{
+  "contract_version": "fieldshift-climate-1",
+  "recorded_at": "2026-11-15T15:31:13+00:00",
+  "municipality": {
+    "code": 2919553,
+    "name": "Luis Eduardo Magalhaes",
+    "name_official": "Luís Eduardo Magalhães",
+    "uf": "BA",
+    "country": "BR",
+    "region_id": "matopiba",
+    "region_name": "MATOPIBA",
+    "enso_signal": "deficit",
+    "centroid_lon": -46.0201,
+    "centroid_lat": -12.1984
+  },
+  "crop_year": 2027,
+  "crop_year_label": "2026/27",
+  "crop_year_enso": {
+    "enso_class": "el_nino_strong",
+    "provisional": true,
+    "forecast": true,
+    "basis": "CPC strength outlook issued 2026-11, NDJ"
+  },
+  "season_progress": {
+    "start": "2026-09-01",
+    "last_observed": "2026-11-12",
+    "rain_mm": 95.6,
+    "normal_mm": 175.1,
+    "analog_mm": 191.6,
+    "n_baseline": 30,
+    "n_analog": 5,
+    "analog_years": [
+      1983,
+      1992,
+      1998,
+      2010,
+      2016
+    ],
+    "basis": "modelled",
+    "source": "https://power.larc.nasa.gov/",
+    "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+    "start_month": 9
+  },
+  "rows": [
+    {
+      "metric": "early_rain_mm_anom_pct",
+      "layer": "Rain Sep to Dec, strong El Nino years vs 1991 to 2020",
+      "value": "-17.9%",
+      "number": -17.9,
+      "unit": "%",
+      "basis": "modelled",
+      "as_of": "2026-11-12",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        9,
+        12
+      ],
+      "n_years": 5,
+      "years": [
+        1983,
+        1992,
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    },
+    {
+      "metric": "late_cdd_days_anom",
+      "layer": "Longest dry spell Jan to Apr, strong El Nino years vs 1991 to 2020",
+      "value": "+4.5 days",
+      "number": 4.5,
+      "unit": "days",
+      "basis": "modelled",
+      "as_of": "2026-11-12",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "months": [
+        1,
+        4
+      ],
+      "n_years": 5,
+      "years": [
+        1983,
+        1992,
+        1998,
+        2010,
+        2016
+      ],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Cotton yield vs trend, strong El Nino years",
+      "value": "-8.1%",
+      "number": -8.1,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "months": null,
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 2689,
+      "crop_name_en": "Cotton",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Beans yield vs trend, strong El Nino years",
+      "value": "-10.2%",
+      "number": -10.2,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "months": null,
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 2702,
+      "crop_name_en": "Beans",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Soybean yield vs trend, strong El Nino years",
+      "value": "-16.0%",
+      "number": -16.0,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "months": null,
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 2713,
+      "crop_name_en": "Soybean",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Sorghum yield vs trend, strong El Nino years",
+      "value": "-20.0%",
+      "number": -20.0,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "months": null,
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 2714,
+      "crop_name_en": "Sorghum",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "yield_anomaly_pct",
+      "layer": "Maize (1st crop) yield vs trend, strong El Nino years",
+      "value": "+3.3%",
+      "number": 3.3,
+      "unit": "%",
+      "basis": "reported",
+      "as_of": "2025",
+      "source": "https://apisidra.ibge.gov.br/",
+      "support": "municipality, IBGE PAM",
+      "months": null,
+      "n_years": 2,
+      "years": [
+        2010,
+        2016
+      ],
+      "crop_code": 114253,
+      "crop_name_en": "Maize (1st crop)",
+      "assumption": true,
+      "small_sample": true
+    },
+    {
+      "metric": "season_rain_to_date_mm",
+      "layer": "Rain since 1 Sep vs 1991 to 2020 normal",
+      "months": [
+        9,
+        9
+      ],
+      "value": "96 mm vs 175 mm",
+      "number": 95.6,
+      "unit": "mm",
+      "basis": "modelled",
+      "as_of": "2026-11-12",
+      "source": "https://power.larc.nasa.gov/",
+      "support": "municipality centroid; POWER values are grid-cell averages (~0.5 x 0.625 deg), not station data",
+      "n_years": 30,
+      "years": [],
+      "crop_code": null,
+      "crop_name_en": null,
+      "assumption": false,
+      "small_sample": false
+    }
+  ],
+  "source": {
+    "climate": "https://power.larc.nasa.gov/",
+    "yield": "https://apisidra.ibge.gov.br/",
+    "rules": "field-shift-pipeline/config/analysis.yaml"
+  }
+}

@@ -25,7 +25,7 @@ export function RotationFlipCard({ scenario }: { scenario: RotationScenario }) {
   const kicker = scenario.is_current
     ? t('scenarios.current_sequence')
     : t('scenarios.option', { crops: scenario.crops.map((crop) => t(`common.crop.${crop.toLowerCase()}`)).join(' / ') })
-  // R-18: the accessible name states the face currently on screen, not the destination.
+  // The accessible name states the face currently on screen, not the destination.
   // The front face shows the charts, the back face shows the details.
   const flipName = showsCharts
     ? t('visual.flip_details', { scenario: heading })

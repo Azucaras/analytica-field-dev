@@ -23,7 +23,12 @@ export type FieldSummary = {
   id: string
   name: string
   location: string
-  coverage: number
+  /** Null for a synthetic pilot field, whose coverage is not measured. */
+  coverage: number | null
+  municipality_code?: number | null
+  synthetic?: boolean
+  /** Region a synthetic pilot field belongs to; fixture fields are listed in their region adapter instead. */
+  region?: "br" | "us"
   center: [number, number]
   boundary: { type: 'Polygon'; coordinates: number[][][] }
 }
