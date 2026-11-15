@@ -368,6 +368,12 @@ def _series_rows(metric: str, series: dict[date, float], window: agg.Window) -> 
     return [{"date": d.isoformat(), "value": series[d]} for d in agg.window_days(window) if agg.is_valid(series.get(d))]
 
 
+def _normals_unavailable(reason: str) -> dict[str, Any]:
+    """Table E requires `normals` in every climate state. A section that never reached the normals keeps
+    the family's facts and the reason R-12 prints, in the shape the normals failure branch already uses."""
+    return {"of_years": 0, "excluded_years": [], "error": reason}
+
+
 def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Window | None]:
     """Returns the section, its provenance rows, the parsed series and the window (for water and NDVI)."""
     url = _climate_source_url(ctx)
@@ -383,10 +389,12 @@ def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Win
         series = power.parse(sourced.payload)
     except SourceFailure as failure:
         _unavailable(section, failure, "climate", CLIMATE_SOURCE, ctx.chosen.isoformat(), gaps)
+        section["normals"] = _normals_unavailable(failure.error)
         rows = [_row(m, None, as_of=None, source=CLIMATE_SOURCE, fetched_at=None) for m in metric_names]
         return section, rows, None, None
     except (KeyError, ValueError, TypeError, AttributeError):
         section.update(state="unavailable", error="malformed POWER response")
+        section["normals"] = _normals_unavailable("malformed POWER response")
         gaps.append(_gap("climate", "malformed POWER response", CLIMATE_SOURCE, "malformed", ctx.chosen.isoformat()))
         rows = [_row(m, None, as_of=None, source=CLIMATE_SOURCE, fetched_at=None) for m in metric_names]
         return section, rows, None, None
@@ -395,7 +403,9 @@ def _climate(ctx: Context, gaps: list) -> tuple[dict, list, dict | None, agg.Win
     rain = series.get("PRECTOTCORR", {})
     window = agg.resolve_window(rain, ctx.chosen)
     if window is None:
-        gaps.append(_gap("climate", "no consolidated PRECTOTCORR day in the 120 days before the chosen date",
+        reason = "no consolidated PRECTOTCORR day in the 120 days before the chosen date"
+        section["normals"] = _normals_unavailable(reason)
+        gaps.append(_gap("climate", reason,
                          CLIMATE_SOURCE, "no valid rain day", ctx.chosen.isoformat()))
         rows = [_row(m, None, as_of=None, source=CLIMATE_SOURCE, fetched_at=sourced.fetched_at) for m in metric_names]
         return section, rows, series, None
