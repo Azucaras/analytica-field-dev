@@ -63,9 +63,10 @@ export function rawFeatureFrom(
 function classText(region: RegionAdapter, raw: PolygonFeatureRaw, date: string): string {
   // R-21: an absent or null `cdl{Y}` prints the year-missing text in the United States. A code
   // 0 or a code the table does not hold prints `class not mapped`. Brazil has no year text.
-  // AC-17 is the one criterion that will move. It asks for `class not mapped` on a null `cdl{Y}`,
-  // which R-21 does not say, so AC-17 and R-21 name two strings for one case. This code follows
-  // R-21 (the spec is frozen and not amended here); the tech-lead amends AC-17 on its own card.
+  // AC-17 named `class not mapped` for a null `cdl{Y}`, which R-21 does not say. Spec revision 6
+  // (card t_2fcdef6a) amended AC-17 to R-21's `No CDL class for {Y}`, and this readout follows R-21.
+  // The legend, the tooltip and the fields chip still print `class not mapped` for the same case:
+  // that is open decision O1 of the spec, for the user to decide. It is not changed here.
   if (region.id === 'us' && raw.classValue === null) {
     return t('polygon.no_cdl_class', { year: paintedClassYear(region, date) ?? '' })
   }
