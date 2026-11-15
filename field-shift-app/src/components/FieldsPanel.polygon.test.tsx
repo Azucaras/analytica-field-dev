@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { FieldsPanel } from './FieldsPanel'
+import { FieldsPanel, SHORT_NO_CDL_QUERY } from './FieldsPanel'
 import type { FieldSummary } from '@/lib/map-store'
 import { UNMAPPED_CLASS_COLOUR } from '@/lib/polygon-style'
 import { FIELDS_CHIP_ROW_ID } from './FieldsPanel'
@@ -27,6 +27,7 @@ const baseProps = {
 
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
 })
 
 describe('the fields header chip for a polygon (R-28, AC-24, AM-04)', () => {
@@ -133,5 +134,63 @@ describe('the fields chip per state (R-28, AC-24, R-44)', () => {
     )
     expect(screen.getByRole('button', { name: 'Corn' }).textContent).toBe('Corn')
     expect(screen.queryByText('class not mapped')).toBeNull()
+  })
+})
+
+describe('the fields chip at the three AC-24 widths (R-28, AC-24, R-44)', () => {
+  // jsdom has no layout, so these tests pin the exact string each preset prints, which panel
+  // content box the chip mounts in, and the two negatives. The pixel containment is measured in
+  // the real browser and recorded in AC-24-overflow.txt: at 780 the short chip box is 104.80 px
+  // wide, right edge 180.80 against the 202.80 px panel (22.00 px inside); at 360 the long form
+  // ends at 296.00, the panel edge; at 1440 it ends at 298.00 inside the 320.00 px panel.
+  function stubChipWidth(preset: '360' | '780' | '1440') {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: preset === '780' && query === SHORT_NO_CDL_QUERY,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }))
+  }
+
+  const usNull = {
+    fieldId: 'csb:381825001868504',
+    name: null,
+    hex: UNMAPPED_CLASS_COLOUR,
+    noCdlYear: 2026,
+  }
+
+  it('prints the long form at 360, where the chip box ends at the 296.00 panel edge', () => {
+    stubChipWidth('360')
+    render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
+    expect(screen.getByRole('button', { name: 'No CDL class for 2026' }).textContent).toBe('No CDL class for 2026')
+    expect(screen.queryByText('No CDL 2026')).toBeNull()
+  })
+
+  it('prints the short form at 780, and the long form is not in the document', () => {
+    stubChipWidth('780')
+    render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
+    const chip = screen.getByRole('button', { name: 'No CDL 2026' })
+    expect(chip.textContent).toBe('No CDL 2026')
+    // The chip mounts in the fields header, the panel content box AC-24 measures the box against.
+    expect(chip.closest('.fields-header')).not.toBeNull()
+    expect(screen.queryByText(/No CDL class for/)).toBeNull()
+  })
+
+  it('returns to the long form at 1440, where the chip box ends 22.00 px inside the panel', () => {
+    stubChipWidth('1440')
+    render(<FieldsPanel {...baseProps} selectedPolygon={usNull} />)
+    expect(screen.getByRole('button', { name: 'No CDL class for 2026' }).textContent).toBe('No CDL class for 2026')
+    expect(screen.queryByText('No CDL 2026')).toBeNull()
+  })
+
+  it('keeps class not mapped for an unmapped code in the short-form band', () => {
+    stubChipWidth('780')
+    render(<FieldsPanel {...baseProps} selectedPolygon={{ ...usNull, noCdlYear: null }} />)
+    expect(screen.getByRole('button', { name: 'class not mapped' }).textContent).toBe('class not mapped')
+    expect(screen.queryByText(/No CDL/)).toBeNull()
   })
 })
