@@ -331,10 +331,11 @@ describe('the offline surface the route sends when POWER is unreachable (R-48, A
     const ndviText = card('ndvi').textContent ?? ''
     expect(ndviText).toContain('NDVI not plotted')
     // The card-level sentence names the count it could not read and the Earth Search source, carries
-    // the NDVI gap cause, and keeps the two-scene rule instead of printing the placeholder value.
+    // the cause the route itself sends in `error` (it outranks the gap register, which is the older
+    // key), and keeps the two-scene rule instead of printing the placeholder value.
     expect(ndviText).toContain('the scene count was not read')
     expect(ndviText).toContain(payload.sections.ndvi.source)
-    expect(ndviText).toContain(payload.gaps.find((gap) => gap.section === 'ndvi')?.cause ?? 'no ndvi gap')
+    expect(ndviText).toContain(payload.sections.ndvi.error ?? 'no ndvi error')
     expect(ndviText).toContain('At least two scenes at or above 0.5 are needed.')
     expect(ndviText).not.toContain('No value')
     expect(within(card('rotation')).getByText('no MapBiomas Collection 11 row for this polygon')).toBeTruthy()

@@ -58,12 +58,13 @@ const RowsContext = createContext<Map<string, ProvenanceRow>>(new Map())
 const NO_GAPS: GapRow[] = []
 
 /**
- * R-12, AC-11: the cause an abstained row prints. The section's own `reason` when the route sends
- * one; otherwise the cause of the section's gap row, which is where the route records why the input
- * is missing; otherwise a sentence that says the reason was not recorded, so the text never falls
- * back to `No value`. `needle` picks the gap row of a section that records more than one cause: the
- * municipality section records the municipal cause and the state cause. A per-row cause never
- * borrows another row's, so when the needle finds no gap the row fails closed to that sentence.
+ * R-12, AC-11: the cause an abstained row prints. The section's own `error` when the route sends
+ * one, then the older `reason` key a payload may still carry; otherwise the cause of the section's
+ * gap row, which is where the route records why the input is missing; otherwise a sentence that says
+ * the reason was not recorded, so the text never falls back to `No value`. `needle` picks the gap row
+ * of a section that records more than one cause: the municipality section records the municipal cause
+ * and the state cause. A per-row cause never borrows another row's, so when the needle finds no gap
+ * the row fails closed to that sentence.
  */
 function abstainReason(
   reason: string | null | undefined,
@@ -405,7 +406,7 @@ function WaterCard({ water, gaps = NO_GAPS }: { water: NumbersPayload['sections'
 }
 
 function SmapCard({ smap, gaps = NO_GAPS }: { smap: NumbersPayload['sections']['smap']; gaps?: GapRow[] }) {
-  const reason = abstainReason(smap.reason, 'smap', gaps)
+  const reason = abstainReason(smap.error ?? smap.reason, 'smap', gaps)
   return (
     <Card id="smap" title={t('numbers.card.smap')} source={smap.source} asOf={smap.as_of} basis="retrieved" resolution={smap.resolution}>
       <p className="numbers-axis">{t('numbers.smap.axis')}</p>
@@ -470,8 +471,8 @@ function SmapCard({ smap, gaps = NO_GAPS }: { smap: NumbersPayload['sections']['
 function NdviCard({ ndvi, gaps = NO_GAPS }: { ndvi: NumbersPayload['sections']['ndvi']; gaps?: GapRow[] }) {
   const plotted = ndvi.scenes.filter((scene) => scene.ndvi_mean !== null && !scene.partial)
   // R-12, AC-11: a null count names the input it counts and the Earth Search source, with the
-  // section reason or the NDVI gap cause, or the sentence that says the reason was not recorded.
-  const countReason = abstainReason(ndvi.reason, 'ndvi', gaps)
+  // section error or the NDVI gap cause, or the sentence that says the reason was not recorded.
+  const countReason = abstainReason(ndvi.error ?? ndvi.reason, 'ndvi', gaps)
   const abstainSceneCount = t('numbers.abstain.ndvi_scene_count', { reason: countReason, source: ndvi.source })
   const abstainClearCount = t('numbers.abstain.ndvi_clear_count', { reason: countReason, source: ndvi.source })
   // The card-level sentence below repeats the count, so a null count cannot reuse the counted
@@ -621,9 +622,11 @@ export function RotationCard({ rotation }: { rotation: NumbersPayload['sections'
 }
 
 function MunicipalCard({ municipal, gaps = NO_GAPS }: { municipal: NumbersPayload['sections']['municipality']; gaps?: GapRow[] }) {
-  // R-12: the municipal row and the share carry the municipal cause of the gap register, and the
-  // state row carries the state cause, because the section records both and they are not the same.
-  const municipalReason = abstainReason(municipal.reason, 'municipality', gaps, 'municipal')
+  // R-12: the municipal row and the share carry the municipal cause: the section error of a failed
+  // SIDRA read first, then the reason the route records for an unresolved municipal code, then the
+  // municipal gap row. The state row carries the state cause, because the section records both and
+  // they are not the same.
+  const municipalReason = abstainReason(municipal.error ?? municipal.reason, 'municipality', gaps, 'municipal')
   // R-12: the state row names its own input and cause. The payload carries `state_reason` for exactly
   // this row, so the municipal reason must not leak into it; when `state_reason` and every state gap
   // are absent the clause falls back to the sentence that says the reason was not recorded.

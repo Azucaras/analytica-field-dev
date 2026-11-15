@@ -172,6 +172,12 @@ export type SmapSection = {
   disclosure: string
   source: string
   as_of: string | null
+  /**
+   * The failure the route records when the section cannot be read (`ConnectError`, the HTTP status,
+   * a malformed response, ...). It is the field the route writes and the one the abstention row
+   * prints; `reason` is the older key a payload may still carry.
+   */
+  error?: string | null
   reason?: string | null
 }
 
@@ -205,6 +211,12 @@ export type NdviSection = {
   best_valid_fraction_reason: string | null
   source: string
   as_of: string | null
+  /**
+   * The failure the route records when it could not read the section: the search window is unknown,
+   * the STAC response is malformed, or the search itself failed. It is the field the route writes
+   * and the one the abstention row prints; `reason` is the older key a payload may still carry.
+   */
+  error?: string | null
   reason?: string | null
 }
 
@@ -262,6 +274,7 @@ export type MunicipalitySection = {
   share: number | null
   source: string
   as_of: string | null
+  /** The route records the unresolved municipal code here; the reader prints `error` first, then this key. */
   reason?: string | null
   /** Present only when the SIDRA read itself failed; the section abstains with this text. */
   error?: string | null
