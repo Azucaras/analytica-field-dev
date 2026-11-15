@@ -527,6 +527,11 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     return container.querySelector<HTMLElement>(`[data-metric="${metric}"]`)?.textContent ?? ''
   }
 
+  /** The window line's abstention: the paragraph a card prints when the payload carries no window. */
+  function windowAbstainText(container: HTMLElement, card: 'climate' | 'water'): string {
+    return container.querySelector<HTMLElement>(`[data-card="${card}"] [data-window-abstain]`)?.textContent ?? ''
+  }
+
   function gapCause(payload: NumbersPayload, section: string, needle: string): string {
     const gap = payload.gaps.find((entry) => entry.section === section && entry.cause.includes(needle))
     expect(gap, `${section} gap whose cause contains ${needle}`).toBeDefined()
@@ -682,6 +687,70 @@ describe('abstention texts name the missing input, its source and its cause (R-1
     expect(text).toContain('T2M_MAX and T2M_MIN')
     expect(text).toContain('the reason was not recorded')
     expect(text).toContain(climate.source)
+    expect(text).not.toContain('No value')
+  })
+
+  // R-16 and R-22 ask for the window line. With no window the missing input IS the window, so the
+  // text names the window and the section source, with the section error or the section gap cause,
+  // or the sentence that says the reason was not recorded (R-12, AC-11).
+  it('names the climate window and the POWER source when the capture carries no window (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.climate.window).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = windowAbstainText(container, 'climate')
+    expect(text).toContain('Climate window not read')
+    expect(text).toContain(payload.sections.climate.source)
+    expect(text).toContain('ConnectError')
+    expect(text).not.toContain('No value')
+  })
+
+  it('names the water balance window and the POWER source when the capture carries no window (R-12, AC-11)', async () => {
+    const payload = structuredClone(OFFLINE)
+    expect(payload.sections.water_balance.window).toBeNull()
+    stubNumbersFetch(payload)
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = windowAbstainText(container, 'water')
+    expect(text).toContain('Water balance window not read')
+    expect(text).toContain(payload.sections.water_balance.source)
+    expect(text).toContain('ConnectError')
+    expect(text).not.toContain('No value')
+  })
+
+  it('says the reason was not recorded for the climate window, and still names the window and the source (R-12, AC-11)', async () => {
+    const payload = recordedNumbersPayload()
+    const climate = { ...payload.sections.climate, window: null, error: null }
+    stubNumbersFetch({
+      ...payload,
+      query: { ...payload.query, window: { start: null, end: null, days: null, valid_days: null, dropped_days: null } },
+      gaps: payload.gaps.filter((gap) => gap.section !== 'climate'),
+      sections: { ...payload.sections, climate },
+    })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = windowAbstainText(container, 'climate')
+    expect(text).toContain('Climate window not read')
+    expect(text).toContain('the reason was not recorded')
+    expect(text).toContain(climate.source)
+    expect(text).not.toContain('No value')
+  })
+
+  it('says the reason was not recorded for the water balance window, and still names the window and the source (R-12, AC-11)', async () => {
+    const payload = recordedNumbersPayload()
+    expect(payload.gaps.some((gap) => gap.section === 'water_balance')).toBe(false)
+    const water = { ...payload.sections.water_balance, window: null, error: null, missing: null }
+    stubNumbersFetch({
+      ...payload,
+      sections: { ...payload.sections, water_balance: water },
+    })
+    const { container } = render(<NumbersView selectedField={field} onClose={vi.fn()} />)
+    await screen.findByText('Climate')
+    const text = windowAbstainText(container, 'water')
+    expect(text).toContain('Water balance window not read')
+    expect(text).toContain('the reason was not recorded')
+    expect(text).toContain(water.source)
     expect(text).not.toContain('No value')
   })
 

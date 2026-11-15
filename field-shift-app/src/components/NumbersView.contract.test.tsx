@@ -307,13 +307,19 @@ describe('the offline surface the route sends when POWER is unreachable (R-48, A
     const card = (id: string) => container.querySelector<HTMLElement>(`[data-card="${id}"]`) as HTMLElement
 
     // The climate card abstains with the section reason, and its chart prints the empty text.
-    expect(within(card('climate')).getAllByText('Climate source unavailable: ConnectError.').length).toBeGreaterThan(0)
+    // With no window the window line itself abstains: the text names the window and the source.
+    expect(
+      within(card('climate')).getByText(`Climate window not read: ConnectError. Source: ${payload.sections.climate.source}.`),
+    ).toBeTruthy()
     expect(within(card('climate')).getAllByText(/Normals not computed: ConnectError\. Source: /).length).toBe(7)
     expect(within(card('climate')).getByText('No valid day in the window.')).toBeTruthy()
 
-    // The water card has no window to print, so it prints the abstention with the same reason and no window line.
+    // The water card has no window to print, so it prints the window abstention with the same
+    // reason and no window line.
     expect(card('water').querySelector('.numbers-window')).toBeNull()
-    expect(within(card('water')).getByText('Climate source unavailable: ConnectError.')).toBeTruthy()
+    expect(
+      within(card('water')).getByText(`Water balance window not read: ConnectError. Source: ${payload.sections.water_balance.source}.`),
+    ).toBeTruthy()
 
     // The remaining cards print their empty states from the reason the section carries. The merged
     // abstention copy names the gap cause and the source, so these hold the text to that shape.

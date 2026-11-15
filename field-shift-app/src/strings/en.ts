@@ -296,7 +296,11 @@ export const en = {
   'numbers.abstain.ndvi_scene_count': 'NDVI scene count not read: {reason}. Source: {source}.',
   'numbers.abstain.ndvi_clear_count': 'NDVI clear scene count not read: {reason}. Source: {source}.',
   'numbers.abstain.normals': 'Normals not computed: {reason}. Source: {source}.',
-  'numbers.abstain.climate': 'Climate source unavailable: {error}.',
+  // R-16 and R-22 ask for the window line, so a card with no window abstains on the window itself:
+  // the text names the window and the section source, with the section error or gap cause, or the
+  // not-recorded sentence (R-12, AC-11). The subject is the window, not the section.
+  'numbers.abstain.window_climate': 'Climate window not read: {reason}. Source: {source}.',
+  'numbers.abstain.window_water': 'Water balance window not read: {reason}. Source: {source}.',
   'numbers.abstain.water': 'Balance not computed: {parameter} is missing on {missing} window days. No partial sum is printed.',
   'numbers.water.formula': 'remaining = in - out',
   'numbers.water.statement': 'This balance is an estimate built from modelled fluxes. It is not a measurement.',
