@@ -111,6 +111,7 @@ build_us() {
     --view "W6:-97.17:46.93:6:1440:900" \
     --view "W7:-97.17:46.93:7:1440:900" \
     --view "W9:-97.17:46.93:9:1440:900" \
+    --view "W14:-97.17:46.93:14:1440:900" \
     --fail-on-violation \
     --out "$WORK/us-detail-measure.json"
 
