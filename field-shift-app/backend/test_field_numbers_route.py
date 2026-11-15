@@ -393,6 +393,47 @@ class RouteMalformedNormalsTests(RouteCase):
         self.assertEqual(payload["sections"]["climate"]["window"]["days"], 42)  # the daily read still landed
 
 
+class RouteNormalsFailureAbstainTests(RouteCase):
+    """R-19 and R-20: a failed normals payload is never a 500, even when every aggregate abstains.
+
+    The unguarded read predates block 6 wave 1: `_climate` read `normals["rain_median"]` only when all
+    six aggregates were None, and the two `_normals` failure branches carry the three keys `of_years`,
+    `excluded_years` and `error` and no metric key, so that read raised `KeyError` inside the route.
+    A mostly fill POWER daily response (one valid `PRECTOTCORR` day, so the 42 day window still
+    resolves) together with a malformed normals response is the shape that reaches it.
+    """
+
+    def test_a_malformed_normals_payload_with_every_aggregate_abstaining_answers_200(self) -> None:
+        recorded = self.transport._power
+
+        def power(url: str) -> dict:
+            if "start=19910101" in url:  # the normals request (1991 to 2025)
+                return {"header": {"fill_value": -999.0}, "properties": {}}
+            # The daily climate request: fill on every day of every parameter, then one valid rain day.
+            payload = recorded(url)
+            params = payload["properties"]["parameter"]
+            rain_days = sorted(params.get("PRECTOTCORR", {}))
+            for series in params.values():
+                for key in list(series):
+                    series[key] = -999.0
+            params["PRECTOTCORR"][rain_days[-1]] = 3.0
+            return payload
+
+        with patch.object(self.transport, "_power", side_effect=power):
+            response = self.post()
+        self.assertEqual(response.status_code, 200, response.text)
+        climate = response.json()["sections"]["climate"]
+        self.assertEqual(climate["state"], "abstained")
+        # The run must reach the failed normals read, not return early on a missing window.
+        self.assertIsNotNone(climate["window"])
+        self.assertEqual(climate["window"]["valid_days"], 1)
+        self.assertEqual(len(climate["aggregates"]), 6)
+        for name, item in climate["aggregates"].items():
+            self.assertIsNone(item["value"], name)
+        self.assertEqual(climate["normals"]["error"], "malformed POWER normals response")
+        self.assertEqual(climate["normals"]["of_years"], 0)
+
+
 class RouteCacheTests(RouteCase):
     """R-47 and AC-46: per source lifetimes, cached and fetched_at exposed, no cache for an unavailable section."""
 
