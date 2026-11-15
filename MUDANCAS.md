@@ -40,7 +40,6 @@ O contraste nos EUA não é tão limpo quanto no Brasil. Lubbock recebe bem mais
 
 - Rotações dos EUA com trigo (McLean) e com sorgo (Lubbock) ficam sem nota: essas culturas ocupam menos de 1% da
   área plantada no condado nos últimos anos, e o método só calcula a produtividade das culturas principais.
-- Previsão Meteomatics dos condados dos EUA: rodar `pipeline.fetch_meteomatics` com a conta.
 - Datas de plantio do Brasil confirmadas pela CONAB.
 - Notas em escala fixa (hoje são relativas entre as opções de cada lugar).
 - CHIRPS e MapBiomas; mais municípios e condados; validação das notas contra a produtividade observada.
