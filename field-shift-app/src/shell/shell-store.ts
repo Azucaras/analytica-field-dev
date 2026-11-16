@@ -11,10 +11,25 @@ type ShellStore = {
   reset: () => void
 }
 
+// Panel id to its exclusive group, filled once by the panel list.
+const groupOf = new Map<string, string>()
+
+export function registerPanelGroups(panels: readonly PanelDefinition[]) {
+  for (const panel of panels) if (panel.group) groupOf.set(panel.id, panel.group)
+}
+
 export const useShellStore = create<ShellStore>((set) => ({
   states: {},
   mobileActive: null,
-  setState: (id, state) => set((current) => ({ states: { ...current.states, [id]: state } })),
+  setState: (id, state) => set((current) => {
+    const next = { ...current.states, [id]: state }
+    // Opening a panel of a group closes the rest of its group, whatever opened it (rail, header, agent).
+    const group = groupOf.get(id)
+    if (state === 'open' && group) {
+      for (const [other, otherGroup] of groupOf) if (other !== id && otherGroup === group) next[other] = 'closed'
+    }
+    return { states: next }
+  }),
   setMobileActive: (id) => set({ mobileActive: id }),
   reset: () => set({ states: {}, mobileActive: null }),
 }))

@@ -18,6 +18,8 @@ import type { LegendRow } from './polygon-legend'
 import type { PolygonFeatureRaw } from './polygon-readout'
 import { activeBasemapAdapter, BASEMAP_ADAPTERS, type BasemapAdapter, type BasemapAdapterId } from './basemap-adapters'
 import type { TileDecision } from './tile-guard'
+import type { NumbersPayload } from './numbers'
+import type { ProducerEntry, RegisteredField } from './producer-store'
 
 export type FieldSummary = {
   id: string
@@ -113,6 +115,28 @@ type MapState = {
   setTileDecision: (layerId: string, decision: TileDecision) => void
   /** R-44: the row reports the scan's outcome until the next `/layers` response replaces it. */
   setLayerStatus: (layerId: string, status: LayerStatus) => void
+
+  // Block 6. `numbersOpen` mirrors `?numbers=1` (R-01). `polygonRing` is the outline of the
+  // selected polygon as the map rendered it, the ring the numbers request carries (Table B).
+  // `numbersLastRead` holds the last payload per field and window in memory only (R-48); it is
+  // never written to local storage, like every other selection of the app.
+  numbersOpen: boolean
+  polygonRing: [number, number][] | null
+  numbersLastRead: Record<string, NumbersPayload>
+  setNumbersOpen: (open: boolean) => void
+  setPolygonRing: (ring: [number, number][] | null) => void
+  setNumbersLastRead: (key: string, payload: NumbersPayload) => void
+
+  // Block 7. The two open flags are URL state like `numbersOpen`: the App writes `?decision=1` and
+  // `?record=1` from them. `registeredFields` is the producer's own record as the store read it,
+  // and `producerData` is every declared season keyed by field id.
+  calendarOpen: boolean
+  recordOpen: boolean
+  registeredFields: RegisteredField[]
+  producerData: Record<string, ProducerEntry>
+  setCalendarOpen: (open: boolean) => void
+  setRecordOpen: (open: boolean) => void
+  setProducerRecords: (fields: RegisteredField[], producer: Record<string, ProducerEntry>) => void
 }
 
 const DEFAULT_ORDER = LAYER_CATALOG.map((entry) => entry.id)
@@ -135,10 +159,28 @@ export const useMapStore = create<MapState>((set, get) => ({
     const region = regionAdapter(get().regionId)
     const rawId = rawIdFromCommandFieldId(region, fieldId)
     if (rawId !== null) {
-      set({ selectedPolygonId: rawId, selectedFieldId: null })
+      // Block 5.5, U4: a selection writes the whole polygon state in one set, class and raw values
+      // included. Selecting B after A used to leave A's class, raw values and ring on screen,
+      // because only `selectedPolygonId` was written and the sync effect treats a populated class
+      // as a finished resolution.
+      set({
+        selectedPolygonId: rawId,
+        selectedFieldId: null,
+        polygonClass: null,
+        polygonClassYear: null,
+        polygonRaw: null,
+        polygonRing: null,
+      })
       return
     }
-    set({ selectedFieldId: fieldId, selectedPolygonId: null })
+    set({
+      selectedFieldId: fieldId,
+      selectedPolygonId: null,
+      polygonClass: null,
+      polygonClassYear: null,
+      polygonRaw: null,
+      polygonRing: null,
+    })
   },
   setComposition: (composition) => set({ composition }),
   openPanel: (openPanelName) => set({ openPanelName }),
@@ -166,15 +208,29 @@ export const useMapStore = create<MapState>((set, get) => ({
     polygonClass: null,
     polygonClassYear: null,
     polygonRaw: null,
+    polygonRing: null,
     legendRows: [],
     polygonSourceError: null,
     basemapFailed: false,
   }),
 
   /** R-23: the selection a `?polygon=` resolves at load, written without a command. */
-  restorePolygon: (rawId) => set({ selectedPolygonId: rawId, selectedFieldId: null }),
+  restorePolygon: (rawId) => set({
+    selectedPolygonId: rawId,
+    selectedFieldId: null,
+    polygonClass: null,
+    polygonClassYear: null,
+    polygonRaw: null,
+    polygonRing: null,
+  }),
 
-  clearPolygonSelection: () => set({ selectedPolygonId: null, polygonClass: null, polygonRaw: null }),
+  clearPolygonSelection: () => set({
+    selectedPolygonId: null,
+    polygonClass: null,
+    polygonClassYear: null,
+    polygonRaw: null,
+    polygonRing: null,
+  }),
 
   setPolygonScene: (polygonMode) => set({ polygonMode }),
   // The raw values travel with the class: a class of null clears both, so no stale area or
@@ -282,6 +338,26 @@ export const useMapStore = create<MapState>((set, get) => ({
         }
       : entry)),
   })),
+
+  // Block 6, R-01 and R-02: the open flag is URL state; the App writes `?numbers=1` from it.
+  numbersOpen: false,
+  polygonRing: null,
+  numbersLastRead: {},
+  setNumbersOpen: (numbersOpen) => set({ numbersOpen }),
+  setPolygonRing: (polygonRing) => set({ polygonRing }),
+  setNumbersLastRead: (key, payload) => set((state) => ({
+    numbersLastRead: { ...state.numbersLastRead, [key]: payload },
+  })),
+
+  // Block 7, R-01 and R-52: the open flags are URL state and the producer's record is read once
+  // per session from the two local storage keys and kept here so the chips and the map can read it.
+  calendarOpen: false,
+  recordOpen: false,
+  registeredFields: [],
+  producerData: {},
+  setCalendarOpen: (calendarOpen) => set({ calendarOpen }),
+  setRecordOpen: (recordOpen) => set({ recordOpen }),
+  setProducerRecords: (registeredFields, producerData) => set({ registeredFields, producerData }),
 }))
 
 /** The chosen date, or the axis default while no control has set one. */

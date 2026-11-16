@@ -1,12 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { RotationScenario } from '@/components/ScenarioCards'
 import type { EvidenceRow } from '@/components/EvidencePanel'
-import type { SelectedPolygonChip } from '@/panels/FieldListPanel'
 import { ensoSchema, fieldClimateSchema, loadParsed, type EnsoState, type FieldClimate, type Loadable } from '@/lib/climate'
-import { useMapStore, type FieldSummary } from '@/lib/map-store'
+import { chosenDateOf, useMapStore, type FieldSummary } from '@/lib/map-store'
+import { selectedPolygonChipOf, type SelectedPolygonChip } from '@/lib/polygon-chip'
+import { loadFields, loadProducer } from '@/lib/producer-store'
 import { regionAdapter } from '@/lib/regions'
-import { unmappedClassColour } from '@/lib/polygon-style'
-import { commandFieldId } from '@/lib/polygon-selection'
 import { seasonForDate } from '@/lib/timeline'
 import { t, translationKeyFor } from '@/strings'
 
@@ -62,6 +61,8 @@ export type AppData = {
   climate: Loadable<FieldClimate> | null
   climateEvidence: { municipality: string; rows: FieldClimate['rows'] } | null
   selectedPolygonChip: SelectedPolygonChip | null
+  /** Re-reads the producer's fields and declared seasons after the Field record panel saves. */
+  refreshProducer: () => void
   openAnalysis: (code: number | null) => void
 }
 
@@ -79,6 +80,8 @@ export function AppDataProvider({ openAnalysis, children }: { openAnalysis: (cod
   const regionId = useMapStore((state) => state.regionId)
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const polygonClass = useMapStore((state) => state.polygonClass)
+  const polygonRaw = useMapStore((state) => state.polygonRaw)
+  const polygonDate = useMapStore(chosenDateOf)
   const chosenDate = useMapStore((state) => state.chosenDate ?? state.axis.default)
 
   const [allFields, setAllFields] = useState<FieldSummary[]>([])
@@ -163,6 +166,18 @@ export function AppDataProvider({ openAnalysis, children }: { openAnalysis: (cod
     return () => controller.abort()
   }, [selectedFieldId])
 
+  // The producer's own fields and declared seasons live in local storage; they are read at load
+  // and again after an action in the Field record panel, and nothing here writes them.
+  const refreshProducer = useCallback(() => {
+    const storedFields = loadFields()
+    const storedProducer = loadProducer()
+    useMapStore.getState().setProducerRecords(
+      'value' in storedFields ? storedFields.value : [],
+      'value' in storedProducer ? storedProducer.value : {},
+    )
+  }, [])
+  useEffect(() => { refreshProducer() }, [refreshProducer])
+
   const retryFields = useCallback(() => {
     setIsLoadingFields(true)
     setFieldsRequest((request) => request + 1)
@@ -185,15 +200,10 @@ export function AppDataProvider({ openAnalysis, children }: { openAnalysis: (cod
     () => fields.find((field) => field.id === selectedFieldId) ?? null,
     [fields, selectedFieldId],
   )
-  const selectedPolygonChip = useMemo<SelectedPolygonChip | null>(
-    () => (selectedPolygonId === null
-      ? null
-      : {
-        fieldId: commandFieldId(regionAdapter(regionId), selectedPolygonId),
-        name: polygonClass?.name ?? null,
-        hex: polygonClass?.hex ?? unmappedClassColour(),
-      }),
-    [selectedPolygonId, polygonClass, regionId],
+  // The class name from the table, or the No CDL label of the painted year for a United States null class.
+  const selectedPolygonChip = useMemo(
+    () => selectedPolygonChipOf(selectedPolygonId, polygonClass, polygonRaw, regionAdapter(regionId), polygonDate),
+    [selectedPolygonId, polygonClass, polygonRaw, polygonDate, regionId],
   )
   const evidenceRows = useMemo<EvidenceRow[]>(() => {
     const current = scenarios.find((scenario) => scenario.is_current) ?? scenarios[0]
@@ -231,11 +241,12 @@ export function AppDataProvider({ openAnalysis, children }: { openAnalysis: (cod
     climate: selectedFieldId ? climate : null,
     climateEvidence,
     selectedPolygonChip,
+    refreshProducer,
     openAnalysis,
   }), [
     fields, selectedField, selectedFieldId, selectField, isLoadingFields, isLoadingScenarios, error, canRetryFields,
     retryFields, scenarios, scenarioState, threshold, showsAbstention, fixtureSeason, chosenDate, evidenceRows,
-    fieldCrops, enso, climate, climateEvidence, selectedPolygonChip, openAnalysis,
+    fieldCrops, enso, climate, climateEvidence, selectedPolygonChip, refreshProducer, openAnalysis,
   ])
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>

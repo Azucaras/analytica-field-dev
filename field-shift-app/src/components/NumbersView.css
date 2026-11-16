@@ -1,0 +1,484 @@
+/*
+ * Block 6: the Field numbers region. The layout contract of the spec is written here as
+ * columns: 12 at 1440 (the default), 6 at 780 (the 1020 px rule of the app), 1 at 360 (the 640 px
+ * rule). The map screen is `display: none` while the surface is open (R-02); this file owns that
+ * rule so the map stylesheets are not edited.
+ */
+
+.app-shell.is-numbers-open > :not(.numbers-view) {
+  display: none;
+}
+
+.numbers-view {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #f6f8f3;
+  color: #1d2a20;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Scroll anchoring would move the offset when the header grows on a narrow width. R-06 keeps the
+   offset in pixels, so anchoring is off on the surface. */
+.numbers-view {
+  overflow-anchor: none;
+}
+
+.numbers-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* A flex item of the column region must not shrink below its content (the facts wrap). */
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  /* 64 px is the band at 1440 and 780. At 360 the four values wrap, and the band grows with them
+     rather than clipping a value (R-03: every value prints). */
+  min-height: 64px;
+  padding: 0 22px;
+  background: #ffffff;
+  border-bottom: 1px solid #e1e6dd;
+  box-sizing: border-box;
+}
+
+.numbers-back {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #c9d4bf;
+  border-radius: 8px;
+  background: #f2f6ea;
+  color: #2e4520;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.numbers-back:focus-visible {
+  outline: 2px solid #25372a;
+  outline-offset: 2px;
+}
+
+.numbers-title-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.numbers-title-block h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.numbers-field-id {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #4a5a46;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.numbers-header-facts {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 18px;
+  margin: 0;
+  min-width: 0;
+}
+
+.numbers-header-fact {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.numbers-header-fact dt {
+  color: #6b7a66;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.numbers-header-fact dd {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  min-width: 0;
+}
+
+.numbers-header-fact dd > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * R-03 and AC-03: the Area fact carries three cells (the area value, its basis and the ring_area
+ * row), and the layout note allows a value to wrap but never to truncate. Its dd wraps, and the
+ * area value wraps with it, so at 360 the value prints in full on its own line and the ring cell
+ * takes the next one. The ellipsis rule above still guards the class, date and window facts.
+ */
+.numbers-header-fact-area dd {
+  flex-wrap: wrap;
+}
+
+.numbers-header-fact-area dd > span:first-child {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+/* R-07: the ring area is a second cell inside the Area fact, so R-03's four header values keep
+   their places at every width. */
+.numbers-header-ring {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+}
+
+.numbers-header-ring-label {
+  color: #6b7a66;
+  font-size: 11px;
+}
+
+.numbers-body {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  padding: 16px 22px;
+  min-height: 0;
+}
+
+.numbers-cards,
+.numbers-provenance,
+.numbers-gaps {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.numbers-card,
+.numbers-provenance > *,
+.numbers-gaps > * {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #e1e6dd;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.numbers-cards .numbers-card:nth-child(1) { grid-column: 1 / span 7; }
+.numbers-cards .numbers-card:nth-child(2) { grid-column: 8 / span 5; }
+.numbers-cards .numbers-card:nth-child(3) { grid-column: 1 / span 6; }
+.numbers-cards .numbers-card:nth-child(4) { grid-column: 7 / span 6; }
+.numbers-cards .numbers-card:nth-child(5) { grid-column: 1 / span 4; }
+.numbers-cards .numbers-card:nth-child(6) { grid-column: 5 / span 4; }
+.numbers-cards .numbers-card:nth-child(7) { grid-column: 9 / span 4; }
+/* Block 6 F-13: the counter evidence card spans the whole grid at every width (Table E). */
+.numbers-cards .numbers-card:nth-child(8) { grid-column: 1 / -1; }
+.numbers-counter-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.numbers-counter-list li { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); gap: 8px; }
+.numbers-counter-name { color: var(--fs-muted); }
+.numbers-counter-count { margin: 8px 0 0; color: var(--fs-muted); }
+
+.numbers-card h3,
+.numbers-provenance h3,
+.numbers-gaps h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.numbers-card h4 {
+  margin: 10px 0 4px;
+  font-size: 12px;
+}
+
+.numbers-provenance,
+.numbers-gaps {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.numbers-provenance > *,
+.numbers-gaps > * {
+  grid-column: 1 / -1;
+}
+
+.numbers-source {
+  margin: 0 0 4px;
+  color: #4a5a46;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.numbers-card p,
+.numbers-card li,
+.numbers-card dd {
+  overflow-wrap: anywhere;
+}
+
+.numbers-resolution,
+.numbers-cell-statement,
+.numbers-window,
+.numbers-formula,
+.numbers-statement,
+.numbers-axis,
+.numbers-provenance-line {
+  margin: 4px 0;
+  color: #3f4f3b;
+  font-size: 12px;
+}
+
+.numbers-disclosure {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-left: 3px solid #b46b00;
+  background: #fff7e6;
+  font-size: 12px;
+}
+
+.numbers-rows {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.numbers-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 8px;
+  align-items: baseline;
+}
+
+.numbers-row dt {
+  color: #3f4f3b;
+  font-size: 12px;
+}
+
+.numbers-row dd {
+  margin: 0;
+}
+
+.numbers-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.numbers-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+.numbers-unit {
+  color: #5a6a56;
+  font-weight: 400;
+}
+
+.numbers-abstain {
+  color: #5a4a2a;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.numbers-basis {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid #c9d4bf;
+  background: #f2f6ea;
+  color: #3f5a2e;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* R-08: the modelled label is the one mark the eye lands on before the number it qualifies. */
+.numbers-basis-modelled {
+  border-color: #d89a3d;
+  background: #fff1d6;
+  color: #7a4a00;
+  font-weight: 650;
+}
+
+.numbers-state-label {
+  color: #5a6a56;
+  font-size: 11px;
+}
+
+.numbers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.numbers-table th,
+.numbers-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #edf1ea;
+  text-align: left;
+  vertical-align: top;
+}
+
+.numbers-table th {
+  color: #4a5a46;
+  font-weight: 650;
+}
+
+.numbers-provenance-table td,
+.numbers-gap-table td {
+  min-width: 96px;
+}
+
+.numbers-scroll-x {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.numbers-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 6px;
+}
+
+.numbers-chart-axis {
+  fill: #4a5a46;
+  font-size: 11px;
+}
+
+.numbers-chart-base {
+  stroke: #d8dfd0;
+  stroke-width: 1;
+}
+
+.numbers-chart-rain circle {
+  fill: #2f6fa3;
+}
+
+.numbers-chart-tmax circle,
+.numbers-chart-tmax path {
+  fill: #b5462b;
+  stroke: #b5462b;
+  stroke-width: 1.4;
+}
+
+.numbers-chart-tmin circle,
+.numbers-chart-tmin path {
+  fill: #2c7a5b;
+  stroke: #2c7a5b;
+  stroke-width: 1.4;
+}
+
+.numbers-last-read,
+.numbers-loading,
+.numbers-empty,
+.numbers-gaps-empty {
+  margin: 8px 0;
+  color: #3f4f3b;
+}
+
+.numbers-error {
+  margin: 8px 0;
+}
+
+.numbers-years {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.numbers-year {
+  color: #4a5a46;
+  font-size: 12px;
+}
+
+/* Layout contract, 780 wide: 6 columns, and the header keeps its 64 px band. */
+@media (max-width: 1020px) {
+  .numbers-header {
+    padding: 0 22px;
+  }
+
+  .numbers-body {
+    padding: 16px 22px;
+  }
+
+  .numbers-cards,
+  .numbers-provenance,
+  .numbers-gaps {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .numbers-cards .numbers-card:nth-child(n) {
+    grid-column: 1 / -1;
+  }
+
+  .numbers-cards .numbers-card:nth-child(5) { grid-column: 1 / span 3; }
+  .numbers-cards .numbers-card:nth-child(6) { grid-column: 4 / span 3; }
+  .numbers-provenance,
+  .numbers-gaps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Layout contract, 360 wide: one column, and the header keeps 64 px with two text rows. */
+@media (max-width: 640px) {
+  .numbers-header {
+    padding: 0 8px;
+    gap: 2px 8px;
+  }
+
+  .numbers-title-block h2 {
+    font-size: 14px;
+  }
+
+  .numbers-header-facts {
+    font-size: 12px;
+    justify-content: flex-start;
+    gap: 2px 10px;
+  }
+
+  .numbers-body {
+    padding: 8px;
+  }
+
+  .numbers-cards,
+  .numbers-provenance,
+  .numbers-gaps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .numbers-cards .numbers-card:nth-child(n) {
+    grid-column: 1 / -1;
+  }
+
+  .numbers-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .numbers-view,
+  .numbers-view * {
+    transition-duration: 0s;
+    animation-duration: 0s;
+  }
+}

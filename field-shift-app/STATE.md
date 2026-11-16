@@ -23,7 +23,7 @@ Atualizado em 2026-11-15. O histórico detalhado de cada etapa está no git e na
 Os blocos 9 a 11 foram feitos na branch `exp_vass` com os números 4 a 6 e renumerados ao entrar na `main`, que já
 tinha blocos 4 a 8 da equipe.
 
-Testes depois do bloco 12: front-end 339, backend 47, pipeline 167, `tsc` e build sem erro. O front-end tinha 364; os 48 testes de posição dos blocos 2 a 5 deram lugar a 21 testes da grade e do registro.
+Testes depois da junção com a `main` da equipe (`df8b238`): front-end 622, backend 169, `tsc` e build sem erro.
 
 ## Aprovações
 

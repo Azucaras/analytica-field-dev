@@ -153,6 +153,8 @@ beforeEach(() => {
   window.history.replaceState({}, '', '/?region=br')
   useMapStore.setState({ regionId: 'br', selectedFieldId: null, chosenDate: null })
   useShellStore.getState().reset()
+  // These tests read the rotation cards; on the merged screen no analysis panel opens by itself.
+  useShellStore.getState().setState('rotations', 'open')
 })
 
 afterEach(() => {
@@ -196,6 +198,7 @@ describe('the shell: a rail of panels around the map', () => {
   })
 
   it('puts the map in its own cell and each default panel in its slot', async () => {
+    useShellStore.getState().reset()
     mockApi()
     render(<App />)
 
@@ -204,14 +207,18 @@ describe('the shell: a rail of panels around the map', () => {
     await waitFor(() => expect(panel('fields')).toBeTruthy())
     expect(slotOf('fields')).toBe('left')
     expect(slotOf('climate')).toBe('left')
-    expect(slotOf('polygon')).toBe('left')
+    // The readout exists only while a polygon is selected (the team's B6).
+    expect(panel('polygon')).toBeNull()
     expect(slotOf('layers')).toBe('right')
     expect(slotOf('timeline')).toBe('bottom')
-    expect(slotOf('rotations')).toBe('bottom')
+    // No analysis panel opens by itself; the picker under the map offers the four of them.
+    expect(panel('rotations')).toBeNull()
+    const picker = document.querySelector('.fs-slot-bottom [data-group-picker="analysis"]') as HTMLElement
+    expect(within(picker).getAllByRole('button')).toHaveLength(4)
     // Closed by default: no frame, and the rail button is not pressed.
     expect(panel('evidence')).toBeNull()
     expect(panel('command')).toBeNull()
-    expect(rail('evidence').getAttribute('aria-pressed')).toBe('false')
+    expect(rail('evidence').getAttribute('aria-expanded')).toBe('false')
     // No panel is a floating overlay on the map.
     expect(document.querySelector('.fs-map .fs-panel')).toBeNull()
   })
@@ -222,7 +229,8 @@ describe('the shell: a rail of panels around the map', () => {
 
     await screen.findByRole('region', { name: 'Field map' })
     const ids = [...document.querySelectorAll('.fs-rail [data-tool]')].map((node) => node.getAttribute('data-tool'))
-    expect(ids).toEqual([...PANELS].sort((a, b) => a.order - b.order).map((entry) => entry.id))
+    // Every panel available now (the polygon readout waits for a polygon), in registry order.
+    expect(ids).toEqual([...PANELS].sort((a, b) => a.order - b.order).map((entry) => entry.id).filter((id) => id !== 'polygon'))
   })
 
   it('collapses a panel to its header, closes it, and reopens it from the rail', async () => {
@@ -231,18 +239,18 @@ describe('the shell: a rail of panels around the map', () => {
     render(<App />)
 
     await fieldList()
-    const header = within(panel('fields') as HTMLElement).getByRole('button', { name: 'Fields', expanded: true })
+    const header = within(panel('fields') as HTMLElement).getByRole('button', { name: 'Collapse Fields', expanded: true })
     await user.click(header)
     expect(panel('fields')?.getAttribute('data-state')).toBe('collapsed')
     expect(screen.queryByRole('group', { name: /your fields/i })).toBeNull()
 
     await user.click(screen.getByRole('button', { name: 'Close Fields' }))
     expect(panel('fields')).toBeNull()
-    expect(rail('fields').getAttribute('aria-pressed')).toBe('false')
+    expect(rail('fields').getAttribute('aria-expanded')).toBe('false')
 
     await user.click(rail('fields'))
     expect(await fieldList()).toBeTruthy()
-    expect(rail('fields').getAttribute('aria-pressed')).toBe('true')
+    expect(rail('fields').getAttribute('aria-expanded')).toBe('true')
   })
 
   it('a panel that throws shows its own message and leaves the others working', async () => {
@@ -471,7 +479,7 @@ describe('rotation flip cards', () => {
     await screen.findByRole('list', { name: 'Rotation scenarios' })
     const card = (await screen.findByRole('heading', { name: 'Current sequence' })).closest('.scenario-card') as HTMLElement
     await user.click(within(card).getByRole('button', { name: 'Charts for Current sequence' }))
-    expect(within(card).getAllByRole('term').map((term) => term.textContent)).toEqual(['Why', 'Evidence', 'Benefit', 'Gap', 'Risk'])
+    expect(within(card).getAllByRole('term').map((term) => term.textContent)).toEqual(['Why', 'Evidence', 'Benefit', 'Falsifier', 'Gap', 'Risk'])
     expect(document.querySelectorAll('.scenario-card .flip-overlay[aria-expanded="true"]')).toHaveLength(1)
 
     await user.click(within(card).getByRole('button', { name: 'Details for Current sequence' }))

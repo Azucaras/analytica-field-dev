@@ -71,6 +71,19 @@ Uma passada de eficiência deixou o JavaScript principal 23% menor (2,08 MB para
 (catálogo do Sentinel-2 e o ZARC) agora carregam só quando são usadas. Saíram quatro dependências que nada usava
 (316 pacotes a menos para instalar), e o backend deixou de reler os arquivos de clima a cada pedido.
 
+## Junção com a main da equipe (blocos 5.5, 6 e 7)
+
+A versão da equipe em `df8b238` trouxe os Números do talhão, o Calendário de plantio e o Registro do talhão
+(com o desenho do contorno no mapa) e as correções de seleção de polígono. Eles entraram como painéis da tela
+em grade. Onde as duas versões se chocavam:
+
+- Os quatro painéis de análise (Panorama de rotação, Números, Calendário e Registro) abrem um por vez, e
+  nenhum abre sozinho: embaixo do mapa aparece um seletor com os quatro botões.
+- O mapa não muda de tamanho quando um painel abre ou fecha; no celular o painel desliza por cima do mapa.
+- O app continua abrindo em português: os 271 textos novos da equipe foram traduzidos, e a regra que deixava
+  o catálogo em português vazio passou a exigir que ele esteja completo.
+- "Polígono selecionado" só aparece quando há um polígono selecionado.
+
 ## Outras mudanças
 
 - O app abre em português, com troca para inglês.

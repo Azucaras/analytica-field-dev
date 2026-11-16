@@ -74,10 +74,13 @@ export function PolygonPanel() {
   if (failure) statusLines.push({ key: 'failure', text: t(failure as TranslationKey) })
   if (basemapKeyMissing) statusLines.push({ key: 'key', text: t('polygon.google_key_missing') })
   if (basemapFailed) statusLines.push({ key: 'basemap', text: t('polygon.basemap_unavailable') })
-  if (lines?.zoomLine) {
+  // R-12 and AC-05, AC-09: a failure line means no tier paints. The zoom and select lines name a
+  // mounted tier, so they are absent beside the failure line, not printed next to it.
+  const tierMounted = failure === null
+  if (tierMounted && lines?.zoomLine) {
     statusLines.push({ key: 'zoom', text: t('polygon.polygons_from_zoom', { lowest: lines.zoomLine.lowest }) })
   }
-  if (lines?.selectLine) {
+  if (tierMounted && lines?.selectLine) {
     statusLines.push({
       key: 'select',
       text: t('polygon.select_from_zoom', { interactive: lines.selectLine.interactive }),
@@ -98,10 +101,10 @@ export function PolygonPanel() {
       {legendRows.length > 0 && (
         <ul aria-label={t('polygon.legend_label')} className="polygon-legend">
           {legendRows.map((row) => (
-            <li className="polygon-legend-row" key={row.classId ?? 'unmapped'}>
+            <li className="polygon-legend-row" key={row.nameKey ?? row.classId}>
               <span aria-hidden="true" className="polygon-legend-swatch" style={{ background: row.hex }} />
               {/* R-44: class names are data values of the class tables, not catalog text. */}
-              <span data-dynamic-content>{row.nameKey ? t(row.nameKey) : row.name}</span>
+              <span data-dynamic-content>{row.nameKey ? t(row.nameKey, row.params) : row.name}</span>
             </li>
           ))}
         </ul>

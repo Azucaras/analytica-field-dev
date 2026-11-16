@@ -148,6 +148,8 @@ describe('R-43 the basemap adapter boundary (AC-34)', () => {
     const importers = sourceFiles().filter((file) => file !== 'src/lib/basemap-adapters.ts'
       && !file.includes('.test.')
       && /from '.*basemap-adapters'/.test(readFileSync(resolve(process.cwd(), file), 'utf8')))
+    // Block 5.5 W7: the boundary editor no longer mounts a map of its own, so it no longer reads
+    // the registry. Three readers, and still no component that names a host.
     expect(importers.sort()).toEqual([
       'src/App.tsx',
       'src/components/MapCanvas.tsx',

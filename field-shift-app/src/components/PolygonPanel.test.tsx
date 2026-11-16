@@ -165,6 +165,43 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
     expect(screen.getByText('Select from zoom 10')).toBeTruthy()
   })
 
+  /**
+   * AC-05, AC-09: Brazil Mode A mounts both tiers, so the line names the overview's 5.
+   */
+  it('names the overview floor in Brazil Mode A, where the overview file is mounted', () => {
+    const modeA: PolygonScene = {
+      ...brScene,
+      tiers: { detail: { minzoom: 8, maxzoom: 12 }, overview: { minzoom: 5, maxzoom: 7 }, interactiveMinzoom: 10 },
+      overviewUrl: 'pmtiles:///data/polygons/br-mt-overview.pmtiles/{z}/{x}/{y}',
+    }
+    setStore({ polygonMode: modeA, mapZoom: 6, regionId: 'br' })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygons from zoom 5')).toBeTruthy()
+    expect(screen.getByText('Select from zoom 10')).toBeTruthy()
+  })
+
+  /**
+   * AC-05, AC-09: the gate measured Brazil Mode B at zoom 6, 7, 9 and 10 and the line read
+   * `Polygons from zoom 5` while the lowest mounted tier was the detail at 8. The real Mode B scene
+   * keeps the Table B overview numbers and mounts no overview URL; the old `brScene` fixture had
+   * `overview: null`, so it never carried that state.
+   */
+  it('names the detail floor in Brazil Mode B, where the overview numbers are mounted by nothing', () => {
+    const modeB: PolygonScene = {
+      ...brScene,
+      tiers: { detail: { minzoom: 8, maxzoom: 12 }, overview: { minzoom: 5, maxzoom: 7 }, interactiveMinzoom: 10 },
+      overviewUrl: null,
+    }
+    for (const zoom of [6, 7, 9, 10]) {
+      setStore({ polygonMode: modeB, mapZoom: zoom, regionId: 'br' })
+      const { unmount } = render(<PolygonPanel />)
+      expect(screen.getByText('Polygons from zoom 8')).toBeTruthy()
+      expect(screen.queryByText('Polygons from zoom 5')).toBeNull()
+      expect(screen.queryByText('Polygon source unavailable')).toBeNull()
+      unmount()
+    }
+  })
+
   it('prints the Google key line when ?basemap=google was asked without a key (R-32)', () => {
     setStore({ polygonMode: brScene, basemapKeyMissing: true, regionId: 'br' })
     render(<PolygonPanel />)
@@ -177,18 +214,19 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
     expect(screen.getByText('Basemap unavailable')).toBeTruthy()
   })
 
-  it('orders the five status lines failure, key, basemap, zoom, select (R-39)', () => {
+  it('orders the status lines key, basemap, zoom, select (R-39), and the failure line stands alone (R-12)', () => {
     setStore({
       polygonMode: { ...brScene, failure: null },
       basemapKeyMissing: true,
       basemapFailed: true,
       mapZoom: 9,
       regionId: 'br',
-      polygonSourceError: 'polygon.source_unavailable',
+      polygonSourceError: null,
     })
     render(<PolygonPanel />)
+    // R-12: a failure line means no tier paints, so the zoom and select lines are absent with it.
+    // The four lines below are the ones that can print together.
     const lines = [
-      'Polygon source unavailable',
       'Google basemap needs an API key',
       'Basemap unavailable',
       'Polygons from zoom 8',
@@ -201,6 +239,22 @@ describe('the status lines of R-07, R-11, R-12, R-32 and R-35', () => {
       expect(index, line).toBeGreaterThan(cursor)
       cursor = index
     }
+  })
+
+  it('orders the failure line alone, with no zoom or select line beside it (R-12)', () => {
+    setStore({
+      polygonMode: { ...brScene, failure: null },
+      basemapKeyMissing: false,
+      basemapFailed: false,
+      mapZoom: 9,
+      regionId: 'br',
+      polygonSourceError: 'polygon.source_unavailable',
+    })
+    render(<PolygonPanel />)
+    const text = screen.getByRole('region', { name: 'Polygon' }).textContent ?? ''
+    expect(text).toContain('Polygon source unavailable')
+    expect(text).not.toContain('Polygons from zoom')
+    expect(text).not.toContain('Select from zoom')
   })
 })
 
@@ -218,6 +272,22 @@ describe('the legend rows of R-37 and R-21', () => {
     const list = screen.getByRole('list', { name: 'Classes in view' })
     const items = within(list).getAllByRole('listitem').map((node) => node.textContent)
     expect(items).toEqual(['Pasture', 'class not mapped'])
+  })
+
+  it('prints the No CDL row with its year, and the class not mapped row, as two rows', () => {
+    setStore({
+      polygonMode: usScene,
+      regionId: 'us',
+      legendRows: [
+        { classId: 5, name: 'Soybeans', nameKey: null, hex: '#267000', unmapped: false },
+        { classId: null, name: null, nameKey: 'polygon.no_cdl_class', params: { year: 2025 }, hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+        { classId: null, name: null, nameKey: 'polygon.class_not_mapped', hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+      ],
+    })
+    render(<PolygonPanel />)
+    const list = screen.getByRole('list', { name: 'Classes in view' })
+    const items = within(list).getAllByRole('listitem').map((node) => node.textContent)
+    expect(items).toEqual(['Soybeans', 'No CDL class for 2025', 'class not mapped'])
   })
 
   it('prints the empty text, and no rows, when the view holds no polygon', () => {
@@ -243,6 +313,50 @@ describe('the provenance, source and credit lines (R-33, R-38, AC-31)', () => {
     render(<PolygonPanel />)
     expect(screen.getByText('CDL 2025, Crop Sequence Boundaries 2025 release, retrieved')).toBeTruthy()
     expect(screen.getByText('Polygon build not available')).toBeTruthy()
+  })
+})
+
+// The measured state of the gate (AC-05, AC-09): the manifest answers, so the scene carries
+// tiers, but the tile files fail, so the map reports the source error and the region has no
+// tier that paints. R-12 says both zoom lines are then absent and the failure line prints.
+const usTiersFromManifest = {
+  detail: { minzoom: 6, maxzoom: 14 },
+  overview: { minzoom: 3, maxzoom: 5 },
+  interactiveMinzoom: 8,
+}
+
+describe('no tier available after a source error prints no zoom line (R-07, R-12, AC-05, AC-09)', () => {
+  it('AC-05: at zoom 3 the failure line prints and the zoom string is absent beside it', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 3,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('AC-09: at zoom 11 (the default view) the zoom string is absent when the US tier is absent', () => {
+    setStore({
+      polygonMode: { ...usScene, tiers: usTiersFromManifest },
+      mapZoom: 11,
+      polygonSourceError: 'polygon.build_not_available',
+    })
+    render(<PolygonPanel />)
+    const region = screen.getByRole('region', { name: 'Polygon' })
+    expect(screen.getByText('Polygon build not available')).toBeTruthy()
+    expect(region.textContent ?? '').not.toContain('Polygons from zoom')
+    expect(region.textContent ?? '').not.toContain('Select from zoom')
+  })
+
+  it('still prints the zoom line when the source answers (no regression on R-12)', () => {
+    setStore({ polygonMode: { ...usScene, tiers: usTiersFromManifest }, mapZoom: 3, polygonSourceError: null })
+    render(<PolygonPanel />)
+    expect(screen.getByText('Polygons from zoom 3')).toBeTruthy()
+    expect(screen.queryByText('Polygon build not available')).toBeNull()
   })
 })
 

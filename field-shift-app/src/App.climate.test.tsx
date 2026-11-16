@@ -117,6 +117,8 @@ function mockApi({ ensoFails = false, climateFails = false } = {}) {
 
 beforeEach(() => {
   useShellStore.getState().reset()
+  // These tests read the rotation cards; on the merged screen no analysis panel opens by itself.
+  useShellStore.getState().setState('rotations', 'open')
   // The app opens on the United States; these cases use the Brazilian fields, so Brazil is active.
   window.history.replaceState({}, '', '/?region=br')
   useMapStore.setState({ regionId: 'br', selectedFieldId: null })

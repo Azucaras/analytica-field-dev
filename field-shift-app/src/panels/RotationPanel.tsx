@@ -10,15 +10,22 @@ export function RotationPanel() {
   const selectedPolygonId = useMapStore((state) => state.selectedPolygonId)
   const { selectedField, scenarios, scenarioState, threshold, isLoadingFields, isLoadingScenarios, error } = data
   const loading = isLoadingFields || isLoadingScenarios
+  // A selected polygon has no fixture scenarios: it prints the empty text, never the "select a field" copy.
   const emptyReason = loading
     ? null
-    : error ?? (!data.selectedFieldId
-      ? t('empty.select_field')
-      : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)
+    : error ?? (selectedPolygonId !== null
+      ? t('empty.no_rotation_scenarios')
+      : !data.selectedFieldId
+        ? t('empty.select_field')
+        : scenarios.length === 0 ? t('empty.no_rotation_scenarios') : null)
 
   return (
-    <div className="fs-stack">
+    <div className="fs-stack" data-rotation-panel>
       <div className="fs-row">
+        {/* The fixture's own season; a polygon has none. */}
+        {selectedPolygonId === null && (
+          <span className="season-chip">{t('scenarios.season', { season: '2025/26' })}</span>
+        )}
         {/* A polygon has no coverage measurement, so no percentage is printed for it. */}
         {selectedPolygonId === null && (
           <span className="field-coverage-pill">

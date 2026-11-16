@@ -21,6 +21,15 @@ export type PanelDefinition = {
   /** Lower first inside its slot. */
   order: number
   defaultState: PanelState
+  /**
+   * Panels that share a group are exclusive: opening one closes the others (the team's block 5.5
+   * rule for Rotation outlook, Field numbers, Planting calendar and Field record).
+   */
+  group?: string
+  /** True for a panel that reads the selected field or polygon: its button is disabled, with the reason in its name, until there is one. */
+  needsSelection?: boolean
+  /** False when the body renders its own landmark of the same name (the timeline); the frame is then a group. */
+  landmark?: boolean
   /** False hides the panel and its toolbar button, for features that do not apply to the current data. */
   available?: (data: AppData) => boolean
   /** The panel body. It reads what it needs from `useAppData()` or from the map store. */

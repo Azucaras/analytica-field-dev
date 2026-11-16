@@ -2,7 +2,9 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useShellStore } from '@/shell/shell-store'
 import App from './App'
-import { useMapStore } from '@/lib/map-store'
+import { chosenDateOf, useMapStore } from '@/lib/map-store'
+import { UNMAPPED_CLASS_COLOUR, paintedClassYear } from '@/lib/polygon-style'
+import { REGION_ADAPTERS } from '@/lib/regions'
 import { layersResponse } from '@/test/api-fixtures'
 import { MapStub } from '@/test/maplibre-stub'
 
@@ -35,14 +37,18 @@ const brazilFields = [
 
 const modeBody = { region: 'br', mode: 'source-direct', classProperty: 'mbmode24' }
 
-function installFetch() {
+function installFetch(options: { axisDefault?: string } = {}) {
   const calls: string[] = []
   vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     calls.push(url)
     const parsed = new URL(url, 'http://localhost/')
     if (parsed.pathname === '/layers') {
-      return { ok: true, status: 200, json: async () => layersResponse() } as unknown as Response
+      const response = layersResponse()
+      const body = options.axisDefault
+        ? { ...response, axis: { ...response.axis, default: options.axisDefault } }
+        : response
+      return { ok: true, status: 200, json: async () => body } as unknown as Response
     }
     if (parsed.pathname === '/polygons/mode') {
       return { ok: true, status: 200, json: async () => modeBody } as unknown as Response
@@ -75,6 +81,8 @@ function installFetch() {
 
 beforeEach(() => {
   useShellStore.getState().reset()
+  // These tests read the rotation cards; on the merged screen no analysis panel opens by itself.
+  useShellStore.getState().setState('rotations', 'open')
   MapStub.reset()
   useMapStore.setState({
     regionId: 'us',
@@ -123,11 +131,12 @@ describe('the polygon selection in the app (R-23, R-24, R-28, AC-19, AC-20, AC-2
     await waitFor(() => expect(useMapStore.getState().regionId).toBe('br'))
 
     act(() => {
-      useMapStore.setState({
-        polygonClass: { classId: 39, name: 'Soybean', hex: '#f5b3c8', unmapped: false },
-      })
       // R-22: the map runs the command; the command runs this store action.
       useMapStore.getState().selectField('trazo:39')
+      // Block 5.5 U4: a selection clears the previous class in the same write, so the class on
+      // screen is the one the map resolves for THIS polygon. The test writes it the way the map's
+      // sync does, after the selection.
+      useMapStore.getState().setPolygonClass({ classId: 39, name: 'Soybean', hex: '#f5b3c8', unmapped: false })
     })
 
     await waitFor(() => expect(window.location.search).toContain('polygon=39'))
@@ -160,6 +169,29 @@ describe('the polygon selection in the app (R-23, R-24, R-28, AC-19, AC-20, AC-2
     expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01')
   })
 
+  it('reads the chip year through chosenDateOf, not the live axis default (R-21, R-28)', async () => {
+    // The live axis default is 2022-06-01 while the static LAYER_AXIS default is 2026-11-14.
+    // The tooltip, the legend and the readout read chosenDateOf, so the chip must too.
+    window.history.replaceState({}, '', '/')
+    installFetch({ axisDefault: '2022-06-01' })
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().axis.default).toBe('2022-06-01'))
+
+    act(() => {
+      useMapStore.getState().selectField('csb:381825001868504')
+      useMapStore.getState().setPolygonClass(
+        { classId: null, name: null, hex: UNMAPPED_CLASS_COLOUR, unmapped: true },
+        { classValue: null, area: 12.5 },
+      )
+    })
+
+    const expectedYear = paintedClassYear(REGION_ADAPTERS.us, chosenDateOf(useMapStore.getState()))
+    const chip = await screen.findByRole('button', { name: `No CDL class for ${expectedYear}` })
+    // The field list item carries the name plus a 'Selected polygon' tag; the name is the label.
+    expect(chip.querySelector('.fs-field-name')?.textContent).toBe(`No CDL class for ${expectedYear}`)
+    expect(screen.queryByRole('button', { name: 'No CDL class for 2022' })).toBeNull()
+  })
+
   it('clears a ?polygon= that does not resolve in the active region', async () => {
     // A csb id under Brazil does not resolve: the app clears it instead of guessing.
     window.history.replaceState({}, '', '/?region=br&polygon=381825001868504')
@@ -167,5 +199,47 @@ describe('the polygon selection in the app (R-23, R-24, R-28, AC-19, AC-20, AC-2
     render(<App />)
     await waitFor(() => expect(useMapStore.getState().selectedPolygonId).toBeNull())
     await waitFor(() => expect(window.location.search).not.toContain('polygon='))
+  })
+})
+
+describe('the rotation panel while a polygon is selected (R-26, R-49, AC-22, AC-41)', () => {
+  it('AC-22: prints the polygon empty text, not the fixture copy, and requests no field scenarios', async () => {
+    window.history.replaceState({}, '', '/')
+    const calls = installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('us'))
+    act(() => {
+      useMapStore.getState().selectField('csb:381825001868504')
+    })
+    await waitFor(() => expect(window.location.search).toContain('polygon=381825001868504'))
+
+    const panel = document.querySelector('[data-rotation-panel]') as HTMLElement
+    expect(panel.textContent).toContain('No rotation scenarios are available for this field.')
+    expect(panel.textContent).not.toContain('Select a field to view rotation scenarios.')
+    expect(calls.some((url) => url.includes('/fields/'))).toBe(false)
+  })
+
+  it('AC-41: prints no 2025/26 season chip while the polygon is the selected field', async () => {
+    window.history.replaceState({}, '', '/')
+    installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('us'))
+    act(() => {
+      useMapStore.getState().selectField('csb:381825001868504')
+    })
+    await waitFor(() => expect(window.location.search).toContain('polygon=381825001868504'))
+    expect(document.body.textContent ?? '').not.toContain('2025/26 season')
+  })
+
+  it('keeps the fixture season chip for a fixture field (regression, block 3 R-07)', async () => {
+    window.history.replaceState({}, '', '/?region=br')
+    installFetch()
+    render(<App />)
+    await waitFor(() => expect(useMapStore.getState().regionId).toBe('br'))
+    act(() => {
+      useMapStore.getState().selectField('mt-santa-carmem-01')
+    })
+    await waitFor(() => expect(useMapStore.getState().selectedFieldId).toBe('mt-santa-carmem-01'))
+    expect(document.body.textContent ?? '').toContain('2025/26 season')
   })
 })

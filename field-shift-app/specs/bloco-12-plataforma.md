@@ -75,6 +75,34 @@ Measured with `vite build` on 2026-11-15:
 - The CSS (231 KB, 35 KB gzip) is mostly MapLibre's own stylesheet and the Tailwind base; limiting Tailwind's
   source scan to `src/` saved 2 KB, so it was left as it was.
 
+## Merge with the team's main at df8b238 (blocks 5.5, 6 and 7)
+
+The team rebuilt the map screen into panels in parallel (block 5.5, `PLANO-TELA-UNICA-E-PAINEIS.md`). The
+merge keeps this block's grid and registry and brings the team's panels and rules into it:
+
+- `Field numbers`, `Planting calendar` and `Field record` are registry entries (`src/panels/team-panels.tsx`)
+  in the bottom slot, with `Rotation outlook`. The four form the exclusive group `analysis`: one open at a
+  time, whatever opens it (rail, picker or the agent's `open_panel`).
+- B4 and D3: no analysis panel opens by itself. While none is open, the bottom slot shows a picker with the
+  four buttons. `Rotation outlook` and `Field numbers` need a selection (B5): their buttons are disabled,
+  with the reason in their accessible name, until a field or polygon is selected.
+- B6: `Selected polygon` exists only while a polygon is selected.
+- Block 6 AC-02, the map keeps its rectangle: the bottom slot has a fixed height, so opening, closing or
+  collapsing a panel there never resizes the map, and on a phone the panel sheet slides over the map
+  instead of shrinking it. Closing every panel of a side column still widens the map; that is the user
+  asking for more map.
+- Block 6 R-11, as merged: new strings still come from `en.ts` through `t()`, and because the merged app
+  opens in Portuguese, `pt-BR.ts` carries every key (the team's 271 new strings were translated). The
+  test that kept `pt-BR.ts` empty now checks that every numbers key is translated.
+- Panel frames are named regions like the team's panel host; header buttons read `Collapse X` and
+  `Expand X`; rail buttons carry `aria-expanded` and `aria-disabled`; closing a panel returns the focus to
+  its rail button.
+- Fixed while merging: the MapBiomas sidecar path printed with backslashes on Windows; closing `Field
+  record` while drawing left the map adding hidden vertices; images stay under the lowest mounted polygon
+  layer (the team's `imageryAnchor`, widened to the overview tier).
+- `PanelHost`, `PanelToggle` and the four toggle components of the team are no longer mounted and can be
+  removed in a later change.
+
 ## What this replaces
 
 The position rules of blocks 2 to 5 (R-35, R-36, R-40, R-41, R-46, R-48, R-49 and the anchor tables) no longer

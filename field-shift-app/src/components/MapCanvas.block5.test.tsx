@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MapCanvas, BASEMAP_LAYER_ID } from './MapCanvas'
 import { useMapStore } from '@/lib/map-store'
+import { buildLayerCatalog } from '@/lib/layer-catalog'
+import { RECORDED_LAYERS_RESPONSE } from '@/lib/recorded-layers-response'
 import { MapStub } from '@/test/maplibre-stub'
 import {
   POLYGON_DETAIL_SOURCE_ID,
@@ -64,6 +66,14 @@ function installFetch() {
     }
     if (parsed.pathname.endsWith('us-38017.manifest.json')) {
       return { ok: true, status: 200, json: async () => manifest } as unknown as Response
+    }
+    // The tile guard's own probe, answered so the one catalog layer this suite turns on draws.
+    if (/^\/tiles\/[^/]+\//.test(parsed.pathname)) {
+      const headers = new Headers()
+      headers.set('X-Tile-Date', '2026-11-12')
+      headers.set('X-Tile-Source', 'recorded')
+      headers.set('X-Tile-Status', 'ok')
+      return { status: 200, headers, arrayBuffer: async () => new ArrayBuffer(6400) } as unknown as Response
     }
     return { ok: false, status: 404, json: async () => null } as unknown as Response
   })
@@ -178,6 +188,33 @@ describe('sources, layers and the basemap (R-04, R-30, R-36, AC-02, AC-28)', () 
     ])
   })
 
+  /**
+   * AC-11, R-36: the fill's composite is one 0.4 fill over the imagery, which is only true when no
+   * raster sits above the polygons. The block 4 stack list used to move the on raster to the very top
+   * of the style, above the polygon fill and above the labels: measured on the running page, the fill
+   * implied alpha 0.159 to 0.166 at 12 interior points of one class 41 polygon with `smap-l3` on at
+   * 0.55, and 0.398 to 0.402 once the raster sat below the polygons (artifacts/AC-11-alpha.json).
+   */
+  it('keeps an on raster under the field polygons and above the basemap (AC-11, R-36)', async () => {
+    const catalog = buildLayerCatalog(RECORDED_LAYERS_RESPONSE)
+    useMapStore.setState({ catalog, on: { 'smap-l3': true }, order: catalog.map((entry) => entry.id) })
+    installFetch()
+    render(<MapCanvas fields={[]} selectedField={null} />)
+    const map = MapStub.last()
+    await waitFor(() => expect(map.getLayer(POLYGON_FILL_LAYER_ID)).toBeTruthy())
+    await waitFor(() => expect(map.getLayer('smap-l3-raster')).toBeTruthy())
+    const ids = map.layers.map((layer) => layer.id)
+    const basemap = ids.indexOf(BASEMAP_LAYER_ID)
+    const raster = ids.indexOf('smap-l3-raster')
+    const fill = ids.indexOf(POLYGON_FILL_LAYER_ID)
+    const firstSymbol = map.layers.findIndex((layer) => layer.type === 'symbol')
+    expect(basemap).toBeGreaterThanOrEqual(0)
+    // imagery over the basemap, the field polygons over the imagery, the labels over everything.
+    expect(raster).toBeGreaterThan(basemap)
+    expect(fill).toBeGreaterThan(raster)
+    expect(firstSymbol).toBeGreaterThan(fill)
+  })
+
   it('mounts the basemap layer exactly once after a composition change (R-36)', async () => {
     const { map } = await mountMap()
     act(() => {
@@ -188,6 +225,50 @@ describe('sources, layers and the basemap (R-04, R-30, R-36, AC-02, AC-28)', () 
     })
     const basemapLayers = map.layers.filter((layer) => String(layer.id).includes('basemap'))
     expect(basemapLayers).toHaveLength(1)
+  })
+
+  it('places the basemap above the style own fill and line layers and below its symbols, polygons between (AC-28)', async () => {
+    // The Liberty order: a road-arrow symbol sits below a bridge line and above the labels. The
+    // criterion needs the basemap above every own fill and line and below every own symbol, so
+    // the arrow is raised above the imagery with the labels (the style's own order is kept).
+    MapStub.styleLayers = [
+      { id: 'water', type: 'fill', source: 'openmaptiles' },
+      { id: 'road_motorway', type: 'line', source: 'openmaptiles' },
+      { id: 'road_one_way_arrow', type: 'symbol', source: 'openmaptiles' },
+      { id: 'bridge_link', type: 'line', source: 'openmaptiles' },
+      { id: 'place-label', type: 'symbol', source: 'openmaptiles' },
+    ]
+    const { map } = await mountMap()
+    const ids = map.layers.map((layer) => layer.id)
+    const at = (id: string) => ids.indexOf(id)
+    const basemap = at(BASEMAP_LAYER_ID)
+    expect(basemap).toBeGreaterThanOrEqual(0)
+    for (const own of ['water', 'road_motorway', 'bridge_link']) {
+      expect(at(own), `${own} must sit below the basemap`).toBeLessThan(basemap)
+    }
+    for (const symbol of ['road_one_way_arrow', 'place-label']) {
+      expect(at(symbol), `${symbol} must sit above the basemap`).toBeGreaterThan(basemap)
+    }
+    for (const polygon of [POLYGON_OVERVIEW_FILL_LAYER_ID, 'polygon-overview-line', POLYGON_FILL_LAYER_ID, POLYGON_LINE_LAYER_ID]) {
+      expect(at(polygon), `${polygon} must sit above the basemap`).toBeGreaterThan(basemap)
+      expect(at(polygon), `${polygon} must sit below the labels`).toBeLessThan(at('place-label'))
+    }
+  })
+
+  it('sets the basemap failure from the map error event of the basemap source (R-35, AC-29)', async () => {
+    const { map } = await mountMap()
+    act(() => {
+      map.emit('error', { sourceId: 'basemap', error: new Error('Failed to fetch'), tile: { tileID: 'z12' } })
+    })
+    expect(useMapStore.getState().basemapFailed).toBe(true)
+  })
+
+  it('does not set the basemap failure for an error of another source (R-35)', async () => {
+    const { map } = await mountMap()
+    act(() => {
+      map.emit('error', { sourceId: 'openmaptiles', error: new Error('style tile failed'), tile: {} })
+    })
+    expect(useMapStore.getState().basemapFailed).toBe(false)
   })
 
   it('paints the United States with cdl{Y} of the painted year and no other table', async () => {

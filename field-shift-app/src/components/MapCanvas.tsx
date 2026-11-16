@@ -20,6 +20,7 @@ import {
   type CompositionPreset,
   type FieldSummary,
 } from '@/lib/map-store'
+import { usePanelStore } from '@/lib/panel-store'
 import { activeBasemapAdapter, BASEMAP_ADAPTERS, type BasemapAdapter } from '@/lib/basemap-adapters'
 import { probeLayerTile } from '@/lib/tile-guard'
 import { regionAdapter, regionFromSearch, type RegionAdapter } from '@/lib/regions'
@@ -38,13 +39,15 @@ import {
   POLYGON_INTERACTIVE_MIN_ZOOM,
   classDisplay,
   classPropertyFor,
+  noCdlYearOf,
   paintedClassYear,
 } from '@/lib/polygon-style'
 import { classIdFrom, legendRowsForMap } from '@/lib/polygon-legend'
 import { commandFieldId, featureStateCall } from '@/lib/polygon-selection'
-import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, type Box } from '@/lib/polygon-tooltip'
+import { placeTooltip, POLYGON_TOOLTIP_MAX_WIDTH, polygonTooltipText, type Box } from '@/lib/polygon-tooltip'
 import { attributionCreditName, collapseAttributionControl, nameAttributionToggle, rawFeatureFrom } from '@/lib/polygon-readout'
 import { runCommand } from '@/lib/commands'
+import { outerRingOf } from '@/lib/numbers'
 import { PolygonTooltip } from '@/components/PolygonTooltip'
 import { t } from '@/strings'
 
@@ -107,6 +110,39 @@ function compareBounds(map: MapLibreMap, divider: number): { a: [number, number,
 }
 
 /**
+ * R-36 and AC-28: the layer the app's imagery is inserted under.
+ *
+ * The polygon fill layer when the polygon surface is mounted, so imagery never covers a polygon;
+ * otherwise the style's first symbol layer, so the labels stay readable in the two satellite
+ * presets. A raster moved to the very top of the style (`moveLayer` with no anchor), which is how
+ * the block 4 stack list used to be applied, lands above the polygon fill and above every label.
+ * That is what veiled the polygons: measured on the running page at Brazil zoom 13 with the
+ * Satellite preset and the default `smap-l3` layer on at 0.55, the fill implied alpha 0.159 to
+ * 0.166 at 12 of 12 interior points of one class 41 polygon, and 0.398 to 0.402 at the same 12
+ * points once the raster sat below the polygons (artifacts/AC-11-alpha.json).
+ */
+function imageryAnchor(map: MapLibreMap): string | undefined {
+  // The lowest mounted polygon layer, so the overview tier is covered too, then the labels.
+  return POLYGON_LAYER_IDS.find((id) => map.getLayer(id)) ?? firstSymbolId(map)
+}
+
+/**
+ * R-36: the basemap goes under every catalog raster already mounted and under the polygons, so a
+ * re-inserted basemap cannot cover the data layers of block 4 or the field polygons.
+ */
+function basemapInsertBefore(
+  map: MapLibreMap,
+  catalog: readonly LayerCatalogEntry[],
+  plan: { before: string | undefined },
+): string | undefined {
+  const mounted = new Set((map.getStyle().layers ?? []).map((layer) => layer.id))
+  for (const entry of catalog) {
+    if (mounted.has(rasterLayerId(entry.id))) return rasterLayerId(entry.id)
+  }
+  return imageryAnchor(map) ?? plan.before
+}
+
+/**
  * R-19 and R-17: only a layer that is on owns a source and a layer, so a layer that is off
  * issues no tile request. Opacity is a paint property on `raster-opacity` and never removes
  * or re-adds a source, which is what AC-13 counts.
@@ -133,7 +169,6 @@ function ensureRaster(
     })
   }
   if (!map.getLayer(layerId)) {
-    const firstSymbolLayer = map.getStyle().layers?.find((styleLayer) => styleLayer.type === 'symbol')
     map.addLayer({
       id: layerId,
       type: 'raster',
@@ -141,7 +176,7 @@ function ensureRaster(
       // A coarse product (SMAP is 9 km) is drawn as hard squares: smoothing it would suggest
       // detail the measurement does not have.
       paint: { 'raster-opacity': 0, ...(resolutionMetres(entry.resolution) >= 1000 ? { 'raster-resampling': 'nearest' as const } : {}) },
-    }, firstSymbolLayer?.id)
+    }, imageryAnchor(map))
   }
   return created
 }
@@ -262,7 +297,7 @@ export function placeWaterMask(
   } else {
     map.setPaintProperty(WATER_MASK_LAYER_ID, 'fill-color', colour)
   }
-  const ceiling = rasterCeiling(map)
+  const ceiling = imageryAnchor(map)
   map.moveLayer(WATER_MASK_LAYER_ID, ceiling)
   for (let index = stack.length - 1; index >= 0; index -= 1) {
     const id = stack[index]
@@ -273,21 +308,13 @@ export function placeWaterMask(
   }
 }
 
-/**
- * Where the raster stack ends: just under the crop polygons, or under the labels when no
- * polygon is mounted. Moving a raster to the very top used to paint SMAP and the other
- * imagery over the crop polygons and the place names.
- */
-function rasterCeiling(map: MapLibreMap): string | undefined {
-  return POLYGON_LAYER_IDS.find((id) => map.getLayer(id)) ?? firstSymbolId(map)
-}
-
 /** R-18: the stack list puts its first item on top, so the list is applied bottom up. */
 function applyOrder(map: MapLibreMap, order: string[]) {
-  const ceiling = rasterCeiling(map)
+  // R-36: the rasters keep their order among themselves and stay under the polygons and the labels.
+  const before = imageryAnchor(map)
   for (let index = order.length - 1; index >= 0; index -= 1) {
     const layerId = rasterLayerId(order[index])
-    if (map.getLayer(layerId)) map.moveLayer(layerId, ceiling)
+    if (map.getLayer(layerId)) map.moveLayer(layerId, before)
   }
 }
 
@@ -313,13 +340,43 @@ export function firstSymbolId(map: MapLibreMap): string | undefined {
 }
 
 /**
- * R-36: the basemap sits above the style's own fill and line layers and below its symbols,
- * and the polygon layers are raised above it, so imagery never hides a polygon.
+ * R-36, AC-28: where the basemap goes and which of the style's own symbols it must not cover.
+ *
+ * The imagery sits above every fill and line of the style's own layers (its land, water, road
+ * and boundary geometry) and below its symbols, so the labels stay readable. The style's own order
+ * can put a symbol under one of those fills and lines: in OpenFreeMap Liberty the road-arrow
+ * symbols sit under the bridge, building and boundary lines. The basemap goes directly before the
+ * first symbol that follows the last such fill or line, and each own symbol that sits under that
+ * point is raised to just above the imagery in its own order. Nothing else of the style moves.
+ *
+ * `ownIds` is the style's layer ids at `style.load`, before the app adds a layer, so the app's
+ * boundary, class and raster layers are never read as the style's own.
+ */
+export function basemapStackPlan(
+  layers: ReadonlyArray<{ id: string; type: string }>,
+  ownIds: ReadonlySet<string>,
+): { before: string | undefined; raise: string[] } {
+  let lastOwnGeometry = -1
+  layers.forEach((layer, index) => {
+    if (ownIds.has(layer.id) && (layer.type === 'fill' || layer.type === 'line')) lastOwnGeometry = index
+  })
+  const anchor = layers.findIndex((layer, index) => index > lastOwnGeometry && layer.type === 'symbol')
+  const raise = layers
+    .filter((layer, index) => index < lastOwnGeometry && ownIds.has(layer.id) && layer.type === 'symbol')
+    .map((layer) => layer.id)
+  return { before: anchor >= 0 ? layers[anchor].id : undefined, raise }
+}
+
+/**
+ * R-36: the basemap sits above the style's own fill and line layers and below its symbols, and
+ * the polygon layers are raised above it, so imagery never hides a polygon.
  */
 function ensureBasemap(
   map: MapLibreMap,
   adapter: BasemapAdapter,
   composition: CompositionPreset,
+  ownIds: ReadonlySet<string>,
+  catalog: readonly LayerCatalogEntry[],
 ): void {
   if (!map.getSource(BASEMAP_SOURCE_ID)) {
     map.addSource(BASEMAP_SOURCE_ID, {
@@ -331,12 +388,15 @@ function ensureBasemap(
     })
   }
   if (!map.getLayer(BASEMAP_LAYER_ID)) {
+    const plan = basemapStackPlan(map.getStyle().layers ?? [], ownIds)
+    const before = basemapInsertBefore(map, catalog, plan)
     map.addLayer({
       id: BASEMAP_LAYER_ID,
       type: 'raster',
       source: BASEMAP_SOURCE_ID,
       paint: { 'raster-opacity': 1 },
-    }, firstSymbolId(map))
+    }, before)
+    for (const layerId of plan.raise) map.moveLayer(layerId, before)
   }
   // R-34: `Map` hides the basemap; the two satellite presets show it, and the labels are the
   // style's own symbol layers, which `applyComposition` owns.
@@ -405,6 +465,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   const region = regionAdapter(regionId)
   const basemapAdapter = BASEMAP_ADAPTERS.find((adapter) => adapter.id === basemapId) ?? activeBasemapAdapter()
   const sceneRef = useRef<PolygonScene | null>(null)
+  // AC-28: the style's own layer ids, read at `style.load` before the app adds any layer.
+  const styleOwnLayerIdsRef = useRef<ReadonlySet<string>>(new Set())
   const attributionRef = useRef<AttributionControl | null>(null)
   const attributionKeyRef = useRef('')
   const hoveredRef = useRef<string | number | null>(null)
@@ -457,9 +519,11 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       // A new style drops every source, so the applied tile cache no longer describes the map.
       appliedTilesRef.current = {}
       setMapReady(true)
+      // AC-28: snapshot the style's own layers before the app adds its boundary, basemap or polygon layers.
+      styleOwnLayerIdsRef.current = new Set((map.getStyle().layers ?? []).map((layer) => layer.id))
       ensureFieldBoundaries(map, fieldsRef.current)
       const styleRegion = regionAdapter(useMapStore.getState().regionId)
-      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition)
+      ensureBasemap(map, activeBasemapAdapter(), useMapStore.getState().composition, styleOwnLayerIdsRef.current, useMapStore.getState().catalog)
       applyComposition(map, useMapStore.getState().composition)
       const scene = sceneRef.current
       if (scene?.tiers) {
@@ -606,7 +670,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map) return
-    ensureBasemap(map, basemapAdapter, composition)
+    ensureBasemap(map, basemapAdapter, composition, styleOwnLayerIdsRef.current, catalog)
     raisePolygonLayers(map)
   }, [mapReady, basemapAdapter, composition, regionId])
 
@@ -643,7 +707,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       }
       const active = regionAdapter(store.regionId)
       const property = classPropertyFor(active, chosenDateOf(store), scene.classSource ?? undefined)
-      store.setLegendRows(legendRowsForMap(map, active, property))
+      store.setLegendRows(legendRowsForMap(map, active, property, noCdlYearOf(active, null, chosenDateOf(store))))
     }
     publishZoom()
     publishLegend()
@@ -699,7 +763,8 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
      */
     const syncSelectedClass = () => {
       const store = useMapStore.getState()
-      if (store.selectedPolygonId === null || store.polygonClass !== null) return
+      if (store.selectedPolygonId === null) return
+      if (store.polygonClass !== null && store.polygonRing !== null) return
       const scene = store.polygonMode
       if (!scene?.tiers) return
       const region = regionAdapter(store.regionId)
@@ -709,11 +774,15 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         (feature) => String(feature.id ?? feature.properties?.[region.idProperty]) === String(store.selectedPolygonId),
       )
       if (!match) return
-      store.setPolygonClass(
-        classDisplay(region, classIdFrom(region, match.properties, property)),
-        rawFeatureFrom(region, match.properties, property),
-      )
-      store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
+      if (store.polygonClass === null) {
+        store.setPolygonClass(
+          classDisplay(region, classIdFrom(region, match.properties, property)),
+          rawFeatureFrom(region, match.properties, property),
+        )
+        store.setPolygonClassYear(paintedClassYear(region, chosenDateOf(store), scene.classSource ?? undefined))
+      }
+      // Block 6, Table B: the outline the map rendered is the ring the numbers request carries.
+      if (store.polygonRing === null) store.setPolygonRing(outerRingOf(match.geometry))
     }
     syncSelectedClass()
     map.on('idle', syncSelectedClass)
@@ -721,6 +790,10 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       map.off('idle', syncSelectedClass)
     }
   }, [mapReady, selectedPolygonId, polygonScene, regionId])
+
+  // Block 6 revision 5 R-02 and block 5.5: the map is never hidden by a panel, so opening or
+  // closing one needs no camera restore and no `map.resize()` call. The guard that used to
+  // read the camera before a surface opened and restored it on close was removed here.
 
   // R-19, R-20, R-22, R-27: hover, the tooltip, the cursor and the press.
   useEffect(() => {
@@ -772,7 +845,7 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
       }
       map.getCanvas().style.cursor = 'pointer'
       const property = classPropertyFor(active, chosenDateOf(useMapStore.getState()), scene.classSource ?? undefined)
-      const display = classDisplay(active, classIdFrom(active, feature.properties, property))
+      const classValue = classIdFrom(active, feature.properties, property)
       const container = containerRef.current?.getBoundingClientRect()
       if (!container) return
       const placement = placeTooltip(
@@ -782,26 +855,49 @@ export function MapCanvas({ fields, selectedField, onTileChange, children }: Map
         rightEdgeColumnBox(),
       )
       setTooltip(placement.hidden ? null : {
-        text: display.name ?? t('polygon.class_not_mapped'),
+        text: polygonTooltipText(active, classValue, chosenDateOf(useMapStore.getState())),
         left: placement.left,
         top: placement.top,
       })
     }
     const handleLeave = () => clearHover()
     const handleClick = (event: PolygonEvent) => {
+      // Block 7 revision 10 R-63: while the boundary drawing mode takes the pointer events, a press
+      // on the map adds a vertex and never selects the polygon under it.
+      if (usePanelStore.getState().draft !== null) return
       const found = currentFeature(event)
       if (!found) return
       // R-22: the map handler runs the command and never calls the store action itself.
       runCommand('select_field', { field_id: commandFieldId(found.active, found.raw) })
     }
 
+    /**
+     * Block 5.5, U5 and B8: a press on the map that lands on no polygon clears the selection. The
+     * layer scoped handler above only runs when the press hits the fill layer, so a press on empty
+     * map, on the basemap or on a label never deselected anything.
+     */
+    const handleMapClick = (event: PolygonEvent) => {
+      const store = useMapStore.getState()
+      if (usePanelStore.getState().draft !== null) {
+        usePanelStore.getState().addVertex([event.lngLat.lng, event.lngLat.lat])
+        return
+      }
+      if (store.selectedPolygonId === null) return
+      // The same feature reader the layer scoped handler uses, so the two agree on what the press
+      // hit: a press with no polygon under it clears, and a press on one never clears what the
+      // command just selected.
+      if (!currentFeature(event)) store.clearPolygonSelection()
+    }
+
     map.on('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
     map.on('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
     map.on('click', POLYGON_FILL_LAYER_ID, handleClick)
+    map.on('click', handleMapClick)
     return () => {
       map.off('mousemove', POLYGON_FILL_LAYER_ID, handleMove)
       map.off('mouseleave', POLYGON_FILL_LAYER_ID, handleLeave)
       map.off('click', POLYGON_FILL_LAYER_ID, handleClick)
+      map.off('click', handleMapClick)
       clearHover()
     }
   }, [mapReady, regionId])

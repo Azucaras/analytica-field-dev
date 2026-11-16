@@ -15,13 +15,18 @@ export type StubSource = {
 
 export type StubLayer = {
   id: string
-  type: 'raster' | 'line' | 'symbol'
+  type: 'raster' | 'fill' | 'line' | 'symbol'
   source?: string
   paint?: Record<string, unknown>
 }
 
 export class MapStub {
   static instances: MapStub[] = []
+  /**
+   * Block 5 AC-28: a test seeds the style's own layers, in the order of the style, before the map
+   * mounts. Null keeps the one-symbol default below.
+   */
+  static styleLayers: StubLayer[] | null = null
 
   sources = new Map<string, StubSource>()
   layers: StubLayer[] = [{ id: 'place-label', type: 'symbol' }]
@@ -47,6 +52,7 @@ export class MapStub {
 
   constructor(options: Record<string, unknown>) {
     this.options = options
+    if (MapStub.styleLayers) this.layers = MapStub.styleLayers.map((layer) => ({ ...layer }))
     MapStub.instances.push(this)
   }
 
@@ -157,6 +163,32 @@ export class MapStub {
     return this.zoom
   }
 
+  /** Block 6, R-02: the camera values and the resize the numbers surface makes on close. */
+  resizeCalls = 0
+  bearing = 0
+  pitch = 0
+  jumpToCalls: Array<Record<string, unknown>> = []
+
+  resize() {
+    this.resizeCalls += 1
+  }
+
+  getBearing() {
+    return this.bearing
+  }
+
+  getPitch() {
+    return this.pitch
+  }
+
+  jumpTo(options: Record<string, unknown>) {
+    this.jumpToCalls.push(options)
+    if (Array.isArray(options.center)) this.center = { lng: options.center[0] as number, lat: options.center[1] as number }
+    if (typeof options.zoom === 'number') this.zoom = options.zoom
+    if (typeof options.bearing === 'number') this.bearing = options.bearing
+    if (typeof options.pitch === 'number') this.pitch = options.pitch
+  }
+
   getCenter() {
     return { ...this.center }
   }
@@ -201,6 +233,7 @@ export class MapStub {
 
   static reset() {
     MapStub.instances = []
+    MapStub.styleLayers = null
   }
 
   static last(): MapStub {

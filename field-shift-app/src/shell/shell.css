@@ -9,7 +9,7 @@
   --fs-right-width: 320px;
   --fs-topbar-height: 52px;
   --fs-rail-width: 76px;
-  --fs-bottom-max: 36vh;
+  --fs-bottom-height: 36vh;
   --fs-bg: #f3f5f0;
   --fs-surface: #ffffff;
   --fs-border: #e1e6dc;
@@ -80,7 +80,7 @@
 }
 .fs-tool svg { width: 18px; height: 18px; flex: 0 0 auto; }
 .fs-tool:hover { background: var(--fs-bg); color: var(--fs-text); }
-.fs-tool[aria-pressed="true"] { border-color: #cfdcbd; background: var(--fs-accent-soft); color: var(--fs-accent); }
+.fs-tool[aria-expanded="true"] { border-color: #cfdcbd; background: var(--fs-accent-soft); color: var(--fs-accent); }
 .fs-tool:focus-visible, .fs-tab:focus-visible, .fs-button:focus-visible, .fs-icon-button:focus-visible, .fs-panel-toggle:focus-visible {
   outline: 2px solid var(--fs-accent);
   outline-offset: 2px;
@@ -114,7 +114,9 @@
 .fs-slot { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; overflow-y: auto; overscroll-behavior: contain; padding: 8px; background: var(--fs-bg); }
 .fs-slot-left { grid-area: left; border-right: 1px solid var(--fs-border); }
 .fs-slot-right { grid-area: right; border-left: 1px solid var(--fs-border); }
-.fs-slot-bottom { grid-area: bottom; max-height: var(--fs-bottom-max); border-top: 1px solid var(--fs-border); }
+/* A fixed height, not a ceiling: opening, closing or collapsing a panel down here never changes the
+   map's rectangle (the team's block 6 AC-02). The slot scrolls inside itself instead. */
+.fs-slot-bottom { grid-area: bottom; height: var(--fs-bottom-height); border-top: 1px solid var(--fs-border); }
 
 .fs-map { grid-area: map; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
 .fs-map > .map-panel { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 0; }
@@ -244,14 +246,15 @@
 /* Phone: the map fills the screen above a tab bar; one panel opens in a sheet between them. */
 .fs-shell[data-layout="phone"] {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: var(--fs-topbar-height) minmax(0, 1fr) auto auto;
-  grid-template-areas: "top" "map" "sheet" "tabs";
+  grid-template-rows: var(--fs-topbar-height) minmax(0, 1fr) auto;
+  grid-template-areas: "top" "map" "tabs";
 }
 .fs-shell[data-layout="phone"] .fs-topbar { gap: 8px; padding: 0 10px; }
 .fs-shell[data-layout="phone"] .brand { font-size: 16px; }
-.fs-sheet { grid-area: sheet; max-height: 52vh; margin: 0; border-width: 1px 0 0; border-radius: 12px 12px 0 0; overflow: hidden; }
+/* On a phone the sheet slides over the lower part of the map, so the map keeps its rectangle. */
+.fs-sheet { grid-area: map; z-index: 6; align-self: end; max-height: 52vh; margin: 0; border-width: 1px 0 0; border-radius: 12px 12px 0 0; overflow: hidden; box-shadow: 0 -6px 20px rgb(29 48 16 / 16%); }
 .fs-sheet .fs-panel-header { border-bottom: 1px solid #eef1ea; }
-.fs-sheet .fs-panel-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.fs-sheet .fs-panel-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; }
 .fs-tabbar { grid-area: tabs; display: flex; gap: 2px; overflow-x: auto; padding: 4px 6px calc(4px + env(safe-area-inset-bottom)); border-top: 1px solid var(--fs-border); background: var(--fs-surface); }
 .fs-tab {
   display: flex;
@@ -300,3 +303,10 @@
 .fs-command-example code { font-size: 12px; font-weight: 700; }
 .fs-command-example .fs-command-args { color: var(--fs-muted); font-weight: 500; overflow-wrap: anywhere; }
 .fs-command-help li > .fs-muted { margin-top: 2px; }
+
+/* The picker an exclusive group shows while none of its panels is open. */
+.fs-group-picker { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--fs-border); border-radius: 10px; background: var(--fs-surface); }
+.fs-group-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.fs-group-button { gap: 6px; height: 36px; }
+.fs-group-button svg { width: 16px; height: 16px; }
+.fs-group-button:disabled { opacity: .55; cursor: not-allowed; }

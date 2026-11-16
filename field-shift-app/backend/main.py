@@ -14,6 +14,8 @@ import httpx
 from fastapi import Body, FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+import field_numbers
+
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "field-scenarios.json"
 with FIXTURE_PATH.open(encoding="utf-8") as fixture_file:
     FIXTURE: dict[str, Any] = json.load(fixture_file)
@@ -906,3 +908,13 @@ def get_fieldphase_file(path: str) -> Response:
     except FileNotFoundError:
         raise HTTPException(status_code=503, detail=f"Field Phase export {path} is missing; run the pipeline exporter") from None
     return Response(content=content, media_type="application/json")
+
+
+@app.post("/fields/{field_id}/numbers")
+def post_field_numbers(field_id: str, body: field_numbers.NumbersRequest = Body(...)) -> dict[str, Any]:
+    """Block 6 R-45: the one numbers route. Refusals are 400 and 404; a body that misses the schema is 422."""
+    try:
+        return field_numbers.build_numbers(field_id, body, fixture_fields=FIXTURE["fields"])
+    except field_numbers.NumbersError as error:
+        raise HTTPException(status_code=error.status, detail=error.detail) from error
+
